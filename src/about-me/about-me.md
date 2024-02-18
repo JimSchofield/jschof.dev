@@ -11,7 +11,3 @@ I've spent the last few years working on content management systems, specificall
 Recently I've been diving into web components as solution to programatic dashboards and UI's.
 
 I live in Minnesota with my wife and 6 children and my loveable golden doodle.
-
-<hr />
-
-{% include "contact.njk" %}

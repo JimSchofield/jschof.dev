@@ -5,16 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="/css/main.css" rel="stylesheet">
+    <script src="/index.js" type="module"></script>
   </head>
   <body>
     {% include "nav.njk" %}
-    <div class="v-space">
+    <main class="v-space">
       <div class="constrain">
         <div class="mt-xxl">
           {{ content | safe }}
         </div>
       </div>
-    </div>
+    </main>
+    {% include "footer.njk" %}
   </body>
 </html>
 

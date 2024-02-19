@@ -1,17 +1,8 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title }} - jschof.dev</title>
-  </head>
-  <body>
-    {% include "posts-nav.njk" %}
-    {{ content | safe }}
-    {% set previousPost = collections.posts | getPreviousCollectionItem %}
-    {% set nextPost = collections.posts | getNextCollectionItem %}
-    {% if previousPost %}Previous Blog Post: <a href="{{ previousPost.url }}">{{ previousPost.data.title }}</a>{% endif %}
-    {% if nextPost %}Next Blog Post: <a href="{{ nextPost.url }}">{{ nextPost.data.title }}</a>{% endif %}
-  </body>
-</html>
+---
+layout: index.njk
+---
+
+<article>
+{{ content | safe }}
+</article>
 

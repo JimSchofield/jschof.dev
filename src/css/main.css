@@ -72,7 +72,7 @@ hr {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  display: inline-block;
+  display: block;
   font-weight: bold;
   margin: 0;
   text-wrap: balance;
@@ -135,6 +135,10 @@ a {
   }
 }
 
+article {
+  width: 100%;
+}
+
 footer {
   margin-top: 3em;
   width: 100%;
@@ -146,7 +150,7 @@ footer {
 }
 
 .constrain {
-  margin: auto;
+  width: 100%;
   max-width: 70ch;
 }
 

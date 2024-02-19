@@ -1,8 +1,10 @@
 body {
   background: #123;
   color: #eee;
-  margin: 0 2em;
-  max-width: 80ch;
+}
+
+.site-title.site-title {
+  color: white;
 }
 
 a {

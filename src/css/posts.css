@@ -19,6 +19,7 @@
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid var(--gunmetal);
+  box-shadow: var(--shadow);
 }
 
 .card__image {

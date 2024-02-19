@@ -9,12 +9,8 @@
   </head>
   <body>
     {% include "nav.njk" %}
-    <main class="v-space">
-      <div class="constrain">
-        <div class="mt-xxl">
-          {{ content | safe }}
-        </div>
-      </div>
+    <main class="v-space constrain">
+      {{ content | safe }}
     </main>
     {% include "footer.njk" %}
   </body>

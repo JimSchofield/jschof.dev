@@ -1,0 +1,31 @@
+#mobile-menu {
+  isolation: isolate;
+  position: fixed;
+  text-align: center;
+  border-radius: 8px;
+  background: var(--seasalt);
+  box-shadow: var(--shadow);
+  z-index: 1;
+}
+
+#mobile-menu:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  padding: 1em;
+}
+
+#mobile-menu::backdrop {
+  backdrop-filter: blur(5px);
+}
+
+.hamburger-button {
+  display: flex;
+  align-items: center;
+  position: relative;
+
+  & svg {
+    stroke: white;
+    fill: white;
+  }
+}

@@ -3,11 +3,12 @@ const path = require('node:path');
 
 module.exports =  function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy('./src/**/*.css');
-  eleventyConfig.addPassthroughCopy('./src/**/*.js');
+  eleventyConfig.addPassthroughCopy('./src/**/*.js', { expand: true });
   eleventyConfig.addPassthroughCopy('./src/**/*.jpeg');
 
-  eleventyConfig.addShortcode("prettyDate", function(date, format) {
-    return dateFns.format(date, "yyyy-MM-dd");
+
+  eleventyConfig.addShortcode("prettyDate", function(date, format = "yyyy-MM-dd") {
+    return dateFns.format(date, format);
   })
 
   eleventyConfig.addShortcode("joinPaths", function(...paths) {

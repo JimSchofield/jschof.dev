@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Lit + TS</title>
+    <script type="module" src="/src/play-ground.ts"></script>
+  </head>
+  <body>
+    <play-ground>
+      <template slot="html"> <h1>Hello World!</h1>
+        <html>
+          <img src='https://picsum.photos/id/12/300/200' />
+          <script>
+          const someJavascript = document.createElement('span');
+          </script>
+          <style>
+          h1 {
+            font-weight: bold;
+          }
+          </style>
+        </html>
+      </template>
+    </play-ground>
+  </body>
+</html>

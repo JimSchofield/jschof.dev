@@ -1,0 +1,1 @@
+../../component/play-ground/dist/assets/index.js

@@ -15,6 +15,37 @@ play-ground {
 }
 </style>
 
-<play-ground value="<h1>Hello, World!</h1> <p>Seems to work fine!</p> <style> p { color: red; } </style>"></play-ground>
+<play-ground>
+    <template>
+        <h1>Hello, World!</h1>
+        <p>Seems to work fine!</p>
+        <style>
+        p {
+            color: red;
+        }
+        </style>
+    </template>
+</play-ground>
+
+<play-ground>
+    <template>
+        <details is="my-details">
+            <summary>Something</summary>
+            Some details
+        </details>
+        <script>
+            class MyDetails extends HTMLDetailsElement {
+                connectedCallback() {
+                    console.log("hi");
+                }
+                static {
+                    if (!customElements.get("my-details")) {
+                        customElements.define("my-details", MyDetails, { extends: "details" });
+                    }
+                }
+            }
+    </script>
+</template>
+</play-ground>
 
 <script src="../../../../js/play-ground.js" type="module"></script>

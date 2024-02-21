@@ -7,16 +7,20 @@
     <script type="module" crossorigin src="/assets/index.js"></script>
   </head>
   <body>
-    <play-ground value="
-<h1>Hello World!</h1>
-<img src='https://picsum.photos/id/12/300/200' />
-<script>
-  const someJavascript = document.createElement('span');
-</script>
-<style>
-  h1 {
-    font-weight: bold;
-  }
-</style>"></play-ground>
+    <play-ground>
+      <template slot="html"> <h1>Hello World!</h1>
+        <html>
+          <img src='https://picsum.photos/id/12/300/200' />
+          <script>
+          const someJavascript = document.createElement('span');
+          </script>
+          <style>
+          h1 {
+            font-weight: bold;
+          }
+          </style>
+        </html>
+      </template>
+    </play-ground>
   </body>
 </html>

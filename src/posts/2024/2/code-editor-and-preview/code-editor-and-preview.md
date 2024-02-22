@@ -3,7 +3,7 @@ title: Here is where I am making a web component code playground
 description: Using plain web components!
 layout: post
 tags: posts
-date: 2024-02-19
+date: 2024-02-22
 ---
 
 # Let's try this bad boy out

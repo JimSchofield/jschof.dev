@@ -12,7 +12,7 @@ import './js/menu-popover/menu-popover.js';
 
 // Feelin cute, might delete later
 function gradientLoop(gradientAngle) {
-  gradientAngle += .05;
+  gradientAngle += .025;
 
 
   const root = document.documentElement;

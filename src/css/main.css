@@ -52,6 +52,8 @@ article > h1 {
 
 img {
   max-width: 100%;
+  box-shadow: var(--shadow);
+  border-radius: 8px;
 }
 
 html {
@@ -75,6 +77,15 @@ main {
   flex-grow: 1;
 }
 
+code {
+  display: inline-block;
+  padding: 0 .25em;
+  font-size: 13.5px;
+  border: 2px dashed var(--teal);
+  border-radius: .5em;
+  line-height: 1.2;
+}
+
 hr {
   display: block;
   margin: 0.5em auto;
@@ -93,7 +104,7 @@ h5,
 h6 {
   display: block;
   font-weight: bold;
-  margin: 0;
+  margin: 1em 0;
   text-wrap: balance;
 }
 

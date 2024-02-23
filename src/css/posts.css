@@ -1,3 +1,7 @@
+article h1 {
+  text-wrap: initial;
+}
+
 .posts-grid {
   margin: 0;
   padding: 0;
@@ -60,4 +64,8 @@
   width: 100%;
   background: var(--gradient);
   aspect-ratio: 1.619;
+}
+
+.post-details {
+  font-weight: bold;
 }

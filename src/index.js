@@ -1,4 +1,5 @@
 import './js/menu-popover/menu-popover.js';
+import './js/play-ground.js';
 
 (function setRandomGradientAngle() {
   const [rangeBeginning, rangeEnd] = [30,144]
@@ -6,19 +7,4 @@ import './js/menu-popover/menu-popover.js';
 
   const root = document.documentElement;
   root.style.setProperty('--gradient-angle', gradientAngle + 'deg');
-
-  gradientLoop(gradientAngle);
 })();
-
-// Feelin cute, might delete later
-function gradientLoop(gradientAngle) {
-  gradientAngle += .025;
-
-
-  const root = document.documentElement;
-  root.style.setProperty('--gradient-angle', gradientAngle + 'deg');
-
-  requestAnimationFrame(() => {
-    gradientLoop(gradientAngle);
-  })
-}

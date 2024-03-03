@@ -1,5 +1,3 @@
-import sheet from "./menu-popover.css" assert { type: "css" };
-
 export default class MenuPopover extends HTMLElement {
   connectedCallback() {
     this.handleWindowResize();
@@ -7,8 +5,6 @@ export default class MenuPopover extends HTMLElement {
     this.windowObserver = new ResizeObserver(this.handleWindowResize);
 
     this.windowObserver.observe(document.body);
-
-    document.adoptedStyleSheets = [sheet];
   }
 
   init = () => {

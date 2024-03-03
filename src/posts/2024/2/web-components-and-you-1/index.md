@@ -1,5 +1,5 @@
 ---
-title: Web Components and You (part 1)
+title: "Web Components and You (part 1): The Shadow Dom"
 description: We look at why web components are a good solution now, and the very basics on how to make one.
 layout: post
 tags:
@@ -9,7 +9,7 @@ image: back_1.jpeg
 date: 2024-02-23
 ---
 
-# Web Components and You (Part 1)
+# Web Components and You (Part 1): The Shadow Dom
 
 <div class="post-details">
     Published {% prettyDate date %}, 
@@ -168,6 +168,7 @@ Yes, we're using `this.shadowRoot.innerHTML` as a shortcut to add a template to 
 
 <play-ground>
   <template>
+        <pre>
     <my-element></my-element>
     <script>
     class MyElement extends HTMLElement {

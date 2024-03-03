@@ -32,6 +32,7 @@ article h1 {
   aspect-ratio: 1.619;
   object-fit: cover;
   object-position: center center;
+  border-radius: 0;
 }
 
 .card__detail {

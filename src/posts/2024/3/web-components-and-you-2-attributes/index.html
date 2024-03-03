@@ -1,0 +1,200 @@
+---
+title: "Web Components and You (part 2): Attributes and Reactivity"
+description: Let's take a look at web component attributes and how you can get your components to react to attribute changes!
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-03-01
+---
+
+<h1>Web Components and You Part 2: Attributes and Reactivity</h1>
+
+<div class="post-details">
+  Published {% prettyDate date %}, {% readTime page %}
+</div>
+
+<p>
+  HTML is powerful because it has attributes to customize elements. You can
+  specify why type of input by include <code>type="_type_"`</code> inside the
+  <code>&lt;input /&gt;</code> tag. You can set properties like whether a
+  checkbox is checked by using the <code>checked</code> boolean attribute.
+</p>
+
+<p>
+  So of course custom elements are going to use attributes. They also allow a
+  component to react when attributes change.
+</p>
+
+<p>First, take a look at accessing a simple attribute "my-attr":</p>
+
+<play-ground>
+  <template>
+    <my-element
+      my-attr="Here is a string passed in using an attribute"
+    ></my-element>
+    <script>
+      class MyElement extends HTMLElement {
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+
+          this.shadowRoot.innerHTML = `<p>${this.getAttribute("my-attr")}</p>`;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>
+
+<p>
+  We can access attributes by using <code>element.getAttributes('attr')</code>,
+  and in this example we're just putting it in the DOM.
+</p>
+
+<h2>What happens if we change the attribute?</h2>
+<p>
+  If you open dev tools and manually change the value of the attribute you'll
+  see that it doesn't automatically update...
+</p>
+
+<video controls>
+  <source src="changing-the-attribute-1.mp4" type="video/mp4" />
+</video>
+
+<p>We have to do more work to wire up reactivity.</p>
+
+<p>An important note here...</p>
+
+<aside>
+  <p>All attributes on HTML elements have only string values.</p>
+  <p>
+    If an attribute is supposed to act like a boolean, the attribute has no
+    value and is either present or absent
+  </p>
+</aside>
+
+<p>
+  If you're used to using <strong>any</strong> framework, this may be something
+  you've never had to think about. In HTML, the attributes we use always have a
+  string value- which is why weird things happen when you have a checkbox and
+  you say <code>disabled="false"</code> and it's disabled.
+</p>
+
+<play-ground>
+  <template>
+    <div>
+      <label for="checkbox">
+        This bad boy is checked despite checked equalling "false":
+      </label>
+      <input id="checkbox" type="checkbox" checked="false" />
+    </div>
+    <br />
+    <div>
+      <label for="text-input">
+        This is disabled despite the "false" string:
+      </label>
+      <input id="text-input" type="text" disabled="false" />
+    </div>
+  </template>
+</play-ground>
+
+<h2>So how do we get a component to react to an attribute changing?</h2>
+
+<p>
+  Let's go back to the example above where we take an attribute and simply put
+  the attribute value in as text in our component. The first requirement is to
+  "register" your attribute with a static property
+  <code>observedAttributes</code>. Once you have the attribute registered, you
+  can add a method <code>attributeChangedCallback()</code> to your component
+  class, and that will be called every time an attribute changes.
+</p>
+
+<play-ground>
+  <template>
+    <my-element
+      my-attr="Here is a string passed in using an attribute"
+    ></my-element>
+    <script>
+      class MyElement extends HTMLElement {
+        static observedAttributes = ["my-attr"];
+
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+          this.shadowRoot.innerHTML = `<p>${this.getAttribute("my-attr")}</p>`;
+        }
+
+        attributeChangedCallback() {
+          // Called when my attributes change!
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>
+
+<p>
+  Now, I'm going to move my template rendering into its own method
+  <code>render()</code>. This makes it much easier to re-render the template
+  when an attribute changes. I'm also doing a check to see if the name of the
+  changed attribute is "my-attr". This isn't strictly necessary, but it's
+  showing what you get in this method when attributes do change.
+</p>
+<p>
+  One thing we're doing is also checking if the shadow root has been added yet.
+  There are cases where attributes are parsed and the
+  <code>attributeChangedCallback</code> is called even before
+  <code>connectedCallback</code> is called. So, we just early exit if that's the
+  case!
+</p>
+
+<p>
+  Go ahed, give it a try below! Inspect our element, change the attribute, and
+  you should see it update its dom and change!
+</p>
+
+<play-ground>
+  <template>
+    <my-element
+      my-attr="Change this attribute and see the web component update!"
+    ></my-element>
+    <script>
+      class MyElement extends HTMLElement {
+        static observedAttributes = ["my-attr"];
+
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+          this.render();
+        }
+
+        attributeChangedCallback(name, oldValue, newValue) {
+          if (!this.shadowRoot) {
+            return;
+          }
+
+          if (name === "my-attr") {
+            this.render();
+          }
+        }
+
+        render() {
+          this.shadowRoot.innerHTML = `<p>${this.getAttribute("my-attr")}</p>`;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>
+
+<h2>That was a lot of work!</h2>
+
+<p>
+  Yeah, admittedly, that is a lot of work. Web components give us the primitives
+  to do this sort of thing, but wouldn't it be nice to just treat these things
+  like a framework component? Meaning, is there a a way we can just update data
+  and let the template update like in React or Vue or Svelte? The answer's yes!
+  In the next post I'll be introducing LitJS and things will get a lot easier!
+</p>
+

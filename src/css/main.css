@@ -50,11 +50,13 @@ article > h1 {
   line-height: 1;
 }
 
+video,
 img {
   max-width: 100%;
   box-shadow: var(--shadow);
   border-radius: 8px;
 }
+
 
 html {
   min-height: 100vh;
@@ -81,9 +83,16 @@ code {
   display: inline-block;
   padding: 0 .25em;
   font-size: 13.5px;
-  border: 2px dashed var(--teal);
-  border-radius: .5em;
+  border: 2px dashed var(--carrot);
+  border-radius: 8px;
   line-height: 1.2;
+}
+
+aside {
+  display: block;
+  border: 5px solid var(--carrot);
+  padding: .5em 1em;
+  border-radius: 16px;
 }
 
 hr {
@@ -106,6 +115,7 @@ h6 {
   font-weight: bold;
   margin: 1em 0;
   text-wrap: balance;
+  line-height: 1.2;
 }
 
 .display {

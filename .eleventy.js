@@ -7,6 +7,7 @@ module.exports =  function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy('./src/**/*.js', { expand: true });
   eleventyConfig.addPassthroughCopy('./src/**/*.jpeg');
   eleventyConfig.addPassthroughCopy('./src/**/*.png');
+  eleventyConfig.addPassthroughCopy('./src/**/*.mp4');
 
 
   eleventyConfig.addShortcode("prettyDate", function(date, format = "yyyy-MM-dd") {

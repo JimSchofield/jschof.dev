@@ -1,0 +1,28 @@
+<play-ground>
+  <template>
+    <p>Inspect this element to see the <code>str</code> attribute change</p>
+    <my-element str="Initial value!"></my-element>
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        static properties = { str: { reflect: true } };
+
+        updateStr = (event) => (this.str = event.target.value);
+
+        render() {
+          return html` <input
+            type="text"
+            value=${this.str}
+            @input=${this.updateStr}
+          />`;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

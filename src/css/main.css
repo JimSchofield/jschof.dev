@@ -92,8 +92,25 @@ code {
 aside {
   display: block;
   border: 5px solid var(--carrot);
-  padding: .5em 1em;
+  padding: 0 1em;
   border-radius: 16px;
+}
+
+aside.blue {
+  position: relative;
+  border-color: var(--teal);
+
+  &::before {
+    display: block;
+    position: absolute;
+    content: "Note!";
+    font-weight: 900;
+    top: 0;
+    left: 0;
+    color: var(--teal);
+    font-family: Avenir, Helvetica, sans-serif;
+    transform: rotate(-90deg) translate(-1em, calc(-100% - .8em));
+  }
 }
 
 hr {
@@ -260,10 +277,16 @@ footer {
   }
 }
 
+embed {
+  margin-left: calc(50% - 42.5vw);
+  width: 85vw;
+  height: 80vh;
+}
+
 /* Specific to play-ground web component */
 play-ground::part(container) {
-  margin-left: calc(50% - 40vw);
-  width: 80vw;
+  margin-left: calc(50% - 42.5vw);
+  width: 85vw;
 }
 @media (max-width: 900px) {
   play-ground::part(container) {

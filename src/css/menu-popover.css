@@ -1,25 +1,57 @@
 #mobile-menu {
   isolation: isolate;
-  position: fixed;
-  text-align: center;
-  border-radius: 8px;
-  background: var(--seasalt);
-  box-shadow: var(--shadow);
-  z-index: 1;
-}
-
-#mobile-menu:popover-open {
+  position: absolute;
+  top: 100%;
+  right: 0;
   display: flex;
   flex-direction: column;
-  gap: 1em;
-  padding: 1em;
+  width: 150px;
+  text-align: center;
+  background: transparent;
+  box-shadow: var(--shadow);
+  z-index: 1;
+
+  transform-origin: top right;
+  transform: rotateX(60deg) scale3d(.8, .8, 1);
+  opacity: 0;
+  visibility: hidden;
+
+  transition: transform 300ms, opacity 300ms, visibility 300ms 1ms;
+
+  & .button {
+    width: 100%;
+    border-radius: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  & .button:focus-visible {
+    /* To stop outline from hiding under next element */
+    z-index: 2;
+  }
+
+  & .button:first-child {
+    border-top-right-radius: 8px;
+    border-top-left-radius: 8px;
+  }
+
+  & .button:last-child {
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
 }
 
-#mobile-menu::backdrop {
-  backdrop-filter: blur(5px);
+#mobile-menu.open {
+  transform: rotateX(0deg) scale3d(1, 1, 1);
+  opacity: 1;
+  visibility: visible;
 }
 
-.hamburger-button {
+menu-popover {
+  position: relative;
+}
+
+button.hamburger-button {
   display: flex;
   align-items: center;
   position: relative;

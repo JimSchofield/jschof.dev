@@ -91,6 +91,7 @@ code {
 
 aside {
   display: block;
+  margin: 0 1em;
   border: 5px solid var(--carrot);
   padding: 0 1em;
   border-radius: 16px;
@@ -215,6 +216,10 @@ footer {
 .constrain {
   width: 100%;
   max-width: 70ch;
+}
+
+.constrain:has(.posts-grid) {
+  max-width: 100ch;
 }
 
 .side-by-side {

@@ -11,6 +11,12 @@ article h1 {
   list-style: none;
 }
 
+@media (max-width: 600px) {
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .posts-grid__item {
   display: flex;
 }
@@ -69,4 +75,12 @@ article h1 {
 
 .post-details {
   font-weight: bold;
+}
+
+
+@media (max-width: 600px) {
+  .card__placeholder,
+  .card__image {
+    aspect-ratio: 4 / 1;
+  }
 }

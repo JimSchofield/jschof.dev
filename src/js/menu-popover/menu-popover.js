@@ -37,7 +37,6 @@ export default class MenuPopover extends HTMLElement {
   setupPopoverEl = () => {
     this.popoverEl = document.createElement("div");
 
-    this.popoverEl.setAttribute("popover", "");
     this.popoverEl.id = "mobile-menu";
 
     for (let child of this.children) {
@@ -48,21 +47,73 @@ export default class MenuPopover extends HTMLElement {
       el.cloneNode(true),
     );
     Array.from(this.children).forEach((el) => el.remove());
+  };
+
+  get popoverIsOpen() {
+    return this.popoverEl.classList.contains("open");
   }
+
+  toggleMenu = (menuButton) => () => {
+    const elToFocusAfterTransition = this.popoverIsOpen
+      ? menuButton
+      : this.popoverEl.children[0];
+
+    this.popoverEl.addEventListener(
+      "transitionend",
+      () => {
+        elToFocusAfterTransition.focus();
+      },
+      { once: true },
+    );
+
+    this.popoverEl.classList.toggle("open");
+  };
+
+  handleClickout = (event) => {
+    if (!this.popoverIsOpen || this.contains(event.target)) {
+      return;
+    }
+
+    this.toggleMenu(this.menuButton)();
+  };
+
+  handleFocusChange = (event) => {
+    if (this.contains(event.target)) {
+      return;
+    }
+
+    if (this.popoverIsOpen) {
+      this.toggleMenu(this.menuButton)();
+    }
+  };
+
+  handleEscape = (event) => {
+    if (
+      this.contains(event.target) &&
+      event.key === "Escape" &&
+      this.popoverIsOpen
+    ) {
+      this.toggleMenu(this.menuButton)();
+    }
+  };
 
   setupMenuButton = () => {
     this.menuButton = document.createElement("button");
     this.menuButton.innerHTML = getHamburgerSvg();
     this.menuButton.classList.add("button", "hamburger-button");
     this.menuButton.ariaLabel = "Toggle navigation menu";
-    this.menuButton.addEventListener("click", () => {
-      this.popoverEl.togglePopover();
-    });
+    this.menuButton.addEventListener("click", this.toggleMenu(this.menuButton));
+    document.body.addEventListener("click", this.handleClickout);
+    document.body.addEventListener("focusin", this.handleFocusChange);
+    document.body.addEventListener("keyup", this.handleEscape);
   };
 
   tearDown = () => {
     this.popoverEl?.remove();
     this.menuButton?.remove();
+    document.body.removeEventListener("click", this.handleClickout);
+    document.body.removeEventListener("focusin", this.handleFocusChange);
+    document.body.removeEventListener("keyup", this.handleEscape);
 
     // Restore regular children
     this.append(...this.storedChildren);

@@ -1,3 +1,14 @@
+.hide-while-booting {
+  opacity: 0;
+}
+
+menu-popover {
+  position: relative;
+  display: flex;
+  gap: 4px;
+}
+
+
 #mobile-menu {
   isolation: isolate;
   position: absolute;
@@ -45,10 +56,6 @@
   transform: rotateX(0deg) scale3d(1, 1, 1);
   opacity: 1;
   visibility: visible;
-}
-
-menu-popover {
-  position: relative;
 }
 
 button.hamburger-button {

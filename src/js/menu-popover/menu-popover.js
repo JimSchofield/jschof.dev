@@ -3,17 +3,14 @@ export default class MenuPopover extends HTMLElement {
     this.handleWindowResize();
 
     this.windowObserver = new ResizeObserver(this.handleWindowResize);
-
     this.windowObserver.observe(document.body);
   }
 
   init = () => {
     this.setupPopoverEl();
     this.appendChild(this.popoverEl);
-
     this.setupMenuButton();
     this.prepend(this.menuButton);
-
     this.initialized = true;
   };
 
@@ -25,6 +22,8 @@ export default class MenuPopover extends HTMLElement {
         this.tearDown();
       }
 
+      // To stop FOUC from happening while booting
+      this.classList.remove('hide-while-booting');
       return;
     }
 
@@ -47,6 +46,8 @@ export default class MenuPopover extends HTMLElement {
       el.cloneNode(true),
     );
     Array.from(this.children).forEach((el) => el.remove());
+
+    this.classList.remove("hide-while-booting");
   };
 
   get popoverIsOpen() {

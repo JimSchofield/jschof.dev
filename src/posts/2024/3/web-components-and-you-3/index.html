@@ -1,6 +1,6 @@
 ---
 title: "Web Components and You (part 3): Simplifying with LitJS"
-description: It can be tedious to wire up reactivity in a web component ourselves.  Let's see how easy it can be with LitJS
+excerpt: It can be tedious to wire up reactivity in a web component ourselves.  Let's see how easy it can be with LitJS
 layout: post
 tags:
   - posts
@@ -9,6 +9,10 @@ date: 2024-03-06
 ---
 
 <h1>Web Components and You (part 3): Simplifying with LitJS</h1>
+
+<div class="post-details">
+  Published {% prettyDate date %}, {% readTime page %}
+</div>
 
 <p>We've seen that if you use <code>attributeChangedCallback</code> after you've registered your attribute in your <code>static observedAttributes</code> you can have your web components react to changes in its attributes. It's just a lot of wiring up to do, and we're used to easy reactivity in modern frameworks. Also, who wants to create an attribute every time something is reactive? (No one.  It's a bad idea to do it that way!)</p>
 

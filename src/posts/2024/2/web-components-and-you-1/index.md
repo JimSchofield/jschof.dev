@@ -1,6 +1,6 @@
 ---
 title: "Web Components and You (part 1): The Shadow Dom"
-description: We look at why web components are a good solution now, and the very basics on how to make one.
+excerpt: We look at why web components are a good solution now, and the very basics on how to make one.
 layout: post
 tags:
   - posts

@@ -39,6 +39,7 @@ article h1 {
   object-fit: cover;
   object-position: center center;
   border-radius: 0;
+  box-shadow: none;
 }
 
 .card__detail {

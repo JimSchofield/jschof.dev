@@ -193,6 +193,9 @@ a {
   max-width: 100ch;
 
   .site-title {
+    display: inline-block;
+    margin: 1em 0;
+    line-height: 1;
     font-weight: bold;
     color: var(--gunmetal);
     text-decoration: none;

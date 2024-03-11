@@ -168,7 +168,6 @@ Yes, we're using `this.shadowRoot.innerHTML` as a shortcut to add a template to 
 
 <play-ground>
   <template>
-        <pre>
     <my-element></my-element>
     <script>
     class MyElement extends HTMLElement {

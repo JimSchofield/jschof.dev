@@ -221,7 +221,7 @@ footer {
   max-width: 70ch;
 }
 
-.constrain:has(.posts-grid) {
+.constrain--wide {
   max-width: 100ch;
 }
 
@@ -283,6 +283,10 @@ footer {
     outline: 2px solid var(--raw-umber);
     background: var(--gradient);
   }
+}
+
+.margin-1-0 {
+  margin: 3rem 0;
 }
 
 embed {

@@ -10,9 +10,7 @@
   </head>
   <body>
     {% include "nav.njk" %}
-    <main class="constrain">
-      {{ content | safe }}
-    </main>
+    {{ content | safe }}
     {% include "footer.njk" %}
   </body>
 </html>

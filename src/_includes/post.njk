@@ -2,7 +2,21 @@
 layout: index.njk
 ---
 
-<article>
-{{ content | safe }}
-</article>
+<main class="constrain">
+  <article>
+  {{ content | safe }}
+  </article>
+</main>
+
+<div class="constrain constrain--wide">
+  <hr class="margin-1-0" />
+  <script src="https://utteranc.es/client.js"
+          repo="jimschofield/jschof.dev"
+          issue-term="pathname"
+          label="💬"
+          theme="github-light"
+          crossorigin="anonymous"
+          async>
+  </script>
+</div>
 

@@ -6,6 +6,9 @@ layout: index.njk
   <article>
   {{ content | safe }}
   </article>
+  <div class="next-previous-nav">
+  {% include "next-previous.njk" %}
+  </div>
 </main>
 
 <div class="constrain constrain--wide">

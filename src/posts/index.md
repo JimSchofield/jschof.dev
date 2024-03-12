@@ -8,7 +8,7 @@ layout: index
 <main class="constrain constrain--wide">
     <h1>Posts:</h1>
     <ul class="posts-grid">
-        {%- for post in collections.posts | reverse -%}
+        {%- for post in collections.posts reversed -%}
         <li class="posts-grid__item"{% if post.url == page.url %} aria-current="page"{% endif %}>
             <a class="card" href="{{post.url}}">
                 {%- if post.data.image -%}

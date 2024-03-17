@@ -90,16 +90,12 @@ code {
 }
 
 aside {
+  position: relative;
   display: block;
   margin: 0 1em;
   border: 5px solid var(--carrot);
   padding: 0 1em;
   border-radius: 16px;
-}
-
-aside.blue {
-  position: relative;
-  border-color: var(--teal);
 
   &::before {
     display: block;
@@ -108,9 +104,21 @@ aside.blue {
     font-weight: 900;
     top: 0;
     left: 0;
-    color: var(--teal);
+    color: var(--carrot);
     font-family: Avenir, Helvetica, sans-serif;
     transform: rotate(-90deg) translate(-1em, calc(-100% - .8em));
+  }
+}
+
+ul {
+  padding-inline-start: 1.5rem;
+}
+
+aside.blue {
+  border-color: var(--teal);
+
+  &::before {
+    color: var(--teal);
   }
 }
 
@@ -300,6 +308,12 @@ embed {
   width: 85vw;
   height: 80vh;
 }
+@media (max-width: 900px) {
+  embed {
+    margin-left: initial;
+    width: 100%;
+  }
+}
 
 /* Specific to play-ground web component */
 play-ground::part(container) {
@@ -312,6 +326,7 @@ play-ground::part(container) {
     width: 100%;
   }
 }
+
 play-ground::part(editor-format-button) {
   display: inline-block;
   padding: 0.25em 1em;

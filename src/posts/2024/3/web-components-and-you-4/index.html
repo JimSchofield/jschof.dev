@@ -1,0 +1,117 @@
+---
+title: "Web Components and You (part 4): Style"
+excerpt: Let's visit how you would do CSS styles in a web component, and how LitJS includes styles.
+layout: post
+tags:
+  - posts
+  - web-components
+image: sophie.jpeg
+date: 2024-03-11
+---
+
+<h1>Web Components and You (part 4): Styles</h1>
+
+<p class="post-details">
+  Published {% prettyDate date %}, {% readTime page %}
+</p>
+
+<p>We have options when we want to include CSS in our web components.  Each solution has differing levels of support by different browsers, levels of ease of use, and levels of reusability. Here's a few I'd like to share:</p>
+
+<ul>
+  <li>Inline styles in the shadow root</li>
+  <li>Using Lit's <code>css``</code> helper</li>
+  <li>Adopting stylesheets</li>
+  <li>Using tailwind two ways</li>
+</ul>
+
+<h2>The easiest: inline styles</h2>
+
+<p>Let's face it, web components really champion component encapsulation and they really enforce this using style scoping with the shadow DOM.  Styles outside of the shadow DOM don't leak into the shadow DOM, so you can depend on the styling and structure inside of web component remaining intact no matter where you place it.</p>
+
+<p>This method is really not my favorite way to do do styles... For the past 20 years we've been preached to about letting CSS, HTML, and JS focus on each of their concerns, so let CSS be CSS and keep it in the <code>.css</code> file.  Well, now we're putting CSS in the HTML.</p>
+
+<p>So here is a super simple example:</p>
+
+{% include "./example1.html" %}
+
+<p>(I'm not winning any design awards here 😅)</p>
+
+<p>If you think about it, this is what a lot of frameworks do, though.  In Vue and Svelte at least there is a section of the component file that are style tags, and it's understood that the component will encapsulate the styles to just that component. At least, in Vue, you can use a `scoped` attribute to make sure the styles stay specific to the component.</p>
+
+<p>Here, though, it doesn't feel quite as neat.  It looks like we're putting CSS inside of our HTML inside of our Javascript... which feels like we're literally mixing up concerns.</p>
+
+<p>Partly, I think this is a problem that has yet to be completely solved, but there are other ways to skin this cat...</p>
+
+<h2>Using the LitJS CSS helper</h2>
+
+<p>By far one of the easiest ways to include CSS but still keep it somewhat separated from the template is to use LitJS' <code>css``</code> helper.</p>
+
+<p>Here's the same example from above but using LitJS:</p>
+
+{% include "./example2.html" %}
+
+<p>Things feel much better here!  CSS has it's own place, HTML is separate and in a render function.  It just <strong>feels</strong> better.  If you want, you can define your css in a different file and import it.</p>
+
+<p>This is all depending on LitJS.  So maybe that's fine, but maybe you want to stay <em>more native</em>?</p>
+
+<h2>Adopting a constructed stylesheet</h2>
+
+<p>All modern browsers have the <code>Constructable Style Sheet</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet">API</a>.  This allows you to create a style sheet object, parse styles, and add them to the object.  Then you can "adopt" the style using the <code>adoptedStyles</code> property on the shadowRoot.</p>
+
+<p>A few things have this <code>adoptedStylesheet</code>: the <code>Document</code>, shadow roots, and any document objects in an iframe.  This is essentially the way LitJS includes styles under the hood, but it's nice to be able to do this without a framework!</p>
+
+<p>Here is how you could adopt a style:</p>
+
+{% include "./example3.html" %}
+
+<p>Not too bad, right?  It's not as visually clean as LitJS, but it's almost there.  There's some ceremony you have to go through to create a sheet and adopt the style, and we probably could have made it more concise.</p>
+
+<p>There is another way to do this that is really slick, but unfortunately Firefox and Safari don't support it! 😭 It's still nice to see it in action.  It involves a sweet new thing call <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#browser_compatibility">import assertions</a>!</p>
+
+<aside>
+  <p>This is not supported by safari and firefox, and according to mdn it's "deprecated."  I don't know what the status of this is or what might replace it (maybe the "with" syntax as that's in "experimental" status?) So this is just a demonstration of shows us how cool native javascript modules can <em>eventually</em> be.</p>
+</aside>
+
+<p>Here's an example of native css modules being imported into javascript and adopted!</p>
+
+<embed src="https://stackblitz.com/edit/vitejs-vite-jfnozz?embed=1&file=index.html"></embed>
+
+<p>You can import CSS directly and it's already considered as a stylesheet object!  Then you only have to adopt the stylesheet in the shadow dom.  This makes it easy to keep CSS in its own file, and there's less ceremony.  But, again, this isn't widely available, so keep tabs on this type of feature, and hopefully it will be available soon.</p>
+
+<h2>What about Tailwind?</h2>
+
+<p>Tailwind and the shadow DOM seem to be in complete contradiction with each other.  Tailwind expects styles and classes to be used globally, and the system is designed to be able to compose styles together without conflict.  Shadow DOM doesn't allow anything global to come in and affect these components, expecting that styles will be located completely in the component and isolated.</p>
+
+<p>So how could you use Tailwind?</p>
+
+<h3>Tailwind option 1: Light DOM</h3>
+
+<p>One option is to create what's called a "light DOM".  Instead of creating and attaching a shadow root, you can just use the custom element itself to attach elements and render stuff.  The strength of this is that nothing is isolated from global styles and you can easily inherit styling from outside of the component.  The downside is that you can't use slots.  (There is some talk floating out there of enabling slots even outside of a shadow DOM, but we'll see if that goes anywhere.)</p>
+
+<p>Here is an example of re-creating the component from above with a light DOM and tailwind:</p>
+
+{% include './example4.html' %}
+
+<p>Not too bad, right?  I think the main issue will be that creating components outside of the shadow root is not quite figured out, and you will probably run into style classes and issues.  However, if you use Tailwind, there's no issue!</p>
+
+<p>Note that we couldn't use a slot, so I grabbed the text node in the element and placed it in the correct place in the template manually.  Not great, but it works here.</p>
+
+<h3>Tailwind option 2: Stealing the styles</h3>
+
+<p>When you load a stylesheet, it's already cached.  So if you want tailwind styles in the shadow root, you can query for all the style tags in the "parent" document and duplicate them in your shadow root.</p>
+
+<p>It will be like there is no shadow DOM boundary.  However, you would be including <em>all</em> the styles, and you would need to make sure to work out how to go about this if your environment smartly purges CSS of unused classes.</p>
+
+<p>But here is an example for the sake of demonstration:</p>
+
+{% include './example5.html' %}
+
+<p><strong>Firstly:</strong> I'm using an older Tailwind CDN link because in the older versions it was a simple link tag pulling in plain CSS.  The most recent CDN option is super nice, but it is doing things under the hood I couldn't quite figure out (the repo for the cdn script wasn't open.)  Anyway, in a real project, you would be using tailwind cli and other tools to create a plain css file and include it with a <code>link</code> element, like in this example.</p>
+
+<p><strong>Secondly:</strong> You could conceivably just query for all link and style tags and copy them into the shadow dom by using <code>node.cloneNode(true)</code>, but the way we're doing it in this example seems more robust to me- using the document registered styles and copying them into a new constructed style sheet.</p>
+
+<h2>Conclusion</h2>
+
+<p>It seems the creators and influencers in the shadow DOM/web component world really pushed for component encapsulation.  This has both strengths and weaknesses- but even if you want to use Tailwind there are ways to easily support it.</p>
+
+<p>We should probably next talk about how a consumer of a web app can influence the styles of a web component.  Next I'd like to write about using the <code>:part()</code> API and what things actually do leak through into the shadow DOM.  Until next time!</p>

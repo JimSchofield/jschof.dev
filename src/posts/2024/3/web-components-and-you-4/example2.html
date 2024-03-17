@@ -1,0 +1,35 @@
+<play-ground>
+  <template>
+    <my-element>Here's some text!</my-element>
+    <script type="module">
+      import {
+        LitElement,
+        html,
+        css,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        static styles = css`
+          .thing {
+            display: inline-block;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            box-shadow: 3px 4px 0 black;
+            border: 1px solid black;
+            border-radius: 1rem;
+          }
+        `;
+
+        render() {
+          return html`
+            <div class="thing">
+              <slot></slot>
+            </div>
+          `;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

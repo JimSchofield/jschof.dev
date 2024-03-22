@@ -20,6 +20,7 @@ menu-popover {
   text-align: center;
   background: transparent;
   box-shadow: var(--shadow);
+  border-radius: 8px;
   z-index: 1;
 
   transform-origin: top right;

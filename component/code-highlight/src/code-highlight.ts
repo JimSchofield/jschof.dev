@@ -1,13 +1,28 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
 import "highlight.js/styles/tokyo-night-dark.css";
+
+import * as prettier from "prettier/standalone";
+import prettierPluginBabel from "prettier/plugins/babel";
+import prettierPluginTypescript from "prettier/plugins/typescript";
+import prettierPluginCSS from "prettier/plugins/postcss";
+import prettierPluginEstree from "prettier/plugins/estree";
+import prettierPluginHtml from "prettier/plugins/html";
 
 import hljs from "highlight.js/lib/core";
 import javascript from "highlight.js/lib/languages/javascript";
 import typescript from "highlight.js/lib/languages/typescript";
 import xml from "highlight.js/lib/languages/xml";
 import cssHighlight from "highlight.js/lib/languages/css";
+
+const plugins = [
+  prettierPluginBabel,
+  prettierPluginTypescript,
+  prettierPluginEstree,
+  prettierPluginHtml,
+  prettierPluginCSS,
+];
 
 hljs.registerLanguage("javascript", javascript);
 hljs.registerLanguage("typescript", typescript);
@@ -24,20 +39,73 @@ export class CodeHighlight extends LitElement {
     super.connectedCallback();
 
     if (["javascript", "typescript"].includes(this.lang)) {
-      // We expect a single script tag to hold content in DOM
-      const content =
-        this.querySelector("template")?.content.querySelector(
-          "script",
-        )?.innerHTML;
-
-      if (!content) {
-        throw new Error(
-          `Language is ${this.lang}, however there is no script tag that would contain the code to highlight`,
-        );
-      }
-
-      this.content = content;
+      this.handleScript();
+    } else if ("css" === this.lang) {
+      this.handleStyle();
+    } else if (this.lang === "html") {
+      this.handleTemplate();
     }
+
+    Array.from(this.children).forEach((child) => child.remove());
+  }
+
+  private handleTemplate() {
+    // We expect a single script tag in a template to hold content in DOM
+    const fragment = this.querySelector("template")?.content;
+
+    if (!fragment) {
+      throw new Error("No document fragment for handling HTML formatting");
+    }
+
+    const content = Array.from(fragment.children)
+      .map((child) => child.outerHTML)
+      .join("");
+
+    if (!content) {
+      throw new Error(
+        `Language is ${this.lang}, however there is no script tag that would contain the code to highlight`,
+      );
+    }
+
+    prettier
+      .format(content, { parser: this.lang, plugins })
+      .then((result) => (this.content = result));
+  }
+
+  private handleScript() {
+    // We expect a single script tag in a template to hold content in DOM
+    const content =
+      this.querySelector("template")?.content.querySelector(
+        "script",
+      )?.innerHTML;
+
+    if (!content) {
+      throw new Error(
+        `Language is ${this.lang}, however there is no script tag that would contain the code to highlight`,
+      );
+    }
+
+    const parser = this.lang === "javascript" ? "babel" : "typescript";
+
+    prettier
+      .format(content, { parser, plugins })
+      .then((result) => (this.content = result));
+  }
+
+  private handleStyle() {
+    // We expect a single style tag in a template tag to hold content in DOM
+    const content =
+      this.querySelector("template")?.content.querySelector("style")?.innerHTML;
+
+    if (!content) {
+      throw new Error(
+        `Language is ${this.lang}, however there is no style tag that would contain the code to highlight`,
+      );
+    }
+
+    prettier
+      .format(content, { parser: this.lang, plugins })
+      .then((result) => (this.content = result));
   }
 
   @property()
@@ -51,7 +119,16 @@ export class CodeHighlight extends LitElement {
   }
 
   render() {
-    return html`<div>
+    return html` <style>
+        code-highlight {
+          display: flex;
+          border-radius: 1rem;
+
+          & pre {
+            display: flex;
+          }
+        }
+      </style>
       <pre>
 <code
   .innerHTML=${this.#rendered.trim()}
@@ -59,11 +136,8 @@ export class CodeHighlight extends LitElement {
         "
 >
 </code>
-    </pre>
-    </div>`;
+    </pre>`;
   }
-
-  static styles = css``;
 }
 
 declare global {

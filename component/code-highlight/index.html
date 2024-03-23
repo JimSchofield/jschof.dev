@@ -8,13 +8,41 @@
     <script type="module" src="/src/code-highlight.ts"></script>
   </head>
   <body>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          function helloWorld(thing) {
+            return "Testing!";
+          }
+        </script>
+      </template>
+    </code-highlight>
+    <br />
     <code-highlight lang="typescript">
       <template>
         <script lang="typescript">
-        function <T extends string>helloWorld(thing: T): string {
-          return "Testing!";
-        }
+          function helloWorld<T extends string>(thing: T): string {
+            return "Testing!";
+          }
         </script>
+      </template>
+    </code-highlight>
+    <br />
+    <code-highlight lang="css">
+      <template>
+        <style>
+          .testing {
+            display: inline-block;
+            border-radius: 1em;
+          }
+        </style>
+      </template>
+    </code-highlight>
+    <br/>
+    <code-highlight lang="html">
+      <template>
+        <input type="text" />
+        <p>Some html to <strong>format!</strong></p>
       </template>
     </code-highlight>
   </body>

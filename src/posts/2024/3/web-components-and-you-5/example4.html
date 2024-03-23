@@ -1,0 +1,20 @@
+<play-ground>
+  <template>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <my-element>Here's some text!</my-element>
+    <script type="module">
+      class MyElement extends HTMLElement {
+        connectedCallback() {
+          this.innerHTML = `
+            <div class="bg-gray-300 inline-block m-2 p-2 rounded-xl shadow-lg">
+              <!-- next line is a workaround for no slot capabilities-->
+              ${this.firstChild.textContent}
+            </div>
+          `;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

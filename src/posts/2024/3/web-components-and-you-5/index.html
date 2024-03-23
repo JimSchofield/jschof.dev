@@ -1,0 +1,38 @@
+---
+title: "Web Components and You (part 5): Piercing the Shadow DOM"
+excerpt: The Shadow DOM has scoped styles, which means that styles outside the shadow root don't affect it.  But there are some exceptions!  We will discuss the `:part()` psuedo-selector, css variables, and other ways the shadow DOM isn't all that \"sealed\""
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-03-21
+---
+
+<h1>Web Components and You (part 5): Piercing the Shadow DOM</h1>
+
+<p class="post-details">
+  Published {% prettyDate date %}, {% readTime page %}
+</p>
+
+<p>In <a href="../../2/web-components-and-you-1">post 1 of this series</a> we showed how the shadow Dom encapsulate styles.  Basically, whatever is defined outside the shadow DOM doesn't intrude inside the web component's shadow root.  You can then style inside the shadow DOM and not have a care about how this component will look in any context- the context shouldn't matter!</p>
+
+<p><span class="decorate">But there are ways</span> to influence styles inside the web component.  I want to show a sketch of how to use each of them:</p>
+
+<ol>
+  <li>The <code>:part()</code> API</li>
+  <li>CSS Variables (custom properties)</li>
+  <li>Using context-dependent properties like flex and grid and <code>display: contents</code>.</li>
+  <li>Inverting control and using slots</li>
+  <li>Including styles with a declarative shadow DOM</li>
+</ol>
+
+<h2>Using the <code>::part()</code> selector</h2>
+
+<p>The <code>::part()</code> api allows you as a web-component maker to selectively expose parts of your shadow DOM to be styled with CSS.  To make something available, you just need to name that part with the attribute <code>part="some-name"</code></p>
+
+<div part="container">
+  <!--...-->
+</div>
+```
+
+Now this is available to be styles using <code>::part(container)</code>.

@@ -1,0 +1,47 @@
+<play-ground>
+  <template>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css"
+      integrity="sha512-wnea99uKIC3TJF7v4eKk4Y+lMz2Mklv18+r4na2Gn1abDRPPOeef95xTzdwGD9e6zXJBteMIhZ1+68QC5byJZw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <my-element>Here's some text!</my-element>
+    <script type="module">
+      class MyElement extends HTMLElement {
+        connectedCallback() {
+          const shadowRoot = this.attachShadow({ mode: "open" });
+
+          const divEl = document.createElement("div");
+
+          divEl.innerHTML = `
+            <div class="bg-gray-300 inline-block m-2 p-2 rounded-xl shadow-lg">
+              <slot></slot>
+            </div>
+          `;
+
+          this.shadowRoot.append(divEl);
+
+          this.adoptGlobalCss();
+        }
+
+        adoptGlobalCss() {
+          const stylesheet = new CSSStyleSheet();
+
+          let index = 0;
+          Array.from(document.styleSheets).forEach((sheet) => {
+            Array.from(sheet.cssRules).forEach((rule) => {
+              stylesheet.insertRule(rule.cssText, index);
+              index += 1;
+            });
+          });
+
+          this.shadowRoot.adoptedStyleSheets = [stylesheet];
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

@@ -81,7 +81,11 @@ export class PlayGround extends LitElement {
   handleDocUpdate = (view: any) => {
     const newDoc = view.state.doc.toString().trim();
 
-    this.docContents = newDoc;
+    // Allows us to stop eager parsing of declarative shadow dom
+    // so we can use declarative shadow doms in our examples :)
+    const res = newDoc.replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+
+    this.docContents = res;
   };
 
   debouncedHandleDocUpdate = debounce(this.handleDocUpdate, 200);

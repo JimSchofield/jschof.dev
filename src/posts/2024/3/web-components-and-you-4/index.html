@@ -96,7 +96,7 @@ date: 2024-03-11
 
 <p>Note that we couldn't use a slot, so I grabbed the text node in the element and placed it in the correct place in the template manually.  Not great, but it works here.</p>
 
-<h3>Tailwind option 2: Stealing the styles</h3>
+<h3 id="stealing-the-styles">Tailwind option 2: Stealing the styles</h3>
 
 <p>When you load a stylesheet, it's already cached.  So if you want tailwind styles in the shadow root, you can query for all the style tags in the "parent" document and duplicate them in your shadow root.</p>
 

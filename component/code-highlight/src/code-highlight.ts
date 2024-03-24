@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 
-import "highlight.js/styles/tokyo-night-dark.css";
+import tokyoNight from "highlight.js/styles/tokyo-night-dark.css?inline";
 
 import * as prettier from "prettier/standalone";
 import prettierPluginBabel from "prettier/plugins/babel";
@@ -46,7 +46,10 @@ export class CodeHighlight extends LitElement {
       this.handleTemplate();
     }
 
-    Array.from(this.children).forEach((child) => child.remove());
+    // Not sure this is needed
+    // The slot has no change handlers
+    // Not sure someone could mess with it...
+    // Array.from(this.children).forEach((child) => child.remove());
   }
 
   private handleTemplate() {
@@ -56,6 +59,8 @@ export class CodeHighlight extends LitElement {
     if (!fragment) {
       throw new Error("No document fragment for handling HTML formatting");
     }
+
+    debugger;
 
     const content = Array.from(fragment.children)
       .map((child) => child.outerHTML)
@@ -128,6 +133,7 @@ export class CodeHighlight extends LitElement {
             display: flex;
           }
         }
+        ${tokyoNight}
       </style>
       <pre>
 <code

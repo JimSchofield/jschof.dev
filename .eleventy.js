@@ -31,7 +31,7 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addShortcode("readTime", async function (page) {
     const contents = await fs.readFile(page.inputPath, { encoding: "utf8" });
 
-    const wordsPerMinute = 250;
+    const wordsPerMinute = 225;
 
     const minutes = Math.ceil(contents.split(/[ ,]+/).length / wordsPerMinute);
 

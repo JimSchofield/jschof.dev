@@ -1,39 +1,36 @@
 <play-ground>
   <template>
-    <my-element>Here's some text!</my-element>
+    <style>
+    :root {
+      --padding: 12px;
+      --my-bg-color: brown;
+      --my-color: white;
+      --my-shadow: 0 0 8px rgba(0,0,0,.8);
+    }
+    </style>
+    <my-element></my-element>
     <script type="module">
-      const myStyle = `
-          .thing {
-            display: inline-block;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 3px 4px 0 black;
-            border: 1px solid black;
-            border-radius: 1rem;
-          }
-        `;
-      class MyElement extends HTMLElement {
-        connectedCallback() {
-          const shadowRoot = this.attachShadow({ mode: "open" });
+      import {
+        LitElement,
+        html,
+        css,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
-          shadowRoot.innerHTML = `
-            <div class="thing">
-              <slot></slot>
-            </div>
+      class MyElement extends LitElement {
+        render() {
+          return html`
+            <style>
+            div {
+              padding: var(--padding);
+              color: var(--my-color);
+              background: var(--my-bg-color);
+              box-shadow: var(--my-shadow);
+            }
+            </style>
+            <div>CSS variables are available in the shadow DOM!</div>
           `;
-
-          this.adoptStyles(myStyle);
         }
-
-        adoptStyles(styleString) {
-          const sheet = new CSSStyleSheet();
-          sheet.replaceSync(styleString);
-
-          this.shadowRoot.adoptedStyleSheets.push(sheet);
-        }
-
       }
-
       customElements.define("my-element", MyElement);
     </script>
   </template>

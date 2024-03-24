@@ -1,5 +1,22 @@
 <play-ground>
   <template>
+    <style>
+      my-element::part(text) {
+        background: orange;
+      }
+      /* trying to select any ancestor */
+      *:has(my-element::part(text)) {
+        background: blue;
+      }
+      /* trying to select child span */
+      my-element::part(text) > span {
+        background: purple;
+      }
+      /* trying to select next sibling */
+      my-element::part(text) + * {
+        background: green;
+      }
+    </style>
     <my-element>Here's some text!</my-element>
     <script type="module">
       import {
@@ -9,26 +26,17 @@
       } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
       class MyElement extends LitElement {
-        static styles = css`
-          .thing {
-            display: inline-block;
-            padding: 1rem;
-            background: rgba(0, 0, 0, 0.3);
-            box-shadow: 3px 4px 0 black;
-            border: 1px solid black;
-            border-radius: 1rem;
-          }
-        `;
-
         render() {
           return html`
-            <div class="thing">
-              <slot></slot>
+            <div>Here is a sibling</div>
+            <div part="text">
+              This div is styleable with the part "text"
+              <span>Here is a child span</span>
             </div>
+            <div>Here's another sibling!</div>
           `;
         }
       }
-
       customElements.define("my-element", MyElement);
     </script>
   </template>

@@ -1,5 +1,6 @@
 import './js/menu-popover/menu-popover.js';
 import './js/play-ground.js';
+import './js/code-highlight.js';
 
 (function setRandomGradientAngle() {
   const [rangeBeginning, rangeEnd] = [30,144]

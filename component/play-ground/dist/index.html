@@ -8,18 +8,43 @@
   </head>
   <body>
     <play-ground>
-      <template slot="html"> <h1>Hello World!</h1>
+      <template slot="html">
+        <h1>Hello World!</h1>
         <html>
-          <img src='https://picsum.photos/id/12/300/200' />
+          <img src="https://picsum.photos/id/12/300/200" />
           <script>
-          const someJavascript = document.createElement('span');
+            const someJavascript = document.createElement("span");
           </script>
           <style>
-          h1 {
-            font-weight: bold;
-          }
+            h1 {
+              font-weight: bold;
+            }
           </style>
         </html>
+      </template>
+    </play-ground>
+    <play-ground>
+      <template>
+        <link href="./example.css" rel="stylesheet" />
+        <div>Div outside the shadow DOM!</div>
+        <my-element>
+          <template shadowrootmode="open.">
+            testing
+            <link href="./example.css" rel="stylesheet" />
+          </template>
+        </my-element>
+        <script type="module">
+          class MyElement extends HTMLElement {
+            connectedCallback() {
+              const div = document.createElement("div");
+              div.innerHTML = `
+            Div inside the shadow DOM!
+          `;
+              this.shadowRoot.append(div);
+            }
+          }
+          customElements.define("my-element", MyElement);
+        </script>
       </template>
     </play-ground>
   </body>

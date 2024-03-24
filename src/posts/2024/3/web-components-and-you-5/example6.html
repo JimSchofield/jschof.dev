@@ -1,0 +1,38 @@
+<play-ground>
+  <template>
+    <style>
+      div {
+        margin: 1em;
+        padding: 0.5em;
+        outline: 2px solid gray;
+        font-family: Avenir, sans-serif;
+      }
+    </style>
+    <my-element>
+      <div>These divs</div>
+      <div>Are all rendered in the light DOM</div>
+      <div>And they are styled</div>
+      <div>From global styles</div>
+      <div>Before being reflected into the shadow DOM</div>
+    </my-element>
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        render() {
+          return html`<slot></slot>`;
+        }
+
+        static styles = css`
+          div {
+            background: orange;
+          }
+        `;
+      }
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

@@ -1,38 +1,185 @@
 ---
 title: "Web Components and You (part 5): Piercing the Shadow DOM"
-excerpt: The Shadow DOM has scoped styles, which means that styles outside the shadow root don't affect it.  But there are some exceptions!  We will discuss the `:part()` psuedo-selector, css variables, and other ways the shadow DOM isn't all that \"sealed\""
+excerpt: The Shadow DOM has scoped styles, which means that styles outside the shadow root don't affect it.  But there are some exceptions!  We will discuss the `:part()` psuedo-selector, css variables, declarative shadow DOM, and other ways the shadow DOM can be styled!
 layout: post
 tags:
   - posts
   - web-components
-date: 2024-03-21
+date: 2024-03-24
 ---
 
 <h1>Web Components and You (part 5): Piercing the Shadow DOM</h1>
 
-<p class="post-details">
-  Published {% prettyDate date %}, {% readTime page %}
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  In <a href="../../2/web-components-and-you-1">post 1 of this series</a> we
+  showed how the shadow Dom encapsulate styles. Basically, whatever is defined
+  outside the shadow DOM doesn't intrude inside the web component's shadow root.
+  You can then style inside the shadow DOM and not have a care about how this
+  component will look in any context- the context shouldn't matter!
 </p>
 
-<p>In <a href="../../2/web-components-and-you-1">post 1 of this series</a> we showed how the shadow Dom encapsulate styles.  Basically, whatever is defined outside the shadow DOM doesn't intrude inside the web component's shadow root.  You can then style inside the shadow DOM and not have a care about how this component will look in any context- the context shouldn't matter!</p>
-
-<p><span class="decorate">But there are ways</span> to influence styles inside the web component.  I want to show a sketch of how to use each of them:</p>
+<p>In the <a href="../web-components-and-you-4">last post</a> we showed a few options of including styles in your web components.  We didn't delve into how we might have consumers interact with the shadow DOM's styles.
+  <span class="decorate">But there are ways</span> to influence styles inside
+  the web component. I want to show a sketch of how to use each of them:
+</p>
 
 <ol>
   <li>The <code>:part()</code> API</li>
   <li>CSS Variables (custom properties)</li>
-  <li>Using context-dependent properties like flex and grid and <code>display: contents</code>.</li>
+  <li>
+    Using context-dependent properties like flex and grid and
+    <code>display: contents</code>.
+  </li>
   <li>Inverting control and using slots</li>
   <li>Including styles with a declarative shadow DOM</li>
 </ol>
 
 <h2>Using the <code>::part()</code> selector</h2>
 
-<p>The <code>::part()</code> api allows you as a web-component maker to selectively expose parts of your shadow DOM to be styled with CSS.  To make something available, you just need to name that part with the attribute <code>part="some-name"</code></p>
+<p>
+  The <code>::part()</code> api allows you as a web-component maker to
+  selectively expose parts of your shadow DOM to be styled with CSS. To make
+  something available, you just need to name that part with the attribute
+  <code>part="some-name"</code>
+</p>
 
-<div part="container">
-  <!--...-->
-</div>
-```
+<code-highlight lang="html">
+  <template>
+    <div part="container">
+      <!--...-->
+    </div>
+  </template>
+</code-highlight>
 
-Now this is available to be styles using <code>::part(container)</code>.
+<p>Now this is available to be styled using <code>::part(container)</code>.</p>
+
+<code-highlight lang="css">
+  <template>
+    <style>
+    custom-element::part(container) {
+      /* your styles! */
+    }
+    </style>
+  </template>
+</code-highlight>
+
+<p>Let's see a full example of how we can do this:</p>
+
+{% include "./example1.html" %}
+
+<p>You can see that the divs are not changed by the general div rule.  But the part rule allows you to style that div and that div only.</p>
+
+<p>You might be thinking "Oh noes! People now have a selector to get in the DOM, they can start selecting children, siblings, and more, and mess everything up!"</p>
+
+<p>Never fear! This is not true!</p>
+
+<p>You will quickly find that you cannot combine the part selector with other selectors to traverse the shadow DOM.  The only thing that might work are the psuedo selectors on that custom element, such as <code>:disabled</code>, <code>:valid</code>, and so on.</p>
+
+<p>Check this out: This shows how combinations of selectors with part don't allow you to traverse around:</p>
+
+{% include "./example2.html" %}
+
+<p>So you really do have control over what you expose.  I used this in my code-playgoround web component.  I put <code>part="editor-format-button"</code> on the format button.  I want people to be able to style their buttons in a way that makes them match their site, but nothing more.</p>
+
+<p>A really nice example of a library that exposes parts for you to customize is <a href="https://shoelace.style/">the shoelace library</a>.  They have a <a href="https://shoelace.style/getting-started/customizing#css-parts">Nice explainer on parts</a></p>
+
+<p>But there are some other things that actually go through the shadow DOM by default, let's move on to...</p>
+
+<h2>CSS Variables</h2>
+
+<p>Be default, CSS variables go right through shadow DOM boundaries.</p>
+
+{% include "./example3.html" %}
+
+<p>If you want someone to only be able to change one particular aspect of your web component, say a border-color, or a text font-family, you can use css variables. The consumer can set them how they would like and it would affect your component.</p>
+
+<p>Again, a really good example of a library that uses this strategy is <a href="https://shoelace.style/getting-started/customizing#custom-properties">shoelace</a></p>
+
+<h2>Context-dependent relationships like flex and grid</h2>
+
+<p>One thing I don't see touched on very much is that certain parent-child relationships can seep into the shadow DOM.  For example, if you create a web component with a few items, and the host is <code>display: contents</code>, a containing grid or flexbox will consider the shadow DOM contents as children. Here's an example:</p>
+
+{% include "./example4.html" %}
+
+<p>Since the flex is outside of the custom element, you wouldn't expect those styles to impact the divs in the shadow DOM.  But in this case the layout considerations of <code>flex</code>, which would normally have targeted `my-element` now target its children because of <code>display: contents</code>.</p>
+
+<p>To me this is more of a curiosity than a strategy to reach into the shadow DOM.  I think you could rely on this if you were to explicitly say that consumers need to use grid or flex to style the elements in the component.  For example, you may want the user to be able to set <code>display: grid</code> on the host custom element and then dictate the layout of children.  Something like this:</p>
+
+{% include "./example5.html" %}
+
+<p>But then again it doesn't seem very wise to rely partly on styles on the top element.  Many CSS styles placed there won't work, for example, child selectors will fail, like this:</p>
+
+<code-highlight lang="css">
+  <template>
+    <style>
+    .my-element {
+      display: grid /* While this will work... */
+    }
+    .my-element > * {
+      /* anything here won't work through shadow DOM */
+    }
+    </style>
+  </template>
+</code-highlight>
+
+<p>So you would be left to exposing those child elements with <code>part</code> or handle the styling internally.  Personally, I think I would handle all this internally and expose parts as I find the consumer might need them.</p>
+
+<h2>Inverting control using slots</h2>
+
+<p>One interesting thing about slots in the shadow DOM is that slotted elements are styled according to what styles would reach them in the light dom before being included in the shadow DOM.  Here's an example:</p>
+
+{% include "./example6.html" %}
+
+<p>So, if you need a consumer to bring their own button for example, instead of exposing your own button with <code>part</code> or exposing tons of custom properties the consumer needs to set, you can just have them place their own styled button in a slot.  The styles will get rendered on the element as if it were outside the shadow DOM, but it would be located in the correct spot in your component.</p>
+
+<p>You would need to hook up the button manually, but this is probably a more advanced topic for a future post!</p>
+
+<h2>Lastly: Including styles with a declarative shadow DOM</h2>
+
+<p>This is the wildest and most experimental example of style injection into the shadow DOM.  Last post <a href="../web-components-and-you-4#stealing-the-styles">we saw how to adopt global styles into the shadow DOM programatically</a>. There is a much shorter way you can do this and in a way "pierce" the shadow dom by setting up a declarative shadow dom with the styles already placed in it.</p>
+
+<p><a href="https://developer.chrome.com/docs/css-ui/declarative-shadow-dom">Declarative shadow DOM</a> is also probably a great topic to go over also in a different post. I consider this to be a more advanced strategy requiring a lot more coordination between template, web component, and styles, and to be honest, we're still figuring out how to use this shadow DOM thing.  So take this example with a grain of salt.</p>
+
+<p>But here it is.  If you have a template inside of the markup of a web component with attribute <code>shadowrootmode</code> set to either open or closed, the web component will have a shadow DOM already instantiated when it is loaded on the page.</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-web-component>
+      <template shadowrootmode="open.">
+        Anything in here will automatically be included in the pre-instantiated shadow DOM of the component even before the component mounts. That means you could put styles here like so:
+        <style>
+        div { background: pink; }
+        </style>
+        Or, you could pre-load your component with a link to a stylesheet:
+        <link href="/css/main.css" rel="stylesheet">
+        And you would have the benefit of those styles automagically included in your component 🤯
+      </template>
+    </my-web-component>
+  </template>
+</code-highlight>
+
+<aside>
+  <p>Notice, I set <code>shadowrootmode</code> to "open." (with a period).  The reason I have to put that period there is to keep the browser from parsing the example code above completely and turning it into a shadow DOM instance 😂.  The browser is a bit too eager, so just know the period is not supposed to be there in real life!</p>
+</aside>
+
+<p>Alright, let's show an example.  I'm hosting a css file <a href="example.css">here</a> that I'll be using in this playground example.  I'll load it in the main body of the page, but also in the web component shadow DOM using this declarative strategy.</p>
+
+{% include "./example7.html" %}
+
+<aside>
+  <p>AGAIN the browser will eagerly parse and process declarative shadow doms, even when I don't want them to in examples.  So in my playground custom element, it will take "open." and replace that with "open" when actually rendering the example.  If you have an idea of how to make this nicer, let me know!</p>
+</aside>
+
+<p>This is actually quite easy to include tailwind styles everywhere if we're heavily invested in web components and want to use tailwind.  The downside, again, is that you would need to set up tailwind to look through your templates and your web components for all the css classes to include.</p>
+
+<p>But tailwind aside, this is a legitamite way you might consider preloading custom elements with the styles and other things you need globally.  It just takes a bit of work to systemize it.</p>
+
+<h2>Conclusion</h2>
+
+<p>Web components are really flexible, and with the addition of the declarative shadow DOM there are many ways to get styles into that shadow DOM.</p>
+
+<p>Hopefully you've been inspired to try some of these strategies creating your own components.  Did I miss anything?  What do you think?  Leave a comment below!</p>
+
+<p>I think in the next post we'll talk a bit more about slots, how to interact with them, and what they enable us to do with Web Components.  Until then, peace and happy programming!</p>

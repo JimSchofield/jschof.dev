@@ -58,7 +58,6 @@ img {
   border-radius: 8px;
 }
 
-
 html {
   min-height: 100vh;
 }
@@ -82,7 +81,7 @@ main {
 
 code {
   display: inline-block;
-  padding: 0 .25em;
+  padding: 0 0.25em;
   font-size: 13.5px;
   border: 2px dashed var(--carrot);
   border-radius: 8px;
@@ -92,7 +91,7 @@ code {
 aside {
   position: relative;
   display: block;
-  margin: 0 1em;
+  margin: 1em;
   border: 5px solid var(--carrot);
   padding: 0 1em;
   border-radius: 16px;
@@ -106,7 +105,7 @@ aside {
     left: 0;
     color: var(--carrot);
     font-family: Avenir, Helvetica, sans-serif;
-    transform: rotate(-90deg) translate(-1em, calc(-100% - .8em));
+    transform: rotate(-90deg) translate(-1em, calc(-100% - 0.8em));
   }
 }
 
@@ -316,6 +315,10 @@ embed {
 }
 
 /* Specific to play-ground web component */
+play-ground {
+  margin: 1rem 0;
+}
+
 play-ground::part(container) {
   margin-left: calc(50% - 42.5vw);
   width: 85vw;
@@ -345,4 +348,18 @@ play-ground::part(editor-format-button):focus-visible {
   color: var(--seasalt);
   outline: 2px solid var(--raw-umber);
   background: var(--gradient);
+}
+
+code-highlight {
+  margin: 1rem 0;
+
+& pre {
+  margin: 0;
+
+  & code.hljs {
+    line-height: 1.4;
+    padding: 0.5rem 0.75rem;
+    border: none;
+  }
+}
 }

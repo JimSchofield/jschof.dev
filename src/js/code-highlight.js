@@ -1,0 +1,1 @@
+../../component/code-highlight/dist/assets/index.js

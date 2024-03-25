@@ -60,8 +60,6 @@ export class CodeHighlight extends LitElement {
       throw new Error("No document fragment for handling HTML formatting");
     }
 
-    debugger;
-
     const content = Array.from(fragment.children)
       .map((child) => child.outerHTML)
       .join("");
@@ -127,7 +125,6 @@ export class CodeHighlight extends LitElement {
     return html` <style>
         code-highlight {
           display: flex;
-          border-radius: 1rem;
 
           & pre {
             display: flex;

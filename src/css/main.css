@@ -352,14 +352,16 @@ play-ground::part(editor-format-button):focus-visible {
 
 code-highlight {
   margin: 1rem 0;
+  max-width: 100%;
+  overflow: auto;
 
-& pre {
-  margin: 0;
+  & pre {
+    margin: 0;
 
-  & code.hljs {
-    line-height: 1.4;
-    padding: 0.5rem 0.75rem;
-    border: none;
+    & code.hljs {
+      line-height: 1.4;
+      padding: 0.5rem 0.75rem;
+      border: none;
+    }
   }
-}
 }

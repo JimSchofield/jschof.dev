@@ -20,7 +20,11 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addShortcode(
     "prettyDate",
     function (date, format = "yyyy-MM-dd") {
-      return dateFns.format(date, format);
+      // Fix UTC to localization issue where dates are a day off
+      const dtDateOnly = new Date(
+        date.valueOf() + date.getTimezoneOffset() * 60 * 1000,
+      );
+      return dateFns.lightFormat(dtDateOnly, format);
     },
   );
 

@@ -5,7 +5,7 @@ layout: post
 tags:
   - posts
   - web-components
-image: back_1.jpeg
+image: back_1.webp
 date: 2024-02-23
 ---
 

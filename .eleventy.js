@@ -2,6 +2,7 @@ const dateFns = require("date-fns");
 const pluginSEO = require("eleventy-plugin-seo");
 const path = require("node:path");
 const fs = require("node:fs/promises");
+const highlightPlugin = require('./eleventy/highlight');
 
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
@@ -16,6 +17,8 @@ module.exports = function (eleventyConfig) {
     url: "https://jschof.dev",
     author: "Jim Schofield",
   });
+
+  eleventyConfig.addPlugin(highlightPlugin);
 
   eleventyConfig.addShortcode(
     "prettyDate",

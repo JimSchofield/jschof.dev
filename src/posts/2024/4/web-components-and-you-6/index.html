@@ -1,0 +1,165 @@
+---
+title: "Web Components and You (part 6): Slots and how to use them"
+excerpt: Slots are a fantastic new feature that comes along with the Shadow DOM. You don't even need to make a custom element to use them.  Let's look at how to use slots, name slots, and some of the lifecycles and features that come along with them.
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-04-01
+image: winter-trail.webp
+---
+
+<h1>Web Components and You (part 6): Slots and how to use them</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>It's time to talk about the real workhorse of the shadow DOM: slots! Slots enable you to accept markup from the consumer. The elements are styled as if they're in the light DOM, but they're placed where you determine in your web component. This is a pretty well-known patter in frameworks like <a href=https://guides.emberjs.com/release/components/block-content/">Ember</a>, <a href="https://svelte.dev/examples/slots">Svelte</a>, <a href="https://vuejs.org/guide/components/slots.html">Vue</a>, and others.</p>
+
+<aside class="blue">
+  <p><strong>For this post</strong> I am assuming all shadow DOMs are open, and I'm not talking about focus delegation.  That might just be my next post though! 👀</p>
+</aside>
+
+<h2>The simplest example: the default slot</h2> 
+
+<p>The default slot is is whatever children markup elements you put inside your web component.</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-custom-element>
+      <p>Anything in here is being placed into the "default" slot</p>
+      <img src="http://something.org" />
+      It can be anything! And it doesn't have to be a single parent node
+    </my-custom-element>
+  </template>
+</code-highlight>
+
+<p>Here's an example where the content is being placed in a particular spot in the shadow DOM (in this case it's being put inside the div):</p>
+
+{% include "./example1.html" %}
+
+<p>And if you were to inspect the DOM, you can see that the element is rendering in the "light dom" portion of the component outside of the shadow DOM.  Yet there is a link between the slot and the revealed content:</p>
+
+<video controls>
+  <source src="slot-content-in-dom.mp4" type="video/mp4"></source>
+</video>
+
+<p>You're probably already used to this sort of thing.  This is what happens in <code>textarea</code> tags.  If you place text inside those tags, that pre-populates the text value to the element</p>
+
+<p>But this is a bit more powerful.  The content lives and breaths!  Meaning that if you make changes to the content in the slot, the slot contents reflect those changes.  Here's an example that hopefully shows how the placed content can still be changed:</p>
+
+{% include "./example2.html" %}
+
+<p>Okay, I understand if that's not mind blowing.  But this is very helpful when we want to let consumers provide their own markup.  We don't have to worry if this custom element is being used in a framework, because even when the framework re-renders or updates the contents in the slot, it will automagically be reflected in the custom element.</p>
+
+<h2>An example of augmenting the provided slot contents</h2>
+
+<p>Case study time!  Let's say you're creating an accordion of sorts, and you want the consumer to be able to provide the content <strong>and</strong> the look of the button that will expand the content?  There are two considerations here.  First, we need to be able to specify where slots go when there are multiple slots.  Second, we need to be able to attach the click action to that consumer-provided element.</p>
+
+<h3>First: multiple slots</h3>
+
+<p>This is the easier part.  You can actually specify a name attribute for slots.  When you do, you can then tag the element you want to be reflected into that slot.  For example:</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-custom-element>
+      This content will go into the default slot
+      <p slot="second-slot">This element (the p tag) will go into the slot with name "second-slot"</p>
+    </my-custom-element>
+  </template>
+</code-highlight>
+
+<p>Examples are worth a thousand words:</p>
+
+{% include "./example3.html" %}
+
+<p>One really cool thing about slots is that you don't necessarilly have to have a custom element defined with a class to use slots.  Since slots are a feature of a shadow DOM you can actually create a declarative shadow DOM and place content in slots without a class!</p>
+
+{% include "./example4.html" %}
+
+<h2>Second: Attaching functionality to items in the slot</h2>
+
+<p>Okay, so we can create an accordion sketch here.  We'll use named slots to specify where the content should be rendered.  Just for this example, we will accept basically anything for the "content" slot, but we will expect the consumer to know they must provide a clickable element like a button to toggle the accordion open and closed.</p>
+
+{% include "./example5.html" %}
+
+<p>In this first part the actual click event listener is on the <code>slot</code> element itself, and this is not going to fly for accessability.  Tabbing through the DOM you would end up with focus on the button and the click event would bubble up to the slot.  It's not accurate or ideal for accessibility reasons: one being that if you were to handle whether the accordion is expanded with <code>aria-expanded</code> attribute you would want it to be on the focused element- the button</p>
+
+<p>So let's try that again, but let's attach the attribute and the event listener on the button instead.  This will require digging into the shadow DOM and the slot!</p>
+
+{% include "./example6.html" %}
+
+<p>This is not perfect but <span class="decorate">much</span> better!  Let's break it down:</p>
+
+<ul>
+  <li>
+    <p>In <code>firstUpdated()</code> (when the dom is first created and rendered) we look into the slot using the <code>assignedNodes()</code> method on the slot in the shadow DOM.  This is the only way to access slotted content by traversing <strong>through</strong> a slot element.  This method allows us to inspect elements placed in the slot. We attach the click handler to the button itself, and set the aria attribute <code>aria-expanded</code>.</p>
+  </li>
+  <li>
+    <p>We then make sure that the <code>toggle()</code> method appropriately changes the state of <code>expanded</code> and updates the aria attribute correctly.</p>
+  </li>
+  <li>
+    <p>We make sure to clean up after ourself and remove the event listener in the <code>disconnectedCallback()</code> method.</p>
+  </li>
+</ul>
+
+<aside class="blue">
+  <p>You may have noticed that I set the toggle method as an arrow function.  The reason for this is that the arrow function preserves the <code>this</code> context of where it was defined (which in this case is the class.) I will often do this in handler functions that I add to event listeners from a class just for convenience.  If you want to read up on this, <a href="https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#the_value_of_this_within_the_handler">check this out!</a></p>
+</aside>
+
+<p>Now this example is a teensy bit contrived because it actually can be simplified in one way: instead of reaching into the slot and using the <code>assignedElements()</code> method, we can just adjust the getter to query the host element.  Remember that elements are rendered into the light DOM and then reflected into place in the shadow DOM?  Well, why don't we just edit the light DOM because it's easier to access?</p>
+
+{% include "./example7.html" %}
+
+<h3>But, there's an alternative to this dom drilling</h3>
+
+<p>We can leverage custom events instead of attaching handlers.</p>
+
+<p>If you don't like the feeling of modifying the elements that the consumer gives you (in this case, the trigger button,) you can also just make the component expect certain events.  In this next example, we'll let the consumer emit a custom event <code>"please-expand"</code> and the accordion will react to that:</p>
+
+{% include "./example7.5.html" %}
+
+<p>I'm not sure that's any better.  The downside to this is that you're expecting the consumer to handle aria attribute changes along with instructing the accordion to open, but maybe that's okay? In general you would expect a component to just take care of state and aria attributes, so this seems like the worse of the two options.  But it is an option!</p>
+
+<h2>Whew.  Let's zoom out about and talk about CSS</h2>
+
+<p>How about we chat about styling contents that were added into a slot?</p>
+
+<p>Let's say that you want to create a list of things.  For some reason, you want to add some spacing between all the elements in the slot.  There's a selector for that!</p>
+
+<code-highlight>
+  <template>
+    <style>
+      ::slotted(*) {
+        /* selects anything placed in a slot in this component! */
+      }
+      ::slotted(.some-class) {
+        /* ...can be combined with any selector! */
+      }
+      ::slotted([name="slot-name"]) {
+        /* selects only slotted elements with the slot name */
+      }
+    </style>
+  </template>
+</code-highlight>
+
+<p>Alright, so let's say that you accept any number of elements in your default slot.  But!  You want all those elements to have background blue and be spaced with an extra line-space between them.  You could do this:</p>
+
+{% include "./example8.html" %}
+
+<p>Note that <code>::slotted()</code> selects <em>any</em> direct child element that is in a slot. If you want to specify which slot to work with, you can use the <code>[name="..."]</code> as a selector inside the slotted function parens.  That is how the last slotted element turned orange in the above example.</p>
+
+<h2>One last item: watching change events in the slot</h2>
+
+<p>There may be a time when you need to watch for changes inside a slot, and react to those changes.  There's an event for that: <a href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement/slotchange_event">'slotchange'</a>.  This event will always run once when the component is connected and the slot contents are filled the first time.</p>
+
+<p>One important thing to note: this event will only be emitted if the direct child nodes of the slot change or are added or subtracted.  Any children or other descendants of the slotted node will not trigger this event. Check out the console after adding and removing nodes in the next playground.</p>
+
+{% include "./example9.html" %}
+
+<p>I think this is mostly so you can attach handlers and cleanup after yourself if you're programatically doing things to elements in the slots.  The annoying thing here is that text change or descendent nodes changing do not trigger this event.  If you really need control of mutations in the DOM at a finer level, you can use <a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver">MutationObserver</a></p>
+
+<h2>That about does it</h2>
+
+<p>Slots are very powerful and allow you to compose elements into your web components.  It allows you to give some control to your consumer.  However, it is still a bit awkward to give functionality to components in slots.</p>
+
+<p>What do you think?  Is there a pattern that's really nice that I didn't cover?  Let me know in the comments or on <a href="https://bsky.app/profile/jschof.bsky.social">bluesky!</a></p>

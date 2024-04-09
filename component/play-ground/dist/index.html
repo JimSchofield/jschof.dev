@@ -47,5 +47,27 @@
         </script>
       </template>
     </play-ground>
+
+    <play-ground
+      html='
+    <my-element>
+      Here is text being passed into the default slot!
+    </my-element>
+    <script type="module">
+      import {
+        LitElement, html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        render() {
+          return html`
+            <slot></slot>
+          `;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+     '></play-ground>
   </body>
 </html>

@@ -6,7 +6,7 @@ import prettierPluginEstree from "prettier/plugins/estree";
 import prettierPluginHtml from "prettier/plugins/html";
 import { EditorView, keymap, gutters, lineNumbers } from "@codemirror/view";
 import { basicSetup } from "codemirror";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { debounce } from "./util";
 import { defaultKeymap } from "@codemirror/commands";
 import { html as htmlLang } from "@codemirror/lang-html";
@@ -27,6 +27,9 @@ export class PlayGround extends LitElement {
   @state()
   docContents = "";
 
+  @property()
+  html = '';
+
   get template() {
     return this.querySelector("template");
   }
@@ -40,9 +43,7 @@ export class PlayGround extends LitElement {
       );
     }
 
-    const template = this.template?.innerHTML.trim();
-
-    const doc = await this.format(template);
+    const doc = await this.getTemplate();
 
     this.editorView = new EditorView({
       doc,
@@ -56,6 +57,18 @@ export class PlayGround extends LitElement {
       ],
       parent,
     });
+  }
+
+  private async getTemplate() {
+    if (this.html) {
+      return await this.format(this.html);
+    }
+
+    // Case where we check template
+    const template = this.template?.innerHTML.trim();
+    const doc = await this.format(template);
+
+    return doc;
   }
 
   async firstUpdated() {

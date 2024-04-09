@@ -1,0 +1,45 @@
+<play-ground>
+  <template>
+    <my-accordion>
+      <button slot="toggle-target">Toggle</button>
+      <div slot="content">
+        <p>This could be anything in the accordion content part!</p>
+        <img src="https://picsum.photos/200/300" />
+      </div>
+    </my-accordion>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyAccordion extends LitElement {
+        static properties = {
+          expanded: { type: Boolean, reflect: true },
+        };
+
+        toggle = () => {
+          this.expanded = !this.expanded;
+        };
+
+        render() {
+          return html`
+            <div>
+              <slot
+                name="toggle-target"
+                @click=${this.toggle}
+                style="display: flex; flex-direction: column; align-items: stretch"
+              ></slot>
+              <div .hidden=${!this.expanded}>
+                <slot name="content">
+              </div>
+            </div>
+          `;
+        }
+      }
+
+      customElements.define("my-accordion", MyAccordion);
+    </script>
+  </template>
+</play-ground>

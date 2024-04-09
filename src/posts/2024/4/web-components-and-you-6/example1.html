@@ -1,0 +1,28 @@
+<play-ground>
+  <template>
+    <my-element>
+      <p>Here is text being passed into the default slot!</p>
+    </my-element>
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        render() {
+          return html` <style>
+              div {
+                background: pink;
+              }
+            </style>
+            <div>
+              <slot></slot>
+            </div>`;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

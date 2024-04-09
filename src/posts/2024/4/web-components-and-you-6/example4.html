@@ -1,0 +1,15 @@
+<play-ground>
+  <template>
+    <my-element>
+      <template shadowrootmode="open.">
+        <p>First slot ➡️ <slot name="first"></slot></p>
+        <p>Second slot ➡️ <slot name="second"></slot></p>
+        <p>Default slot ➡️ <slot></slot></p>
+      </template>
+      This content will be in the default slot
+      <span slot="first">This will go first</span>
+      <span slot="second">This will go in the "second" slot</span>
+    </my-element>
+    
+  </template>
+</play-ground>

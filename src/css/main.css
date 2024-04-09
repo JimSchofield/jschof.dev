@@ -370,8 +370,10 @@ code-highlight {
 
   & pre {
     margin: 0;
+    width: 100%;
 
     & code.hljs {
+      width: 100%;
       line-height: 1.4;
       padding: 0.5rem 0.75rem;
       border: none;

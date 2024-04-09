@@ -1,0 +1,42 @@
+<play-ground>
+  <template>
+    <my-element>
+      <p>Test</p>
+    </my-element>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        slotChanged = (event) => {
+          console.log("Slot node changed!", event.target);
+        }
+
+        add = () => {
+          const newEl = document.createElement('p');
+          newEl.textContent = "New Element!"
+          this.appendChild(newEl)
+        }
+
+        subtract = () => {
+          this.childNodes[this.childNodes.length - 1].remove();
+        }
+
+        render() {
+          return html`
+            <div>
+              <slot @slotchange=${this.slotChanged}></slot>
+            </div>
+            <button @click=${this.add}>Add a node</button>
+            <button @click=${this.subtract}>Remove a node</button>
+          `;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

@@ -2,7 +2,7 @@ const dateFns = require("date-fns");
 const pluginSEO = require("eleventy-plugin-seo");
 const path = require("node:path");
 const fs = require("node:fs/promises");
-const highlightPlugin = require('./eleventy/highlight');
+const highlightPlugin = require("./eleventy/highlight");
 
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");

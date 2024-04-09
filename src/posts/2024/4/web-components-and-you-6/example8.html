@@ -1,0 +1,49 @@
+<play-ground>
+  <template>
+    <my-element>
+      <p>Thing 1</p>
+      <div>Thing 2</div>
+      <img src="https://picsum.photos/300/100" />
+      <p slot="example">example!</p>
+    </my-element>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+        css
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        static styles = css`
+          ::slotted(*) {
+            margin: 0;
+            background: cadetblue;
+          }
+          ::slotted(:not(:first-child)) {
+            /* could also have been ::slotted(* + *) */
+            margin-top: 1rem;
+          }
+          ::slotted([slot="example"]) {
+            background: orange;
+          }
+          `;
+         
+        render() {
+          return html`
+            <style>
+            </style>
+            <div>
+              <slot></slot>
+            </div>
+            <div>
+              <slot name="example"></slot>
+            </div>
+          `;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

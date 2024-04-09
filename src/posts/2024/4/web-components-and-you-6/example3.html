@@ -1,0 +1,26 @@
+<play-ground>
+  <template>
+    <my-element>
+      This content will be in the default slot
+      <span slot="first">This will go first</span>
+      <span slot="second">This will go in the "second" slot</span>
+    </my-element>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyElement extends LitElement {
+        render() {
+          return html`<p>First slot ➡️ <slot name="first"></slot></p>
+            <p>Second slot ➡️ <slot name="second"></slot></p>
+            <p>Default slot ➡️ <slot></slot></p>`;
+        }
+      }
+
+      customElements.define('my-element', MyElement);
+    </script>
+  </template>
+</play-ground>

@@ -20,6 +20,7 @@
   --carrot: #f79103;
   --raw-umber: #906b56;
   --teal: #376170;
+  --red: hsla(10, 97.6%, 49.02%, 1); /* Take from carrrot and adjusted hue */
 
   --gradient: linear-gradient(
     var(--gradient-angle, 132deg),
@@ -131,6 +132,27 @@ aside.blue {
 
   &::before {
     color: var(--teal);
+  }
+}
+
+aside.error {
+  border-color: var(--red);
+
+  & code {
+    padding: 1em 0;
+    border: none;
+  }
+  
+  &::before {
+    display: block;
+    position: absolute;
+    content: "Error!";
+    font-weight: 900;
+    top: 0;
+    left: 0;
+    color: red;
+    font-family: Avenir, Helvetica, sans-serif;
+    transform: rotate(-90deg) translate(-1em, calc(-100% - 0.8em));
   }
 }
 

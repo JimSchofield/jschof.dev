@@ -1,0 +1,40 @@
+<play-ground>
+  <template>
+    <style>
+    sl-dropdown { margin: 2rem 0; }
+    </style>
+    <div>
+      <sl-dropdown>
+        Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint
+        cillum sint consectetur cupidatat.
+        <button slot="trigger">This should work!</button>
+      </sl-dropdown>
+    </div>
+
+    <div>
+      <sl-dropdown>
+        Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum
+        sint consectetur cupidatat.
+        <my-closed-button slot="trigger">
+          Accessibility is broken :(
+        </my-closed-button>
+      </sl-dropdown>
+    </div>
+
+    <script type="module">
+      import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/components/dropdown/dropdown.js";
+
+      class MyClosedButton extends HTMLElement {
+        connectedCallback() {
+          const root = this.attachShadow({ mode: "closed" });
+
+          const button = document.createElement('button');
+          button.innerHTML = '<slot></slot>';
+          root.appendChild(button);
+        }
+      }
+
+      customElements.define("my-closed-button", MyClosedButton);
+    </script>
+  </template>
+</play-ground>

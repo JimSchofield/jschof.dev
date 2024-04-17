@@ -1,0 +1,25 @@
+<play-ground>
+  <template>
+    <my-closed-button>Wait... is it closed?</my-closed-button>
+
+    <script>
+      Element.prototype._attachShadow = Element.prototype.attachShadow;
+      Element.prototype.attachShadow = function (arg) {
+        return this._attachShadow({ ...arg, mode: "open" });
+      };
+    </script>
+    <script type="module">
+      class MyClosedButton extends HTMLElement {
+        connectedCallback() {
+          const root = this.attachShadow({ mode: "closed" });
+
+          const button = document.createElement("button");
+          button.innerHTML = "<slot></slot>";
+          root.appendChild(button);
+        }
+      }
+
+      customElements.define("my-closed-button", MyClosedButton);
+    </script>
+  </template>
+</play-ground>

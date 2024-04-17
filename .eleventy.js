@@ -32,6 +32,14 @@ module.exports = function (eleventyConfig) {
     },
   );
 
+  eleventyConfig.addShortcode(
+    "socials",
+    () => {
+      return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.bsky.social">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>.';
+    }
+  )
+
+
   eleventyConfig.addShortcode("joinPaths", function (...paths) {
     return path.join(...paths);
   });

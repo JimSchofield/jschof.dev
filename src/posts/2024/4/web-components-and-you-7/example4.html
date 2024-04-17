@@ -1,0 +1,33 @@
+<play-ground>
+  <template
+    ><link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/themes/light.css"
+    />
+    <sl-dialog label="Test Dialog" id="dialog">
+      <div style="border: 1px solid black">
+        <div><button>Normal button</button></div>
+        <div>Here is some content</div>
+        <div><my-closed-button>The dialog is unaware of me!</my-closed-button></div>
+        <div><input type="text" value="normal input" /></div>
+      </div>
+    </sl-dialog>
+    <button onclick="dialog.show()">Open</button>
+
+    <script type="module">
+      import "https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.15.0/cdn/components/dialog/dialog.js";
+
+      class MyClosedButton extends HTMLElement {
+        connectedCallback() {
+          const root = this.attachShadow({ mode: "closed" });
+
+          const button = document.createElement("button");
+          button.innerHTML = "<slot></slot>";
+          root.appendChild(button);
+        }
+      }
+
+      customElements.define("my-closed-button", MyClosedButton);
+    </script>
+  </template>
+</play-ground>

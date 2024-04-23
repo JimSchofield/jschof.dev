@@ -1,16 +1,21 @@
 import { LitElement, css, html } from "lit";
+
 import * as prettier from "prettier/standalone";
 import prettierPluginBabel from "prettier/plugins/babel";
 import prettierPluginCSS from "prettier/plugins/postcss";
 import prettierPluginEstree from "prettier/plugins/estree";
 import prettierPluginHtml from "prettier/plugins/html";
+
 import { EditorView, keymap, gutters, lineNumbers } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { customElement, property, state } from "lit/decorators.js";
-import { debounce } from "./util";
 import { defaultKeymap } from "@codemirror/commands";
 import { html as htmlLang } from "@codemirror/lang-html";
 import { indentWithTab } from "@codemirror/commands";
+
+import { foldCode } from "@codemirror/language";
+
+import { debounce } from "./util";
 
 const plugins = [
   prettierPluginBabel,
@@ -28,7 +33,10 @@ export class PlayGround extends LitElement {
   docContents = "";
 
   @property()
-  html = '';
+  html = "";
+
+  @property()
+  fold = "";
 
   get template() {
     return this.querySelector("template");
@@ -56,6 +64,27 @@ export class PlayGround extends LitElement {
         EditorView.updateListener.of(this.debouncedHandleDocUpdate),
       ],
       parent,
+    });
+
+    if (!!this.fold) {
+      this.foldLines()
+    }
+  }
+
+  private foldLines() {
+    const folds = this.fold.split(",").map(n => Number.parseInt(n));
+
+    folds.forEach((line) => {
+      const fromLine = this.editorView.state.doc.line(line);
+
+      this.editorView.dispatch({
+        selection: {
+          anchor: fromLine.to,
+          head: fromLine.from,
+        },
+      });
+
+      foldCode(this.editorView);
     });
   }
 
@@ -96,7 +125,10 @@ export class PlayGround extends LitElement {
 
     // Allows us to stop eager parsing of declarative shadow dom
     // so we can use declarative shadow doms in our examples :)
-    const res = newDoc.replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+    const res = newDoc.replace(
+      `shadowrootmode="open."`,
+      `shadowrootmode="open"`,
+    );
 
     this.docContents = res;
   };
@@ -117,7 +149,7 @@ export class PlayGround extends LitElement {
           </button>
         </div>
         <iframe
-          sandbox="allow-scripts"
+          sandbox="allow-scripts allow-forms"
           id="view"
           srcdoc=${this.docContents || "<!DOCTYPE html><p>Loading...</p>"}
         ></iframe>

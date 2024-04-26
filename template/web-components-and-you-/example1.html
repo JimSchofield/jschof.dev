@@ -1,0 +1,25 @@
+<play-ground>
+  <template>
+    <my-element></my-element>
+    <script type="module">
+      class MyElement extends HTMLElement {
+        #shadowRoot;
+
+        connectedCallback() {
+          this.#shadowRoot = this.attachShadow({ mode: "closed"});
+
+          const div = document.createElement('div');
+          div.innerText = "Here is the closed DOM!";
+          this.#shadowRoot.appendChild(div);
+        }
+
+        someMethod() {
+          // Now can reference the closed shadow DOM since we've manually stored it
+          return this.#shadowRoot;
+        }
+      }
+
+      customElements.define("my-element", MyElement);
+    </script>
+  </template>
+</play-ground>

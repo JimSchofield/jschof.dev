@@ -1,0 +1,65 @@
+<play-ground>
+  <template>
+    <form id="myForm">
+      <my-text-input id="myTextInput" name="my-text-input">
+        <div slot="label">Label:</div>
+      </my-text-input>
+      <button type="button">Submit</button>
+    </form>
+    <br />
+    <label for="checkbox">Disable input</label>
+    <input type="checkbox" id="checkbox" />
+
+    <style>
+      my-text-input:disabled {
+        background: gray;
+      }
+    </style>
+
+    <script>
+      checkbox.addEventListener("input", () => {
+        myTextInput.disabled = !myTextInput.disabled;
+      });
+    </script>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyTextInput extends LitElement {
+        static shadowRootOptions = {
+          ...LitElement.shadowRootOptions,
+          delegatesFocus: true,
+        };
+
+        static properties = {
+          disabled: { type: Boolean, reflect: true },
+        };
+
+        static formAssociated = true;
+
+        _internals = this.attachInternals();
+
+        setFormValue = (inputEvent) => {
+          this._internals.setFormValue(inputEvent.target.value);
+        };
+
+        render() {
+          return html`
+            <label for="text-input"><slot name="label"></slot></label>
+            <input
+              .disabled=${this.disabled}
+              type="text"
+              id="text-input"
+              @input=${this.setFormValue}
+            />
+          `;
+        }
+      }
+
+      customElements.define("my-text-input", MyTextInput);
+    </script>
+  </template>
+</play-ground>

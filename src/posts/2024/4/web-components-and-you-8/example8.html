@@ -1,0 +1,59 @@
+<play-ground fold="16,25">
+  <template>
+    <form id="myForm">
+      <my-text-input id="myTextInput" name="my-text-input">
+        <div slot="label">Label:</div>
+      </my-text-input>
+      <button type="button">Submit</button>
+    </form>
+    <br />
+    <button id="button">Invalidate the component!</button>
+
+    <style>
+    my-text-input:invalid {
+      outline: 4px solid red;
+    }
+    </style>
+
+    <script>
+      button.addEventListener('click', () => {
+        myTextInput._internals.setValidity(
+          { customError: true },
+          "making our component invalid!",
+        );
+      })
+    </script>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyTextInput extends LitElement {
+        static shadowRootOptions = {
+          ...LitElement.shadowRootOptions,
+          delegatesFocus: true,
+        };
+
+        static formAssociated = true;
+
+        _internals = this.attachInternals();
+
+        setFormValue = (inputEvent) => {
+          this._internals.setFormValue(inputEvent.target.value);
+        };
+
+        render() {
+          return html`
+            <slot></slot>
+            <label for="text-input"><slot name="label"></slot></label>
+            <input type="text" id="text-input" @input=${this.setFormValue} />
+          `;
+        }
+      }
+
+      customElements.define("my-text-input", MyTextInput);
+    </script>
+  </template>
+</play-ground>

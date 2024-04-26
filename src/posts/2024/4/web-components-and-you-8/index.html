@@ -1,0 +1,196 @@
+---
+title: "Web Components and You (part 8): Making a form element web component!"
+excerpt: "We can create form elements with our new web components, but we need to do a few new things: attach internals, handle focus delegation, and register the component as a bona fide form element with a value.  It's pretty simple once you get into it- let's make a special text component as an example."
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-04-26
+---
+
+<h1>Web Components and You (part 8): Making a form element web component!</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  One thing you may notice while building web components is that once you put a
+  form input in the shadow DOM it doesn't get automatically recognized by the
+  form it might be in. Also, it doesn't seem to enjoy the priviledges of form
+  elements, like <code>:disabled</code> or <code>:valid</code> CSS psuedo
+  selectors
+</p>
+
+<p>
+  Below is an example of what I'm talking about. We would expect that the value
+  of the input would be in the formData, but it isn't! There's not even an entry
+  with an empty value- the component is not even part of the form's
+  consideration.
+</p>
+
+{% include "./example1.html" %}
+
+<p>
+  You'll see the form data appended to the DOM as JSON in this example, but
+  there's nothing in the form data! Contrast this with a plain old text element
+  example below. Here the containing form handles the form element's value and
+  adds it to the form data of the form:
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  So can we have web components as form elements? <strong>Yes!</strong> and it's
+  not too difficult to get them set up. In this article I want to discuss:
+</p>
+
+<ol>
+  <li>
+    How to register a web component as a form element and attach "internals"
+  </li>
+  <li>How to report values to be included in form data</li>
+  <li>How to hook into custom validations with internals</li>
+</ol>
+
+<h2>Configuring a web component to participate in form stuffs</h2>
+
+<p>
+  It's really easy to configure a web component to participate in forms. I think
+  the actual way to do this is not documented all that well. Here are the three
+  things you need to do to make a web component play nicely with a form and form
+  data:
+</p>
+
+<ol>
+  <li>
+    Set a static property <code>formAssociated</code> on the web component class
+    and set that property to <code>true</code>.
+  </li>
+  <li>
+    Attach internals using <code>this.attachInternals()</code> in the
+    constructor, saving the return value to a property on the class. In my
+    examples I do this by instantiating a property directly, but this is just
+    shorthand for doing it in the constructor.
+  </li>
+  <li>
+    Lastly, and the most complicated, you must update the form value manually
+    that you want stored in the form data. Here we are looking for an
+    <code>input</code> event on the input element and then manually calling
+    <code>setFormValue</code> off of our internals property.
+  </li>
+</ol>
+
+<p>
+  You'll notice that the "key" that this value is saved under in the form data
+  is whatever name the component was given with the <code>name</code> attribute.
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  But this may not be enough. At this point, the web component doesn't have a
+  <code>value</code> property to set or get the value of the text input!
+</p>
+
+<p>
+  We should probably have the web component manage some state when the value
+  changes in the text input. Here's one way to do this with Lit:
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  So why did we add the <code>updated()</code> method and update the form values
+  there? If we were to update the form values only in the
+  <code>setValue()</code> method, any form value changes that were done
+  programatically wouldn't update the form! If someone queried this web
+  component and set the value, the form wouldn't know. So we set up the form to
+  update any time the component updates and <code>value</code> changes.
+</p>
+
+<h2>Focus management</h2>
+
+<p>
+  Ideally, the form should interact with our web component as a black box. The
+  form shouldn't have to reach into the web component to focus the right area.
+  You want your text box to be selected if the web component is clicked. For
+  example, in the following web component we don't have this. If we click the
+  text that is part of the web component (not the label,) it doesn't focus on
+  the pertinent input box.
+</p>
+
+<p>
+  Along with this issue, if we programatically try to focus the web component
+  itself, it doesn't automatically focus on the the pertinent input box. Check
+  it out by clicking the focus button below:
+</p>
+
+{% include "./example5.html" %}
+
+<p>
+  This is why <code>delegatesFocus</code> exists. Setting this to be true on a
+  custom element allows automatic implementation of <code>focus</code> and
+  <code>blur</code> methods for your web component. This is a shadow DOM
+  property, so in LitJS you need to set this using the
+  <code>shadowRootOptions</code> static property:
+</p>
+
+{% include "./example6.html" %}
+
+<p>
+  Yay! Now the web component acts like a form element. The values are reported
+  to the form data, calling <code>focus()</code> or <code>blur()</code> should
+  work, and clicking on the component should correctly focus the first focusable
+  element.
+</p>
+
+<h2>Validity</h2>
+
+<p>
+  The component can now also participate in form states like "valid" or
+  "invalid"! The easiest way to see this is to manually invalidate the component
+  state, and then see that <code>:invalid</code> CSS is triggered:
+</p>
+
+{% include "./example7.html" %}
+
+<p>
+  If you take away the form associated flag on line 37, you'll notice that the
+  component invalidation no longer triggers.
+</p>
+
+<p>
+  You might also notice that both the web component and the form have the style
+  for <code>:invalid</code>. This is because the form validity is dependent on
+  the validity of each of its registered components. If your web component is
+  invalid, the form overall will be invalid too!
+</p>
+
+<p>You can easily make only your component invalid by chaning the style:</p>
+
+{% include "./example8.html" %}
+
+<h2>Form related psuedo-selectors for CSS</h2>
+
+<p>
+  We get a lot of other nice psuedo-selectors for free! This includes
+  <code>:disabled</code>, <code>:read-only</code>, <code>:required</code>, etc!
+</p>
+
+<p>
+  Here's an example of a disabled web component with
+  <code>:disabled</code> working. Note that we needed to wire up a disabled
+  property on the web component to make the text input disabled internally:
+</p>
+
+{% include "./example9.html" %}
+
+<h2>We have first-class form web components!</h2>
+
+<p>
+  Hopefully that fills in the blanks and will help when making form components.
+</p>
+
+<p>
+  What do you think? Is there something I missed? Am I just plain wrong? {%
+  socials %}
+</p>

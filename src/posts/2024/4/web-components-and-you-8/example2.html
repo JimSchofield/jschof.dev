@@ -1,0 +1,24 @@
+<play-ground>
+  <template>
+    <form id="myForm">
+      <div>
+        <label for="text-input">Label:</label>
+        <input type="text" id="text-input" name="my-text-input" />
+      </div>
+      <button type="submit">Submit</button>
+    </form>
+    <div>Form data entries:</div>
+    <pre id="output"></pre>
+
+    <script>
+      const formDataAsJSON = (form) =>
+        JSON.stringify([...new FormData(myForm).entries()], null, 2);
+
+      // When we submit, add the form data to the dom to see it
+      myForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        output.innerText = formDataAsJSON(myForm);
+      });
+    </script>
+  </template>
+</play-ground>

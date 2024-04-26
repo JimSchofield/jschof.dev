@@ -1,0 +1,44 @@
+<play-ground>
+  <template>
+    <form id="myForm">
+      <my-text-input id="myTextInput" name="my-text-input">
+        <p>Some text to click on</p>
+        <div slot="label">Label:</div>
+      </my-text-input>
+      <button type="button">Submit</button>
+    </form>
+    <br/>
+    <button onclick="myTextInput.focus()">Focus on the web component</button>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyTextInput extends LitElement {
+        static formAssociated = true;
+
+        _internals = this.attachInternals();
+
+        setFormValue = (inputEvent) => {
+          this._internals.setFormValue(inputEvent.target.value);
+        }
+
+        render() {
+          return html`
+            <slot></slot>
+            <label for="text-input"><slot name="label"></slot></label>
+            <input
+              type="text"
+              id="text-input"
+              @input=${this.setFormValue}
+            />
+          `;
+        }
+      }
+
+      customElements.define("my-text-input", MyTextInput);
+    </script>
+  </template>
+</play-ground>

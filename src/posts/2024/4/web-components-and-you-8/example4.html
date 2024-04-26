@@ -1,0 +1,69 @@
+<play-ground fold="10">
+  <template>
+    <form id="myForm">
+      <my-text-input name="my-text-input">
+        <div slot="label">Label:</div>
+      </my-text-input>
+      <button type="submit">Submit</button>
+    </form>
+    <div>Form data entries:</div>
+    <pre id="output"></pre>
+
+    <script>
+      const formDataAsJSON = (form) =>
+        JSON.stringify([...new FormData(myForm).entries()], null, 2);
+
+      // When we submit, add the form data to the dom to see it
+      myForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        output.innerText = formDataAsJSON(myForm);
+      });
+    </script>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyTextInput extends LitElement {
+        static formAssociated = true;
+
+        static properties = {
+          value: {},
+        }
+
+        _internals = this.attachInternals();
+
+
+        setFormValue = (inputEvent) => {
+          const { value } = inputEvent.target;
+
+          // Set the value as a publicly available property
+          this.value = value;
+        }
+
+        updated(changes) {
+          if (changes.has('value')) {
+            // if value changes, let's update the form value
+            this._internals.setFormValue(this.value);
+          }
+        }
+
+        render() {
+          return html`
+            <label for="text-input"><slot name="label"></slot></label>
+            <input
+              type="text"
+              id="text-input"
+              .value=${this.value || ''}
+              @input=${this.setFormValue}
+            />
+          `;
+        }
+      }
+
+      customElements.define("my-text-input", MyTextInput);
+    </script>
+  </template>
+</play-ground>

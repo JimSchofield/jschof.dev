@@ -1,0 +1,52 @@
+<play-ground fold="13">
+  <template>
+    <div>
+      <my-input>
+        <span slot="label">Here's a slotted label</span>
+      </my-input>
+    </div>
+
+    <script type="module">
+      import {
+        LitElement,
+        css,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      const styles = css`
+        :host {
+          margin: 0.5em;
+          display: flex;
+          gap: 1ch;
+        }
+        ::slotted(*) {
+          background: pink;
+        }
+      `;
+
+      class MyInput extends LitElement {
+        static styles;
+
+        static properties = {
+          label: {},
+        };
+
+        onLabelSlotChange = (event) => {
+          console.log("Event from slotchange:", event);
+          console.log(event.target.assignedNodes());
+        };
+
+        render() {
+          return html`
+            <label for="text-input">
+              <slot name="label" @slotchange=${this.onLabelSlotChange}></slot>
+            </label>
+            <input type="text" id="text-input" />
+          `;
+        }
+      }
+
+      customElements.define("my-input", MyInput);
+    </script>
+  </template>
+</play-ground>

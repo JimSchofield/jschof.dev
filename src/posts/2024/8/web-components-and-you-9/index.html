@@ -1,0 +1,144 @@
+---
+title: "Web Components and You (part 9): Handling empty slots"
+excerpt: "Sometimes you want to check the contents of slots in the shadow DOM and conditionally do things based on what's in them.  Can you do this with slots?  Yes!  It's a little strange though..."
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-08-12
+image: coast.webp
+---
+
+<h1>Web Components and You (part 9): Handling empty slots</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  You won't go very far building web components until you reach an interesting
+  scenario: How do you tell when a slot has stuff in it?
+</p>
+
+<p>Here's an example:</p>
+
+{% include "./example1.html" %}
+
+<p>
+  Yes, you could say this is the user's fault. They provided both a slot and
+  attribute.
+  <a href="https://en.wikipedia.org/wiki/Robustness_principle"
+    >But can't we be more liberal in what we expect from others</a
+  >
+  and help guard against these cases?
+</p>
+
+<p>
+  In order to do that we would need to know if there is content in the slot.
+  Basically,
+  <span class="decorate"
+    >if both are supplied, we should defer to the slot</span
+  >
+</p>
+
+<h2>The <code>slotchange</code> event</h2>
+
+<p>
+  We have a tool from the shadow DOM api:
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/HTMLSlotElement/slotchange_event"
+    >the slotchange event</a
+  >. The event is triggered when content is placed in the slot, and when those
+  <strong>immediate</strong> nodes in the slot changes. (If you change the
+  great-great grandchild nodes of the slot elements, no event fires)
+</p>
+
+<p>So let's see this in action!</p>
+
+{% include "./example2.html" %}
+
+<p>
+  Check out the console, and you'll see an event logged out, and something
+  called <code>assignedNodes()</code> logged as well:
+</p>
+
+<img src="slotchange-event.png" />
+
+<p>
+  Without doing anything except placing a span in this slot, we see that the
+  slotchange event was triggered. The way I think of it is that the following
+  happens in order:
+</p>
+
+<ol>
+  <li>The component is constructed</li>
+  <li>The component is connected with the DOM</li>
+  <li>The span element is rendered inside the "light dom" of our component</li>
+  <li>The span is reflected into the slot in the shadow DOM</li>
+  <li>The event <code>slotchange</code> is triggered</li>
+</ol>
+
+<p>
+  I can't <em>promise</em> this is what's happening under the hood, but it makes
+  a pretty dang good mental model. And it also "explains" why the slotchange
+  fires even though we haven't dynamically changed anything.
+</p>
+
+<p>
+  The other cool thing here is that the "assigned nodes" are basically all the o
+  nodes reflected into that slot. So, it's easy enough for us to check what we
+  need in that slot!
+</p>
+
+<h2>So how do we "check" the contents and adjust?</h2>
+
+<p>
+  The strategy is straightforward once you know how to inspect that slot. We're
+  going to make a reactive state property <code>hasLabelContents</code>, and if
+  there's stuff in the slot we record it in that state. Then, we render out what
+  we need to with logic pertaining to that state.
+</p>
+
+<p>Here we go!</p>
+
+{% include "./example3.html" %}
+
+<p>
+  There we have it. The component checks the slot, toggles a state property, and
+  you can decide what to render from there
+</p>
+
+<h2>But there are some gotchas...</h2>
+
+<p>
+  Unfortunately, you can do slots conditionally. Say, for example, you wanted to
+  show a slot only if there are items in that slot. Well, you enter a kind of
+  catch 22 there. If the slot is not on the DOM the slotchange won't happen. But
+  even if you try to default showing the slot to trigger the event to not show
+  the slot, you'll see that it doesn't work:
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  You might think that the second instance would render the slot, the slotchange
+  event would trigger, the slot would appear empty, and then the alternate value
+  of the ternary would show. Sadly, this just isn't the case. In the second
+  instance the slotchange event never fires. And I think this is because there
+  is never content reflected into the slot.
+</p>
+
+<p>
+  There's a workaround, but I don't recommend it. If you use
+  <code>firstUpdated</code> and check the slot contents in that lifecycle
+  method, you can correctly render what you want with a ternary, but
+  <span class="decorate">only on the first render.</span> If state changes or a
+  slot gets added, it may or may not update correctly depending on the
+  situation.
+</p>
+
+{% include "./example5.html" %}
+
+<h2>That's all for now!</h2>
+
+<p>
+  Hopefully that helps answer how to detect when a slot is empty. {% socials %}
+</p>

@@ -123,10 +123,6 @@ aside {
   }
 }
 
-ul {
-  padding-inline-start: 1.5rem;
-}
-
 aside.blue {
   border-color: var(--teal);
 
@@ -154,6 +150,19 @@ aside.error {
     font-family: Avenir, Helvetica, sans-serif;
     transform: rotate(-90deg) translate(-1em, calc(-100% - 0.8em));
   }
+}
+
+aside.shadow {
+  padding: 1em;
+  border-color: var(--gunmetal);
+
+  &::before {
+    content:""
+  }
+}
+
+ul {
+  padding-inline-start: 1.5rem;
 }
 
 hr {

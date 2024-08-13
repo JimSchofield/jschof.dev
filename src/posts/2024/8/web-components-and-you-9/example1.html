@@ -1,0 +1,49 @@
+<play-ground>
+  <template>
+    <my-input>
+      <span slot="label">Here's a slotted label</span>
+    </my-input>
+    <my-input label="Here's an attribute label"></my-input>
+    <my-input label="Here's both!">
+      <span slot="label">Attribute and slot</span>
+    </my-input>
+
+    <script type="module">
+      import {
+        LitElement,
+        css,
+        html
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyInput extends LitElement {
+        static styles = css`
+          :host {
+            margin: .5em;
+            display: flex;
+            gap: 1ch;
+          }
+
+          ::slotted(*) {
+            background: pink;
+          }
+        `;
+
+        static properties = {
+          label: {},
+        }
+
+        render() {
+          return html`
+            <label for="text-input">
+              <slot name="label"></slot>
+              ${this.label}
+            </label>
+            <input type="text" id="text-input" />
+          `;
+        }
+      }
+
+      customElements.define("my-input", MyInput);
+    </script>
+  </template>
+</play-ground>

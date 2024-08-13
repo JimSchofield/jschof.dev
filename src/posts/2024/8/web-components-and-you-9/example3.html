@@ -1,0 +1,57 @@
+<play-ground>
+  <template>
+    <div>
+      <my-input label="This shouldn't show...">
+        <span slot="label">Here's a slotted label</span>
+      </my-input>
+    </div>
+    <div>
+      <my-input label="This _should_ show!"> </my-input>
+    </div>
+
+    <script type="module">
+      import {
+        LitElement,
+        css,
+        html,
+        nothing,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyInput extends LitElement {
+        static styles = css`
+          :host {
+            margin: 0.5em;
+            display: flex;
+            gap: 1ch;
+          }
+          ::slotted(*) {
+            background: pink;
+          }
+        `;
+
+        static properties = {
+          label: {},
+          hasLabelContents: { state: true },
+        };
+
+        onLabelSlotChange = (event) => {
+          const assignedNodes = event.target.assignedNodes();
+
+          this.hasLabelContents = assignedNodes.length > 0;
+        };
+
+        render() {
+          return html`
+            <label for="text-input">
+              <slot name="label" @slotchange=${this.onLabelSlotChange}></slot>
+              ${this.hasLabelContents ? nothing : this.label}
+            </label>
+            <input type="text" id="text-input" />
+          `;
+        }
+      }
+
+      customElements.define("my-input", MyInput);
+    </script>
+  </template>
+</play-ground>

@@ -24,7 +24,7 @@ layout: index
                         {% prettyDate post.date %}
                     </div>
                     <div class="card__excerpt">
-                        {{post.data.description}}
+                        {{post.data.excerpt}}
                     </div>
                 </div>
             </a>

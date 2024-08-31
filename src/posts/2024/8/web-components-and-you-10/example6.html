@@ -1,0 +1,104 @@
+<play-ground fold="16">
+  <template>
+    <my-list>
+      <another-shadow-dom slot="controls">
+        <template shadowrootmode="open.">
+          <my-input></my-input>
+          <my-button></my-button>
+        </template>
+      </another-shadow-dom>
+    </my-list>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyList extends LitElement {
+        static properties = {
+          filterTerm: { attribute: "filter-term", default: "" },
+          data: { state: true },
+        };
+
+        data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
+
+        get filteredData() {
+          return this.filterTerm
+            ? this.data.filter((word) => word.includes(this.filterTerm))
+            : this.data;
+        }
+
+        // new public method!
+        reverseData = () => {
+          this.data.reverse();
+          this.requestUpdate();
+        };
+
+        render() {
+          return html`
+            <slot name="controls"></slot>
+            <ul>
+              ${this.filteredData.map((el) => html`<li>${el}</li>`)}
+            </ul>
+          `;
+        }
+      }
+
+      function closestThroughShadowDOMs(node, selector) {
+        if (!node) {
+          return null;
+        }
+
+        if (node instanceof ShadowRoot) {
+          return closestThroughShadowDOMs(node.host, selector);
+        }
+
+        if (node instanceof HTMLElement) {
+          if (node.matches(selector)) {
+            return node;
+          } else {
+            return closestThroughShadowDOMs(node.parentNode, selector);
+          }
+        }
+
+        return closestThroughShadowDOMs(node.parentNode, selector);
+      }
+
+      class MyInput extends LitElement {
+        setParentFilterWord = (word) => {
+          closestThroughShadowDOMs(this, "my-list")?.setAttribute("filter-term", word);
+        };
+
+        render() {
+          return html`
+            <label for="filter-text">Input text to filter list with:</label>
+            <input
+              id="filter-text"
+              type="text"
+              @input=${(e) =>
+                (this.text = this.setParentFilterWord(e.target.value))}
+            />
+          `;
+        }
+      }
+
+      class MyButton extends LitElement {
+        render() {
+          return html`
+            <button
+              type="button"
+              @click=${() => closestThroughShadowDOMs(this, "my-list")?.reverseData()}
+            >
+              Reverse list
+            </button>
+          `;
+        }
+      }
+
+      customElements.define("my-list", MyList);
+      customElements.define("my-input", MyInput);
+      customElements.define("my-button", MyButton);
+    </script>
+  </template>
+</play-ground>

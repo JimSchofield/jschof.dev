@@ -1,0 +1,175 @@
+---
+title: "Web Components and You (part 10): Provider patterns"
+excerpt: "Web components are by default pretty isolated.  There are some nice patterns to start sharing state and actions among web components.  This article explores the 'provider' pattern"
+layout: post
+tags:
+  - posts
+  - web-components
+date: 2024-08-31
+---
+
+<h1>Web Components and You (part 10): Provider Patterns</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  You won't go very far building web components before you realize that
+  sometimes components need to be aware of each other. This could be to pass and
+  react to state changes, for contextual information, or to send actions or
+  execute methods.
+</p>
+
+<p>There's a few strategies to do this:</p>
+
+<ul>
+  <li>
+    <a href="#dom-methods"
+      >Using good ol' fashioned DOM methods to find parents</a
+    >
+  </li>
+  <li><a href="#events-to-get-providers">Utilizing events</a></li>
+  <li>Using a provider pattern</li>
+  <li>Using <code>context</code> (in this case, lit context!)</li>
+</ul>
+
+<h2 id="dom-methods">Using parents and ancestors directly to communicate</h2>
+
+<p>
+  Let's say that you have an input that acts as a text filter for a list. This
+  list is a component in the ancestor list of your button. So we have this
+  relationship: <code>my-list</code> &gt; <code>my-input</code>
+</p>
+
+<p>
+  In framework land, we pass functions to children as props, and this is all
+  fine and dandy in framework land. In the DOM, though, we can't do this
+  declaratively. We can only pass attributes or string values in attributes. So
+  how are we to pass functionality?
+</p>
+
+<p>
+  One option is for the filter list to reach out to its parent explicitly, and
+  run a <code>filterByText</code> method that the parent makes available
+  publicly. The button can use normal DOM traversal, in this case
+  <code>this.parent</code> and just call the method by that reference.
+</p>
+
+<p>Here's the contrived example in action:</p>
+
+{% include "./example1.html" %}
+
+<p>
+  In this case, we didn't provide a method. We provided a public property that
+  the list would react to. Could we have called a method? Certainly. Check this
+  out:
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  Isn't this nice? These components are nicely composed and work with each other
+  by just reaching out to each other through <code>parentElement</code>. And
+  yes, they are tightly coupled, but that is expected in this API. We could
+  always spend some time using something like
+  <a href="https://github.com/sindresorhus/ow">ow</a> to validate components are
+  allowed in that control slot.
+</p>
+
+<p>
+  But there's an issue... what if there are some layers between the the controls
+  and the parent provider? We can't just use <code>parentElement</code>
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  Oh noes! how can it break that easily? The answer is that
+  <code>parentElement</code> is probably not the best way to find the parent
+  provider. There maby be a million divs between these consumers and the
+  provider. So what about instead we use <code>closest(parent-selector)</code>?
+</p>
+
+{% include "./example4.html" %}
+
+<p>Yay! It works again! We've covered the edge cases, right?</p>
+
+<p>
+  Nope, sorry. Take a look here where the consumers (the button and input) are
+  in an additional layer of shadow DOMs.
+</p>
+
+{% include "./example5.html" %}
+
+<p>
+  We have another situation where this ain't going to cut it. If we are nested
+  in multiple levels of shadow DOMs, <code>closest</code> is not going to
+  correctly find our parent provider. The reason is that you need special logic
+  to "rise out of" shadow DOMs and keep searching up the DOM tree.
+</p>
+
+<p>
+  There is a function you can use instead of closest to recursively search back
+  up the tree:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function closestThroughShadowDOMs(node, selector) {
+        if (!node) {
+          return null;
+        }
+
+        if (node instanceof ShadowRoot) {
+          return closestThroughShadowDOMs(node.host, selector);
+        }
+
+        if (node instanceof HTMLElement) {
+          if (node.matches(selector)) {
+            return node;
+          } else {
+            return closestThroughShadowDOMs(node.parentNode, selector);
+          }
+        }
+
+        return closestThroughShadowDOMs(node.parentNode, selector);
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  So <span class="decorate">FINALLY</span> we have something that is somewhat
+  robust:
+</p>
+
+{% include "./example6.html" %}
+
+<aside class="blue">
+  <p>
+    You might be thinking, "Jim, this is super contrived. When are we going to
+    have shadow DOMs nested in shadow DOMs in slots like this?"
+  </p>
+
+  <p>
+    And you might be right. This is covering some pretty extreme edge cases. But
+    in my experience in the past year and a half of working with web components
+    to build libraries and apps, this <strong>does</strong> come up and it comes
+    up frequently. This is part of the reason libraries like shoelace have these
+    <a
+      href="https://github.com/shoelace-style/shoelace/blob/77d7ce5f2fc87121c7f7b0e5e3e09fbdc48f587a/src/internal/tabbable.ts"
+      >complex shadow DOM traversal searches like this</a
+    >.
+  </p>
+
+  <p>So I'd say this workaround is actually quite "light!"</p>
+</aside>
+
+<p>
+  Alright, so that's how we can possibly get a provider. Using DOM methods. It's
+  worth looking next at using events instead. It may be a lot nicer!
+</p>
+
+<h2 id="events-to-get-providers">Using events</h2>
+
+<p>{% socials %}</p>

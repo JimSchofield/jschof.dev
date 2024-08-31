@@ -1,0 +1,72 @@
+<play-ground fold="42">
+  <template>
+    <my-list>
+      <my-input slot="controls"></my-input>
+      <my-button slot="controls"></my-button>
+    </my-list>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class MyList extends LitElement {
+        static properties = {
+          filterTerm: { attribute: "filter-term", default: '' },
+          data: { state: true }
+        }
+
+        data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
+
+        get filteredData() {
+          return this.filterTerm ? this.data.filter(word => word.includes(this.filterTerm)) : this.data;
+        }
+
+        // new public method!
+        reverseData = () => {
+          this.data.reverse();
+          this.requestUpdate();
+        }
+
+        render() {
+          return html`
+            <slot name="controls"></slot>
+            <ul>
+              ${this.filteredData.map((el) => html`<li>${el}</li>`)}
+            </ul>
+          `;
+        }
+      }
+
+      class MyInput extends LitElement {
+        setParentFilterWord = (word) => {
+          this.parentElement.setAttribute('filter-term', word);
+        }
+
+        render() {
+          return html`
+            <label for="filter-text">Input text to filter list with:</label>
+            <input
+              id="filter-text"
+              type="text"
+              @input=${(e) => (this.text = this.setParentFilterWord(e.target.value))}
+            />
+          `;
+        }
+      }
+
+      class MyButton extends LitElement {
+        render() {
+          return html`
+            <button type="button" @click=${() => this.parentElement.reverseData()}>Reverse list</button>
+          `;
+        }
+      }
+
+      customElements.define("my-list", MyList);
+      customElements.define("my-input", MyInput);
+      customElements.define("my-button", MyButton);
+    </script>
+  </template>
+</play-ground>

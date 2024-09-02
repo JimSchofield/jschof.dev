@@ -27,9 +27,15 @@ date: 2024-08-31
       >Using good ol' fashioned DOM methods to find parents</a
     >
   </li>
-  <li><a href="#events-to-get-providers">Utilizing events</a></li>
-  <li>Using a provider pattern</li>
-  <li>Using <code>context</code> (in this case, lit context!)</li>
+  <li>
+    <a href="#events-to-get-providers"
+      >Utilizing events to set up a provider pattern</a
+    >
+  </li>
+  <li>
+    <a href="#context-protocol">Context protocol for web components</a>
+  </li>
+  <li><a href="#lit-context">Using <code>context</code> (in this case, lit context!)</a></li>
 </ul>
 
 <h2 id="dom-methods">Using parents and ancestors directly to communicate</h2>
@@ -170,6 +176,115 @@ date: 2024-08-31
   worth looking next at using events instead. It may be a lot nicer!
 </p>
 
-<h2 id="events-to-get-providers">Using events</h2>
+<h2 id="events-to-get-providers">Using events to set up a provider pattern</h2>
 
-<p>{% socials %}</p>
+<p>
+  Events can bubble up and pass through shadow DOMs. Why don't we use those
+  instead?
+</p>
+
+<p>
+  Alright, so the idea here is that when a consumer renders, it will emit an
+  event that the provider will be listening for. When the provider hears this
+  event, they <strong>provide</strong> a reference of themselves to the callback
+  that the consumer sent along with the event. So the provider "provides" itself
+  to the consumer as a reference. Voila! No DOM searching.
+</p>
+
+{% include "./example7.html" %}
+
+<p>
+  You might say, why go through all the trouble of storing a reference to
+  <code>my-list</code>? Why not have the consumers just emit different events
+  for each action they need to do?
+</p>
+
+<p>
+  This is probably a matter of preference. I like how the consumers are provided
+  a reference to <code>my-list</code> and can do any of its public api because
+  they have a stored reference.
+</p>
+
+<p>Also, this is a leading example that leads us to...</p>
+
+<h2 id="context-protocol">Context protocol for Web Components</h2>
+
+<p>
+  This pattern that we just saw is basically how the W3C's Web Components
+  Community Group designed the
+  <a
+    href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md"
+    >web components context prototcol</a
+  >. Context is common thing in other frameworks, so this protocol provides a
+  standard for web components to basically have the same thing, but with vanilla
+  javascript!
+</p>
+
+<p>Here's how it works:</p>
+
+<ol>
+  <li>
+    A provider is listening for a 'context-request' event. This event should
+    provide a callback in which the provider should call with the provider's
+    context as the argument:
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          this.addEventListener("context-request", (event) => {
+            // We only want one context provider to respond
+            event.stopPropagation();
+
+            // Check to make sure the provider is giving the right context
+            if (event.detail.context === "our-context") {
+              event.detail.callback(context);
+            }
+          });
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+  <li>
+    The consumer dispatches an event when it connects to the DOM. In that event,
+    a callback function is passed that stores the context on the consumer's
+    instance.
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          function connectedCallback() {
+            this.dispatchEvent(
+              new CustomEvent("context-request", {
+                detail: {
+                  callback: (context) => {
+                    this.context = context;
+                  },
+                  // the particular context the consumer wants
+                  context: contextName,
+                },
+                bubbles: true,
+                composed: true,
+              }),
+            );
+          }
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+
+  <p>And then the consumer has a reference to the context!  There are some other details, like if the consumer can subscribe and react to changes, and how to actually type these kinds of things.  But basically, it's doing what we did in the last section.  The consumer requests something in an event, and the provider provides it!</p>
+</ol>
+
+<h2 id="lit-context">Using Lit's Context</h2>
+
+<p>Lucky us, Lit provides context to us.  In vanilla javascript, you have to use what's called a <a href="https://lit.dev/docs/data/context/#contextconsumer">context consumer reactive controller</a>.  Here's an example of a provider and consumer using Lit libraries:</p>
+
+{% include "./example8.html" %}
+
+<p>Admittedly, this is a bit weird.  We're using context to basically provide consumers with methods to change the list, when normally context in, for example the React world, is sharing out pure data.  You can store the list data in the context, but that felt a little strange to me, and there is one hiccup: consumers aren't able to update the value of the context directly through the context.</p>
+
+<p>So really this context is an API to work with <code>my-list</code>, which does feel alright, at least to me!</p>
+
+<h2>So there it is!</h2>
+
+<p>It was a long meandering path, but we looked at many ways to provide a context/api to children consumers.  We did it through dom traversal, solved an issue traversing through shadow DOMs, used custom events, and then finally used Lit's Context.</p>
+
+<p>So what do you think? {% socials %}</p>

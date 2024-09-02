@@ -50,7 +50,7 @@
             <input
               id="filter-text"
               type="text"
-              @input=${(e) => (this.text = this.setParentFilterWord(e.target.value))}
+              @input=${(e) => this.setParentFilterWord(e.target.value)}
             />
           `;
         }

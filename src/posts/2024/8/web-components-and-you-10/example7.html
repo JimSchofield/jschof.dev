@@ -1,4 +1,4 @@
-<play-ground fold="16">
+<play-ground fold="16, 92">
   <template>
     <my-list>
       <another-shadow-dom slot="controls">
@@ -23,6 +23,14 @@
 
         data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
 
+        constructor() {
+          super();
+
+          this.addEventListener("get-my-list", (event) => {
+            event.detail.callback(this);
+          });
+        }
+
         get filteredData() {
           return this.filterTerm
             ? this.data.filter((word) => word.includes(this.filterTerm))
@@ -45,32 +53,29 @@
         }
       }
 
-      function closestThroughShadowDOMs(node, selector) {
-        if (!node) {
-          return null;
-        }
-
-        if (node instanceof ShadowRoot) {
-          return closestThroughShadowDOMs(node.host, selector);
-        }
-
-        if (node instanceof HTMLElement) {
-          if (node.matches(selector)) {
-            return node;
-          } else {
-            return closestThroughShadowDOMs(node.parentNode, selector);
-          }
-        }
-
-        return closestThroughShadowDOMs(node.parentNode, selector);
+      function connectToMyList(host, callback) {
+        host.dispatchEvent(
+          new CustomEvent("get-my-list", {
+            detail: {
+              callback,
+            },
+            bubbles: true,
+            composed: true,
+          }),
+        );
       }
 
       class MyInput extends LitElement {
+        connectedCallback() {
+          super.connectedCallback();
+
+          connectToMyList(this, (myListEl) => {
+            this.myListEl = myListEl;
+          });
+        }
+
         setParentFilterWord = (word) => {
-          closestThroughShadowDOMs(this, "my-list")?.setAttribute(
-            "filter-term",
-            word,
-          );
+          this.myListEl.setAttribute("filter-term", word);
         };
 
         render() {
@@ -86,13 +91,17 @@
       }
 
       class MyButton extends LitElement {
+        connectedCallback() {
+          super.connectedCallback();
+
+          connectToMyList(this, (myListEl) => {
+            this.myListEl = myListEl;
+          });
+        }
+
         render() {
           return html`
-            <button
-              type="button"
-              @click=${() =>
-                closestThroughShadowDOMs(this, "my-list")?.reverseData()}
-            >
+            <button type="button" @click=${() => this.myListEl.reverseData()}>
               Reverse list
             </button>
           `;

@@ -1,4 +1,4 @@
-<play-ground fold="16">
+<play-ground>
   <template>
     <my-list>
       <another-shadow-dom slot="controls">
@@ -14,26 +14,43 @@
         LitElement,
         html,
       } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+      import {
+        createContext,
+        ContextProvider,
+        ContextConsumer,
+      } from "https://cdn.jsdelivr.net/npm/@lit/context@1.1.2/+esm";
+
+      const myListContext = createContext("my-list-context");
 
       class MyList extends LitElement {
         static properties = {
-          filterTerm: { attribute: "filter-term", default: "" },
-          data: { state: true },
+          filterTerm: { state: true },
         };
 
         data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
+
+        reverseData = () => {
+          this.data = this.data.reverse();
+          this.requestUpdate();
+        };
+
+        setFilterTerm = (term) => {
+          this.filterTerm = term;
+        };
+
+        #myListContext = new ContextProvider(this, {
+          context: myListContext,
+          initialValue: {
+            reverseData: this.reverseData,
+            setFilterTerm: this.setFilterTerm,
+          },
+        });
 
         get filteredData() {
           return this.filterTerm
             ? this.data.filter((word) => word.includes(this.filterTerm))
             : this.data;
         }
-
-        // new public method!
-        reverseData = () => {
-          this.data.reverse();
-          this.requestUpdate();
-        };
 
         render() {
           return html`
@@ -45,33 +62,8 @@
         }
       }
 
-      function closestThroughShadowDOMs(node, selector) {
-        if (!node) {
-          return null;
-        }
-
-        if (node instanceof ShadowRoot) {
-          return closestThroughShadowDOMs(node.host, selector);
-        }
-
-        if (node instanceof HTMLElement) {
-          if (node.matches(selector)) {
-            return node;
-          } else {
-            return closestThroughShadowDOMs(node.parentNode, selector);
-          }
-        }
-
-        return closestThroughShadowDOMs(node.parentNode, selector);
-      }
-
       class MyInput extends LitElement {
-        setParentFilterWord = (word) => {
-          closestThroughShadowDOMs(this, "my-list")?.setAttribute(
-            "filter-term",
-            word,
-          );
-        };
+        #myListContext = new ContextConsumer(this, { context: myListContext });
 
         render() {
           return html`
@@ -79,19 +71,21 @@
             <input
               id="filter-text"
               type="text"
-              @input=${(e) => this.setParentFilterWord(e.target.value)}
+              @input=${(e) =>
+                this.#myListContext.value.setFilterTerm(e.target.value)}
             />
           `;
         }
       }
 
       class MyButton extends LitElement {
+        #myListContext = new ContextConsumer(this, { context: myListContext });
+
         render() {
           return html`
             <button
               type="button"
-              @click=${() =>
-                closestThroughShadowDOMs(this, "my-list")?.reverseData()}
+              @click=${() => this.#myListContext.value.reverseData()}
             >
               Reverse list
             </button>

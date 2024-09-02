@@ -17,21 +17,23 @@
 
       class MyList extends LitElement {
         static properties = {
-          filterTerm: { attribute: "filter-term", default: '' },
-          data: { state: true }
-        }
+          filterTerm: { attribute: "filter-term", default: "" },
+          data: { state: true },
+        };
 
         data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
 
         get filteredData() {
-          return this.filterTerm ? this.data.filter(word => word.includes(this.filterTerm)) : this.data;
+          return this.filterTerm
+            ? this.data.filter((word) => word.includes(this.filterTerm))
+            : this.data;
         }
 
         // new public method!
         reverseData = () => {
           this.data.reverse();
           this.requestUpdate();
-        }
+        };
 
         render() {
           return html`
@@ -45,8 +47,8 @@
 
       class MyInput extends LitElement {
         setParentFilterWord = (word) => {
-          this.closest('my-list')?.setAttribute('filter-term', word);
-        }
+          this.closest("my-list")?.setAttribute("filter-term", word);
+        };
 
         render() {
           return html`
@@ -54,7 +56,7 @@
             <input
               id="filter-text"
               type="text"
-              @input=${(e) => (this.text = this.setParentFilterWord(e.target.value))}
+              @input=${(e) => this.setParentFilterWord(e.target.value)}
             />
           `;
         }
@@ -63,7 +65,12 @@
       class MyButton extends LitElement {
         render() {
           return html`
-            <button type="button" @click=${() => this.closest('my-list')?.reverseData()}>Reverse list</button>
+            <button
+              type="button"
+              @click=${() => this.closest("my-list")?.reverseData()}
+            >
+              Reverse list
+            </button>
           `;
         }
       }

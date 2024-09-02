@@ -11,13 +11,16 @@
       } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
 
       class MyList extends LitElement {
-        static properties = { filterTerm: { attribute: "filter-term", default: '' } }
+        static properties = {
+          filterTerm: { attribute: "filter-term", default: "" },
+        };
 
         data = ["apple", "banana", "car", "dog", "elephant", "froggy"];
 
         get filteredData() {
-
-          return this.filterTerm ? this.data.filter(word => word.includes(this.filterTerm)) : this.data;
+          return this.filterTerm
+            ? this.data.filter((word) => word.includes(this.filterTerm))
+            : this.data;
         }
 
         render() {
@@ -32,8 +35,8 @@
 
       class MyInput extends LitElement {
         setParentFilterWord = (word) => {
-          this.parentElement.setAttribute('filter-term', word);
-        }
+          this.parentElement.setAttribute("filter-term", word);
+        };
 
         render() {
           return html`
@@ -41,7 +44,7 @@
             <input
               id="filter-text"
               type="text"
-              @input=${(e) => (this.text = this.setParentFilterWord(e.target.value))}
+              @input=${(e) => this.setParentFilterWord(e.target.value)}
             />
           `;
         }

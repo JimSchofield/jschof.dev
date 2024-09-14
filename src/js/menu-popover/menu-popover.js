@@ -1,3 +1,6 @@
+// Deprecated.... just using css to handle
+
+
 export default class MenuPopover extends HTMLElement {
   connectedCallback() {
     this.handleWindowResize();

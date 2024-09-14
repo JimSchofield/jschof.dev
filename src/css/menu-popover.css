@@ -1,18 +1,10 @@
-.hide-while-booting {
-  opacity: 0;
+#menu {
+  display: none;
 }
 
-menu-popover {
-  position: relative;
-  display: flex;
-  gap: 4px;
-}
-
-
-#mobile-menu {
+#mobile-menu-popover {
   isolation: isolate;
   position: absolute;
-  top: 100%;
   right: 0;
   display: flex;
   flex-direction: column;
@@ -24,11 +16,14 @@ menu-popover {
   z-index: 1;
 
   transform-origin: top right;
-  transform: rotateX(60deg) scale3d(.8, .8, 1);
+  transform: rotateX(60deg) scale3d(0.8, 0.8, 1);
   opacity: 0;
   visibility: hidden;
 
-  transition: transform 300ms, opacity 300ms, visibility 300ms 1ms;
+  transition:
+    transform 300ms,
+    opacity 300ms,
+    visibility 300ms 1ms;
 
   & .button {
     width: 100%;
@@ -51,21 +46,33 @@ menu-popover {
     border-bottom-right-radius: 8px;
     border-bottom-left-radius: 8px;
   }
-}
 
-#mobile-menu.open {
-  transform: rotateX(0deg) scale3d(1, 1, 1);
-  opacity: 1;
-  visibility: visible;
+  &.open {
+    transform: rotateX(0deg) scale3d(1, 1, 1);
+    opacity: 1;
+    visibility: visible;
+  }
 }
 
 button.hamburger-button {
   display: flex;
   align-items: center;
   position: relative;
+  cursor: pointer;
 
   & svg {
     stroke: white;
     fill: white;
+  }
+}
+
+@media (width > 625px) {
+  #menu {
+    display: flex;
+    gap: 6px;
+  }
+
+  #mobile-menu {
+    display: none;
   }
 }

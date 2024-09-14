@@ -6,9 +6,28 @@
     <a href="/" class="site-title text-xxl gradient-text">Jschof.dev</a>
     {% endif %}
   </div>
-  <menu-popover class="hide-while-booting">
+  <div id="menu">
     <a class="button" href="/">Home</a>
     <a class="button" href="/posts">Posts</a>
     <a class="button" href="/about-me">About Jschof</a>
-  </menu-popover>
+  </div>
+  <div id="mobile-menu">
+    <button class="button hamburger-button" aria-haspopup="menu" aria-label="Toggle navigation menu">
+      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <g clip-path="url(#a)">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 6h18M3 12h18M3 18h18"></path>
+        </g>
+        <defs>
+          <clipPath id="a">
+            <path fill="#fff" d="M0 0h24v24H0z"></path>
+          </clipPath>
+        </defs>
+      </svg>
+    </button>
+    <div id="mobile-menu-popover" role="menu">
+      <a class="button" href="/">Home</a>
+      <a class="button" href="/posts">Posts</a>
+      <a class="button" href="/about-me">About Jschof</a>
+    </div>
+  </div>
 </nav>

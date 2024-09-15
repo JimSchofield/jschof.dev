@@ -1,0 +1,9 @@
+<quick-search>
+  {%- for post in collections.posts -%}
+  <search-option
+    value="{{post.data.title}}"
+    excerpt="{{post.data.excerpt}}"
+    categories="{{post.data.tags}}"
+  ></search-option>
+  {%- endfor -%}
+</quick-search>

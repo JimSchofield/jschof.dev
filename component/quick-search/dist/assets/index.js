@@ -95,6 +95,7 @@
 
     dialog {
       margin-top: 10vh;
+      height: auto;
       width: 80vw;
       max-width: 600px;
       max-height: 80vh;

@@ -2,17 +2,21 @@ import { LitElement, css, html } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
 import { when } from "lit/directives/when.js";
+import { map } from "lit/directives/map.js";
+
+import Fuse from "fuse.js";
 
 type Option = {
-  title: string,
-  excerpt?: string,
-  url: string,
-  categories: string[]
-}
+  title: string;
+  excerpt?: string;
+  url: string;
+  categories: string[];
+};
 
 @customElement("quick-search")
 export class QuickSearch extends LitElement {
   #dialog = createRef<HTMLDialogElement>();
+  fuse?: Fuse<Option>;
 
   @state()
   private searchTerm = "";
@@ -24,20 +28,45 @@ export class QuickSearch extends LitElement {
     super.connectedCallback();
 
     window.addEventListener("keydown", this.#handleKeyDown);
+
+    this.options = this.#scrapeOptions();
+
+    this.fuse = new Fuse(this.options, {
+      keys: ["title", "categories", "excerpt"],
+      shouldSort: true,
+      includeScore: true,
+      includeMatches: true,
+    });
   }
 
   disconnectedCallback(): void {
     window.removeEventListener("keydown", this.#handleKeyDown);
   }
 
+  #scrapeOptions() {
+    const searchOptionNodes =
+      this.querySelectorAll<HTMLElement>("search-option");
+
+    if (!searchOptionNodes) return [];
+
+    return Array.from(searchOptionNodes).map((el) => {
+      const title = el.getAttribute("value") ?? "";
+      const excerpt = el.getAttribute("excerpt") ?? "";
+      const url = el.getAttribute("url") ?? "";
+      const categories = el.getAttribute("categories")?.split(",") ?? [];
+
+      return { title, excerpt, url, categories };
+    });
+  }
+
   get results() {
-    if (!this.searchTerm) {
+    if (!this.searchTerm || !this.fuse) {
       return [];
     }
 
-    return this.options.filter((option) => {
-      return option.title.includes(this.searchTerm) || option.excerpt?.includes(this.searchTerm);
-    })
+    const results = this.fuse.search(this.searchTerm);
+
+    return results;
   }
 
   get hasResults() {
@@ -49,7 +78,7 @@ export class QuickSearch extends LitElement {
     const controlK = event.key === "k" && event.getModifierState("Control");
 
     if (commandK || controlK) {
-      this.#dialog.value?.showModal();
+      this.open()
     }
   };
 
@@ -57,22 +86,52 @@ export class QuickSearch extends LitElement {
     this.searchTerm = (e.target as HTMLInputElement).value;
   };
 
-
+  open = () => {
+    this.#dialog.value?.showModal();
+  }
 
   render() {
     return html`
       <dialog part="qs-dialog" ${ref(this.#dialog)}>
-        <input
-          autofocus
-          type="text"
-          placeholder="Search for a page"
-          part="qs-input"
-          value=${this.searchTerm}
-          @input=${this.#handleInput}
-        />
-        <hr part="qs-divider" />
-        <div>
-          ${when(this.hasResults, () => html`<results></results>`, () => html`default`)}
+        <div class="inner">
+          <input
+            autofocus
+            type="text"
+            placeholder="Search for a page"
+            part="qs-input"
+            value=${this.searchTerm}
+            @input=${this.#handleInput}
+          />
+          <hr part="qs-divider" />
+          <div part="qs-results" class="results">
+            ${when(
+              this.hasResults,
+              () => html`
+                <ul>
+                  ${map(this.results, ({ item }) => {
+                    return html`<li>
+                      <a part="qs-result" class="result" href=${item.url}>
+                        <div part="qs-title" class="title">${item.title}</div>
+                        <div part="qs-excerpt" class="excerpt">
+                          ${item.excerpt}
+                        </div>
+                        <div part="qs-categories" class="categories">
+                          ${item.categories.map((category, index) => {
+                            if (index === item.categories.length - 1) {
+                              return html`<span>${category}</span>`;
+                            } else {
+                              return html`<span>${category},</span>`;
+                            }
+                          })}
+                        </div>
+                      </a>
+                    </li>`;
+                  })}
+                </ul>
+              `,
+              () => html`Enter a search term. Press escape to return.`,
+            )}
+          </div>
         </div>
       </dialog>
     `;
@@ -82,29 +141,91 @@ export class QuickSearch extends LitElement {
     * {
       box-sizing: border-box;
     }
+
+    *:focus-visible {
+      outline: 2px solid #f79103;
+      outline-offset: -2px;
+    }
+
     dialog {
+      margin-top: 10vh;
       width: 80vw;
-      padding: 8px;
+      max-width: 600px;
+      max-height: 80vh;
+      padding: 0;
       border: none;
       border-radius: 8px;
-      box-shadow: 0 3px 11px rgba(0, 0, 0.1);
+      color: #1b2f36;
+      box-shadow: 0 3px 8px rgba(0, 0, 0.1);
+      overflow: hidden;
     }
 
     dialog::backdrop {
       backdrop-filter: blur(2px);
     }
 
+    .inner {
+      max-height: 100%;
+      padding: 0.75rem;
+    }
+
     input {
       width: 100%;
-      padding: 1em;
+      padding: 0.7rem;
       font: inherit;
       border: none;
     }
 
     hr {
+      width: 100%;
       border: none;
       height: 1px;
-      background: blue;
+      background: #376170;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .results {
+      max-height: 70vh;
+      overflow: auto;
+    }
+
+    .result {
+      display: grid;
+      position: relative;
+      padding: 0.5em;
+      color: inherit;
+      grid-template-columns: 4fr 1fr;
+      gap: 0.25em;
+      font: inherit;
+      text-decoration: none;
+      border-radius: 8px;
+
+      &:focus,
+      &:hover {
+        background: #dfe3e6;
+      }
+    }
+
+    .title {
+      grid-column: 1 / 3;
+      font-weight: bold;
+    }
+
+    .excerpt {
+      grid-column: 1 / 3;
+      font-size: 14px;
+    }
+
+    .categories {
+      display: none;
+      text-transform: capitalize;
     }
   `;
 }

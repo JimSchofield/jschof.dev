@@ -1,5 +1,6 @@
 import './js/play-ground.js';
 import './js/code-highlight.js';
+import './js/quick-search.js';
 import MobileMenu from './js/mobile-menu.js';
 
 new MobileMenu('#mobile-menu');

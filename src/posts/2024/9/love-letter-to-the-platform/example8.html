@@ -1,0 +1,109 @@
+<play-ground fold="18">
+  <template>
+    <button>A thing to shift+tab to</button>
+    <my-popover open>
+      <span slot="trigger-text">Click me to open!</span>
+      <div slot="popover-content">
+        Here is the content of the popover.
+        <button>Thing to focus on in popover</button>
+      </div>
+    </my-popover>
+    <button>Another thing to tab to</button>
+
+    <script type="module">
+      import {
+        LitElement,
+        css,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      function getStyles() {
+        return css`
+          button {
+            anchor-name: --button;
+          }
+
+          div[popover] {
+            position-anchor: --button;
+            left: anchor(left);
+            top: anchor(bottom);
+            display: block;
+            margin: 0;
+            opacity: 0;
+            transform: scale(0.95);
+            transform-origin: top left;
+            visibility: hidden;
+            transition:
+              opacity 500ms,
+              transform 500ms,
+              visibility 500ms;
+          }
+
+          [popover]:popover-open {
+            transform: scale(1);
+            opacity: 1;
+            visibility: visible;
+          }
+        `;
+      }
+
+      class MyPopover extends LitElement {
+        static styles = getStyles();
+
+        static properties = {
+          open: { type: Boolean, reflect: true },
+        };
+
+        handleFocusout = (event) => {
+          if (!this.contains(event.relatedTarget)) {
+            // If this custom element doesn't contain the new focus, we have focused out
+            this.open = false;
+          }
+        }
+
+        connectedCallback() {
+          super.connectedCallback();
+
+          this.addEventListener('focusout', this.handleFocusout);
+        }
+
+        disconnectedCallback() {
+          super.disconnectedCallback();
+
+          this.removeEventListener('focusout', this.handleFocusout);
+        }
+
+        get popoverEl() {
+          return this.shadowRoot.getElementById("popover-el");
+        }
+
+        respondToToggle = (event) => {
+          this.open = event.newState === "open";
+        };
+
+        updated(changes) {
+          if (changes.has("open")) {
+            if (this.open) {
+              this.popoverEl.showPopover();
+            } else {
+              this.popoverEl.hidePopover();
+            }
+          }
+        }
+
+        render() {
+          return html`
+            <button popovertarget="popover-el">
+              <slot name="trigger-text"></slot>
+            </button>
+            <div popover id="popover-el" @toggle=${this.respondToToggle}>
+              <slot name="popover-content"></slot>
+            </div>
+          `;
+        }
+      }
+
+      customElements.define("my-popover", MyPopover);
+    </script>
+  </template>
+</play-ground>

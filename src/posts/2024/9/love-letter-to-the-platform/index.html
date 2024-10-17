@@ -1,0 +1,291 @@
+---
+title: "Web components + anchor positioning + popover API = I love the platform"
+excerpt: "Man I love the platform.  It's gotten really great recently with custom elements, new CSS like anchoring, and new element apis like the popover api.  Let's look at making a popover element in this post."
+layout: post
+tags:
+  - posts
+  - web-components
+  - css
+date: 2024-10-12
+---
+
+<h1>Web components + anchor positioning + popover API = I love the platform</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  I want to make a simple popover web component that let's you define an anchor
+  and attach a popover to that anchor. This element should handle some simple
+  things, like an open attribute and clickout/focusout behavior.
+</p>
+
+<p>
+  This used to be super tricky, and you'd have to rely on some libraries to get
+  this all to work together. (I used
+  <a href="https://floating-ui.com/">floating UI</a> which is excellent, but we
+  have something even better now that isn't JS!)
+</p>
+
+<p>
+  Just a heads up... we're going to be using some features that won't be
+  available sometimes in chrome or firefox. It's bad that I have to preface
+  this, but these are just too good not to make example with, and I'm certain
+  these will have global adoption soon.
+</p>
+
+<p>Here is the most recent availabilty status according to MDN:</p>
+
+<baseline-status featureId="anchor-positioning"></baseline-status>
+
+<br />
+
+<baseline-status featureId="popover"></baseline-status>
+
+<aside class="blue">
+  <p>
+    Aren't those API things neat? It's a web component that shows status for
+    different browsers that you might have seen on MDN.
+    <a href="https://github.com/web-platform-dx/baseline-status"
+      >Here's the github for those web components</a
+    >
+  </p>
+</aside>
+
+<h2 id="popover-api">First Awesome Thing: Popover API</h2>
+
+<p>
+  The
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Popover_API"
+    >popover API</a
+  >
+  gives us a nice way to make a <strong>popover.</strong> What is a popover?
+  It's anything that floats over the page- a menu, a help tooltip- it could be
+  anything that isn't part of the normal flow of the page.
+</p>
+
+<p>Check out this absolutely simple example:</p>
+
+{% include "./example1.html" %}
+
+<p>Pretty simple. And notice: There was no javascript (⁉️)</p>
+
+<p>
+  That's right, just using attributes you have a fully functioning popover. This
+  version is more like a modal. If you click outside of the popover it closes
+  the popover. If you hit escape it also closes the modal.
+</p>
+
+<p>
+  It actually takes the element that has the <code>popover</code> attribute and
+  puts it in a type of "portal" or slot called "top-layer":
+</p>
+
+<img src="top-layer.png" alt="DOM showing top-layer slot" />
+
+<p>
+  This allows popovers to escape any issues with
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_positioned_layout/Understanding_z-index/Stacking_context"
+    >stacking contexts</a
+  >. This is a pretty advanced CSS concept, but if you're interested or running
+  into z-index issues check out
+  <a href="https://www.joshwcomeau.com/css/stacking-contexts/"
+    >Josh Comeau's excellent post</a
+  >!
+</p>
+
+<p>
+  There are two css properties you should know about:
+  <code>::backdrop</code> and <code>:popover-open</code>
+</p>
+
+<h3 id="backdrop-psuedo-element">The <code>::backdrop</code> Psuedo-element</h3>
+
+<p>
+  This selector has a double colon to distinguish this thing as a psuedo element
+  you can style. If you inspect the DOM, you'll see the element and can inspect
+  its styles:
+</p>
+
+<img src="backdrop-in-dom.png" alt="DOM showing" />
+
+<p>
+  So let's make that backdrop have a cool, foggy glass effect just to see what
+  I'm talking about:
+</p>
+
+{% include "./example2.html" %}
+
+<h3 id="popover-open-state">The <code>:popover-open</code> CSS State</h3>
+
+<p>
+  Often we want to specify styles based on whether the popover is open or not or
+  transitioning. So this is why we have <code>:popover-open</code>. To
+  demonstrate, here is a fade in/fade out example using that state
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  The reason we need to set display is that by default when a popover is closed
+  it's set to <code>display: none;</code>. In this case we're just going to
+  transition opacity with a teensy bit of scale to make a nice pop in/out
+  effect. We transition <code>visibility</code> to make sure that the popover is
+  not clickable or visible by screen readers while it's hidden.
+</p>
+
+<p>
+  Already, this is super cool. But there's something pretty fantastic that's
+  recently made available in chrome...
+</p>
+
+<h2 id="anchor-positioning">
+  Second Amazing Thing: Adding in Anchor Positioning
+</h2>
+
+<p>
+  This is fine and dandy if we want our popover to show up in the middle of the
+  viewport like a modal. But this is not what I want. I want the popover to be
+  <strong>anchored</strong> to the trigger button. In my case, I'm going to want
+  to put the popover aligned to the button's left edge and just below the button
+  so it drops down like a ... drop down.
+</p>
+
+<p>
+  We used to have to do this using <code>position</code>, creating a relative
+  ancestor and absolutely positioning the popover, using some fancy calculated
+  <code>top</code> and <code>left</code> properties. Now we have something
+  better!
+</p>
+
+<aside class="blue">
+  <p>
+    Sorry, this only works in Chrome 😭 but I expect this to have general
+    support very quickly!
+  </p>
+</aside>
+
+{% include "./example4.html" %}
+
+<p>
+  The CSS is so quick and easy to position to the top and left of the popover
+  against the anchor. If you're interested in seeing more examples and how this
+  anchoring works,
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_anchor_positioning/Using"
+    >check out this MDN guide</a
+  >!
+</p>
+
+<h2 id="web-component">
+  Awesome Thing Three: Let's wrap this up in a web component!
+</h2>
+
+<p>
+  The coolest thing about all this is that we can encapsulate this popover into
+  a web component! This makes it easy to reuse.
+</p>
+
+{% include "./example5.html" %}
+
+<p>
+  There we have it. We've only the platform to make a custom element that
+  handles this popover for us (well, using LitJS to help smooth out the custom
+  element part.)
+</p>
+
+<p>
+  But we should support a few things: an <code>open</code> attribute, and
+  probably a focusout handling to make sure that if you're tabbing away it
+  closes. So first: the <code>open</code> attribute!
+</p>
+
+{% include "./example6.html" %}
+
+<p>
+  To make the <code>open</code> attribute available, we make it a property that
+  is <code>Boolean</code> type and reflected. That way, when the attribute is
+  changed, Lit takes care of placing the attribute on the custom element in the
+  DOM
+</p>
+
+<p>
+  In our case, we listen for a
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Popover_API#interfaces"
+    >toggle event</a
+  >. This way the <code>open</code> attribute will always reflect the true state
+  of the toggled popover.
+</p>
+
+<p>
+  To make the component react to that <code>open</code> attribute being
+  removed/added, we need to create a <code>updated()</code> check to check and
+  see if the <code>open</code> attribute has changed, and to imperatively open
+  or close the popover if needed.
+</p>
+
+<video controls>
+  <source src="./popover-two-way-binding.mp4" type="video/mp4" />
+</video>
+
+<h3 id="handling-focusout">One last thing: handling close on focusout!</h3>
+
+<p>
+  We need to have the component respond to when focus is being applied
+  elsewhere. "Wait a minute, doesn't it already handle click-outs?" you might be
+  thinking. And this is true, but if you were to navigate <em>past</em> the
+  popover programatically, or with a keyboard using tab, it would remain open.
+  So let's just have the component react to the
+  <a href=""><code>focusout</code> event</a>
+</p>
+
+<p>
+  This focusout event has a <code>relatedTarget</code> property that tells us
+  what is receiving the new focus. We can just check to see if that element is
+  inside the DOM of the custom element, and if not we can close the popover. And
+  vice versa!
+</p>
+
+<p>
+  Check out an example where we haven't yet done this foucusout handling. Try
+  navigating with the keyboard, hitting enter on other buttons, and see if the
+  popover closes
+</p>
+
+{% include "./example7.html" %}
+
+<p>Alright, so here is an example with that being handled:</p>
+
+{% include "./example8.html" %}
+
+<h2 id="conclusion">Conclusion: The Platform Is Amazing</h2>
+
+<p>
+  I think this example is powerful because it shows just how far the platform
+  has come.
+</p>
+
+<p>
+  The popover takes care of creating a portal of sorts to place content in a
+  popover in the root of the document. This popover also handles clickout
+  behavior, open/closed state, and creating the opening/closing behavior. It
+  comes with a sneezeguard built in!
+</p>
+
+<p>
+  The anchor positioning allows us to avoid using a JS library and with three
+  lines of code position the popover declaratively where we want it. We didn't
+  even get into the robust options the anchor positioning css allows for us!
+</p>
+
+<p>
+  The web component allows us to create a dead simple re-usable element. We
+  could modify this to be a tooltip, a drop down menu, or a hover contextual
+  helper, and lots more. We use platform events to handle the two-way binding of
+  the <code>open</code> attribute and to handle focusout events.
+</p>
+
+<p>I ❤️ the platform!</p>
+
+<p>{% socials %}</p>

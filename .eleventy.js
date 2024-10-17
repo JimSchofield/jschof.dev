@@ -12,6 +12,9 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.png");
   eleventyConfig.addPassthroughCopy("./src/**/*.mp4");
   eleventyConfig.addPassthroughCopy("./src/**/*.webmanifest");
+  eleventyConfig.addPassthroughCopy({
+    "./node_modules/baseline-status/baseline-status.min.js": "js/baseline-status.min.js"
+  });
 
   eleventyConfig.addPlugin(pluginSEO, {
     title: "Jschof.dev",

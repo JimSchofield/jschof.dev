@@ -259,6 +259,29 @@ date: 2024-10-12
 
 {% include "./example8.html" %}
 
+<h3 id="dealing-with-fouc">A small addition: dealing with FOUC</h3>
+
+<p>
+  If you are keen-eyed, you might have noticed that there's a split second where
+  the popover we made is "popping" in. The DOM shows slot content while the web
+  component is still being register, then it applies the constructed styles and
+  popover hide/showing a second later. We'd rather not have the slot content
+  appear at all until the web component is loaded!
+</p>
+
+<p>This <strong>Flash Of Unstyled Content</strong> is easy to avoid:</p>
+
+{% include "./example9.html" %}
+
+<p>
+  Note that this is defined in the overall page styles, not the
+  <code>my-popover</code> constructed stylesheet. This tells the page how to
+  deal with our popover slot contents until it is <code>:defined</code>. Check
+  out the <code>:defined</code> <a href="">psuedo-selector docs page</a> for
+  more uses. But this is so cool to me that the platform has solutions for those
+  edge issues.
+</p>
+
 <h2 id="conclusion">Conclusion: The Platform Is Amazing</h2>
 
 <p>
@@ -289,3 +312,57 @@ date: 2024-10-12
 <p>I ❤️ the platform!</p>
 
 <p>{% socials %}</p>
+
+<h2 id="updates-10-17-2024">Updates! (10-17-2024)</h2>
+
+<p>
+  ➡️ <a href="https://piaille.fr/@tbroyer/113323176222102945">Thomas Broyer</a>
+  pointed out on mastadon that we don't need to use
+  <code>connectedCallback()</code> and <code>disconnectedCallback()</code> to
+  attach and remove the focus event listener. It suffices to just attach the
+  focus listener in the constructor, since the listener is on the element and if
+  the element is removed so will the listener. The last example was updated to
+  show that! Thanks, Thomas Broyer!
+</p>
+
+<p>
+  ➡️
+  <a href="https://mastodon.social/@westbrook/113323159989896786">westbrook</a>
+  pointed out two things:
+</p>
+
+<blockquote>
+  <p>@oldcoyote Looking good!</p>
+
+  <p>
+    ...except, the &lt;baseline-status&gt; adjusts for `prefers-color-scheme:
+    dark` while your site doesn't leaving some users with the attached screen
+    shot 😱
+  </p>
+
+  <p>
+    Also, have thought about distribution of :not(:defined) styles to prevent a
+    little FOUC in your &lt;my-popover&gt; element, something like:
+  </p>
+
+  <code-highlight lang="css">
+    <template>
+      <style>
+        my-popover:not(:defined) [slot="popover-content"] {
+          display: none;
+        }
+      </style>
+    </template>
+  </code-highlight>
+
+  <p>
+    Depends on usage whether it's worth having, especially without a standard
+    distribution mechanism.
+  </p>
+</blockquote>
+
+<p>
+  Very true and very true. I've adjusted my site styles to handle the
+  <code>prefers-color-scheme: dark</code>. I added a short note about the FOUC
+  style at the end of the post, too. Thanks, westbrook!
+</p>

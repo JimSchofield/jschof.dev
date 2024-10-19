@@ -1,5 +1,10 @@
-<play-ground fold="18">
+<play-ground fold="7,23,53">
   <template>
+    <style>
+      my-popover:not(:defined) [slot="popover-content"] {
+        display: none;
+      }
+    </style>
     <button>A thing to shift+tab to</button>
     <my-popover open>
       <span slot="trigger-text">Click me to open!</span>
@@ -59,12 +64,12 @@
             // If this custom element doesn't contain the new focus, we have focused out
             this.open = false;
           }
-        }
+        };
 
         constructor() {
           super();
 
-          this.addEventListener('focusout', this.handleFocusout);
+          this.addEventListener("focusout", this.handleFocusout);
         }
 
         get popoverEl() {

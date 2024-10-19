@@ -103,6 +103,12 @@ pre.shiki {
   }
 }
 
+blockquote {
+  margin: 1em;
+  padding: 0 1em;
+  border-left: 4px solid var(--sunset);
+}
+
 aside {
   position: relative;
   display: block;
@@ -114,12 +120,12 @@ aside {
   &::before {
     display: block;
     position: absolute;
-    content: "Note!";
+    content: "note!";
     font-weight: 900;
     top: 0;
     left: 0;
     color: var(--carrot);
-    font-family: Avenir, Helvetica, sans-serif;
+    font-family: avenir, helvetica, sans-serif;
     transform: rotate(-90deg) translate(-1em, calc(-100% - 0.8em));
   }
 }
@@ -143,12 +149,12 @@ aside.error {
   &::before {
     display: block;
     position: absolute;
-    content: "Error!";
+    content: "error!";
     font-weight: 900;
     top: 0;
     left: 0;
     color: red;
-    font-family: Avenir, Helvetica, sans-serif;
+    font-family: avenir, helvetica, sans-serif;
     transform: rotate(-90deg) translate(-1em, calc(-100% - 0.8em));
   }
 }
@@ -364,7 +370,7 @@ embed {
   }
 }
 
-/* Specific to play-ground web component */
+/* specific to play-ground web component */
 play-ground {
   margin: 1rem 0;
 }
@@ -415,5 +421,11 @@ code-highlight {
       padding: 0.5rem 0.75rem;
       border: none;
     }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  baseline-status {
+    background: var(--gunmetal);
   }
 }

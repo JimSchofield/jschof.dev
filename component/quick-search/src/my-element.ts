@@ -35,7 +35,7 @@ export class QuickSearch extends LitElement {
       keys: ["title", "categories", "excerpt"],
       shouldSort: true,
       includeScore: true,
-      includeMatches: true,
+      // includeMatches: true, // LATER!
     });
   }
 
@@ -64,9 +64,7 @@ export class QuickSearch extends LitElement {
       return [];
     }
 
-    const results = this.fuse.search(this.searchTerm);
-
-    return results;
+    return this.fuse.search(this.searchTerm);
   }
 
   get hasResults() {
@@ -78,7 +76,7 @@ export class QuickSearch extends LitElement {
     const controlK = event.key === "k" && event.getModifierState("Control");
 
     if (commandK || controlK) {
-      this.open()
+      this.open();
     }
   };
 
@@ -88,20 +86,27 @@ export class QuickSearch extends LitElement {
 
   open = () => {
     this.#dialog.value?.showModal();
-  }
+  };
+
+  close = () => {
+    this.#dialog.value?.close();
+  };
 
   render() {
     return html`
       <dialog part="qs-dialog" ${ref(this.#dialog)}>
         <div class="inner">
-          <input
-            autofocus
-            type="text"
-            placeholder="Search for a page"
-            part="qs-input"
-            value=${this.searchTerm}
-            @input=${this.#handleInput}
-          />
+          <div class="controls">
+            <input
+              autofocus
+              type="text"
+              placeholder="Search for a page"
+              part="qs-input"
+              value=${this.searchTerm}
+              @input=${this.#handleInput}
+            />
+            <button class="close" @click=${this.close}>Close</button>
+          </div>
           <hr part="qs-divider" />
           <div part="qs-results" class="results">
             ${when(
@@ -129,7 +134,9 @@ export class QuickSearch extends LitElement {
                   })}
                 </ul>
               `,
-              () => html`Enter a search term. Press escape to return.`,
+              () =>
+                html`Enter a search term or select a category. Press escape to
+                return.`,
             )}
           </div>
         </div>
@@ -227,6 +234,25 @@ export class QuickSearch extends LitElement {
     .categories {
       display: none;
       text-transform: capitalize;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .close {
+      margin: 0;
+      padding: 0.25em;
+      background: none;
+      border: none;
+      font: inherit;
+      cursor: pointer;
+
+      &:focus,
+      &:hover {
+        background: #dfe3e6;
+      }
     }
   `;
 }

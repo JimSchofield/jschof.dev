@@ -1,0 +1,15 @@
+<play-ground>
+  <template>
+    <my-wrapper>
+      <div onclick="this.textContent = this.parentElement.somePropertyToShare;">Click to access parent property</div>
+    </my-wrapper>
+
+    <script>
+      class MyWrapper extends HTMLElement {
+        somePropertyToShare = "42"
+      }
+
+      customElements.define("my-wrapper", MyWrapper);
+    </script>
+  </template>
+</play-ground>

@@ -1,0 +1,49 @@
+<play-ground>
+  <template>
+    <my-counter></my-counter>
+    <script>
+      class MyCounterComponent extends HTMLElement {
+        #state = 0;
+
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+          this.insertTemplate();
+          this.attachListeners();
+        }
+
+        insertTemplate() {
+          this.shadowRoot.innerHTML = `
+  <button id="decrement">-1</button>
+  <output id="output">${this.#state}</output>
+  <button id="increment">+1</button>
+`;
+        }
+
+        getById(id) {
+          return this.shadowRoot.getElementById(id);
+        }
+
+        changeCounter(delta) {
+          this.#state += delta;
+          this.updateView();
+        }
+
+        updateView() {
+          this.getById("output").textContent = this.#state;
+        }
+
+        attachListeners() {
+          this.getById("increment").addEventListener("click", () =>
+            this.changeCounter(+1),
+          );
+          this.getById("decrement").addEventListener("click", () =>
+            this.changeCounter(-1),
+          );
+        }
+      }
+
+      customElements.define("my-counter", MyCounterComponent);
+    </script>
+  </template>
+</play-ground>

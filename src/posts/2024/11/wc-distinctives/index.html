@@ -1,0 +1,487 @@
+---
+title: "The Differentiating Property of Web Components"
+excerpt: "There's been a lot of discussion on whether web components are good or not.  But there is one property of web components that might make them the best or the worst solution for your needs."
+layout: post
+tags:
+  - posts
+  - web-components
+  - architecture
+  - opinion
+date: 2024-11-09
+---
+
+<h1>The Differentiating Property of Web Components</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  About two months ago a Ryan Carniato wrote an inflammatory piece explaining
+  that
+  <a href="https://dev.to/ryansolid/web-components-are-not-the-future-48bh"
+    >Web Components Are Not The Future</a
+  >.
+</p>
+
+<p>
+  Ryan's piece made the internet rounds, and it seems almost everyone had
+  something to say. I appreciate the more measured responses by
+  <a href="https://lea.verou.me/blog/2024/wcs-vs-frameworks/">Lea Verou</a> and
+  <a href="https://nolanlawson.com/2024/09/28/web-components-are-okay/"
+    >Nolan Lawson</a
+  >
+</p>
+
+<p>
+  It made me reflect on the pains and pleasures I've experienced as my team is
+  architecting a platform that relies heavily on web components. The whole
+  discussion can be reduced down to one fundamental property of web components.
+  Whether this property is good or bad largely depends on what you need to
+  accomplish, but it is inescapable and has far-reaching consequences.
+</p>
+
+<blockquote>Web components are tightly bound to the DOM</blockquote>
+
+<p>So let's dive in.</p>
+
+<h2 id="tightly-bound-to-dom">Web Components are tightly bound to the DOM</h2>
+
+<p>
+  Until very recently I had trouble articulating this but it is very much felt
+  as you start getting used to using web components. . The post
+  <a href="https://www.baldurbjarnason.com/2024/liskovs-gun/"
+    >Liskov's gun: The parallel evolution of React and Web Components</a
+  >
+  gave me some language to talk about this. In the article, Baldur Bjarnason
+  says, "Web Components are defined in terms of alterations to the DOM". I make
+  an even stronger statement that web components, by design, are tightly bound
+  to the DOM.
+</p>
+
+<p>
+  But to illustrate this, let's rewind and go back to javascript development
+  circa 2014. This is when I was first beginning the transition from teacher to
+  software engineer. I was bright-eyed, bushy-tailed, and manically devouring
+  new frameworks like the rest of the javascript world.
+</p>
+
+<p>
+  But if you can journey back to this era of development, before frameworks
+  abstracted a large amount of browser APIs and DOM manipulations, you'd
+  remember that "component" design was basically creating a class that
+  instantiated itself on a "mounting point," or an element that would contain
+  the markup for your component.
+</p>
+
+<p>
+  This class was a pure Javascript construct. As far as the browser was
+  concerned, it could have everything or nothing to do with the DOM. If it was
+  dealing with the DOM, it was a small bundle of functions that searched for
+  things in the DOM, and would attach listeners and react to inputs. The state
+  of the object was stored in this class, and the view, the template, the HTML
+  itself carried nearly no state. It was an empty view that remained inert until
+  Javascript enabled dynamic functionality. (There were some exceptions to this-
+  think media elements or form elements. But by themselves they didn't do too
+  much outside of showing media, or making form action requests back to the
+  server.)
+</p>
+
+<p>
+  So to create something like a counter you would provide the smallest units of
+  HTML in order that Javascript, like a marionettist, would be able to pull
+  strings and create interactions. This
+  <span class="decorate">separation of concerns</span> was revered as an ideal
+  that front end engineers should asipre to uphold.
+</p>
+
+<h3>How about an example?</h3>
+
+<p>To give a concrete example, let's create a counter here!</p>
+
+{% include "./example1.html" %}
+
+<p>
+  That was a lot of fun to do. There's just one glaring omission in my
+  example... let me fix that.
+</p>
+
+{% include "./example2.html" %}
+
+<p>I miss those dollar signs, don't you?</p>
+
+<p>
+  Notice that the class could be spun up with any element. Yes, the class is
+  expecting particular markup for it to work, but it doesn't require markup to
+  actually run. It's a floating class that reaches into the DOM selectively when
+  it needs to. The <code>this</code> context in the class is really just the
+  class instance.
+</p>
+
+<h3>Let's talk a bit about <code>this</code></h3>
+
+<p>
+  You'll also probably remember that binding <code>this</code> to event handlers
+  was routine and a common concern. The <code>this</code> concern was the stuff
+  of tech interviews, and probably rightly so. <code>this</code> could refer to
+  the javascript class (if you're in a method or the constructor of the class),
+  or the element that is the target of the event (if you're in the scope of an
+  event handler function that was triggered) or the window (if you are outside
+  of the class.)
+</p>
+
+<p>
+  This is one thing that frameworks have nearly removed from our purvue: we
+  don't have to worry so much about <code>this</code>. Here are some examples in
+  different frameworks:
+</p>
+<ul>
+  <li>
+    In react, there's almost no use using <code>this</code> unless you were
+    using the old class component API. If you follow the standard stateless
+    functional components,
+    <a href="https://playcode.io/2136674"
+      ><code>this</code> is just the window</a
+    >, or it's <code>undefined</code> if you're using an arrow function. In
+    fact, one of the reasons React wanted to move to SFC and not use the old
+    <code>Component</code> classes was to remove the component instances that
+    React had to instantiate and manage, effectively getting rid of
+    <code>this</code>.
+  </li>
+  <li>
+    In Vue, <code>this</code> is pretty useless in practice, because it's by
+    default <code>undefined</code> in the <code>&lt;script&gt;</code> tags:
+    <a
+      href="https://play.vuejs.org/#eNp9kTFPwzAQhf+KdRNIVRhgKgUJUAcYANGOXqL0SF0c2/KdS6Qo/73nRE07VN3s9753frY7eAmh2CeEOSyoiiawIuQUnrVTqvKOWDVIVNaontSKo3H1DW8N3T5qt7gbE8LKhrEJtmQckmskFlRldK66bhrS9zl3xsIMmOSgX1MXO/JOinR5gobKN8FYjF+BjRTRIIOyk73SWv//MWgcE86OerXF6u+CvqM2axq+IxLGPWqYPC5jjTzay9UntrKezMZvkhX6ivmD5G3KHUfsNbmN1D7jhrbvTfAxP8qali2jo+OlctFM9gOvQX7j7crVT3Xvi4chp10P/QH4lZhh"
+      >Check it out</a
+    >
+  </li>
+  <li>
+    It's basically the same in Svelte:
+    <a
+      href="https://svelte.dev/playground/hello-world?version=5.1.13#H4sIAAAAAAAAE23OPQvCMBSF4b8S79RCsXSNseDm7mgcqr3aQLwNyfGL0v8uQcTF9eU5cCaS7sqkacvej-oxRt-rgnsH7kuq6Ow8J9L7ifAK2eVA1Xe1CWGZ7uyR27FL_K-fRgELEmky6RRdQGvFwjNU5mqtdohOLgUGl8qVFVP_mJihaT_npqznhamHprVCFYGfII144_kwvwFfVcJWygAAAA=="
+      >Check it out</a
+    >
+  </li>
+  <li>
+    In Ember, reaching into <code>this</code> in the template will get you the
+    component the template is related to, or in the case of a route template the
+    controller for that route. Ember does the work of binding
+    <code>this</code> to the instance involved- so while Ember doesn't get rid
+    of this concern completely, it does allow you to think of the component as a
+    union of view + controller, so <code>this</code> has been simplified.
+  </li>
+</ul>
+
+<h3>So what about web components?</h3>
+
+<p>
+  Let's compare this with how a counter might be written in a vanilla web
+  component:
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  What's the big deal? It doesn't look too different from the vanilla counter
+  above. And it's true, there's still a lot of wiring up handlers to handle
+  events and so on.
+</p>
+
+<p>
+  But there's a critical difference: <code>this</code> in this component is a
+  DOM element. When the browser sees <code>&lt;my-counter&gt;</code> in the DOM,
+  it runs our class as a DOM element in DOM lifecycles. The class instance is
+  instantiated by the browser when this element is created by HTML. (And here is
+  also an important point: there are lifecycle methods now when this instance is
+  actually connected to a DOM/Fragment or disconnected.)
+</p>
+
+<p>
+  We have completely tied our component class to the DOM. We depend on it being
+  connected to the DOM to be meaningful.
+</p>
+
+<p>There are a lot of really nice advantages to this:</p>
+
+<ul>
+  <li>
+    The inner template/DOM that your component needs to manage is encapsulated.
+    You don't have to worry about what would happen if the html that the class
+    is trying to work with is malformed. Generally, the web component makes it's
+    own DOM internally.
+  </li>
+  <li>
+    You don't have to manually write the "mounting" logic to make your component
+    seek out proper html and mount.
+  </li>
+  <li>
+    You have automatic connected and disconnected hooks that you can use. In
+    other words, your component is aware when it's entering the DOM and when
+    it's being removed from the DOM. This was a sticky point for vanilla
+    components. You used to have to manually tear down listeners and such before
+    you removed the component. (At least, I'm not aware of being able to detect
+    DOM element removal unless you use a
+    <a href="https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver"
+      >mutation observer</a
+    >)
+  </li>
+  <li>
+    You inherit all methods, properties, etc. from <code>HTMLElement</code>
+  </li>
+</ul>
+
+<p>
+  This is particularly nice for isolated, small, or federated pieces of user
+  interface. But this coupling brings about framework problems...
+</p>
+
+<h2>Paint point 1: Renderless web components aren't possible</h2>
+
+<p>
+  Since web components are tightly bound to the DOM because the component
+  <strong>is</strong> an HTML Element,
+  <span class="decorate">you can't have renderless components</span>. Sure, you
+  can create components that wrap other things and don't affect the DOM of its
+  slotted contents, but that's still not renderless. For example:
+</p>
+
+{% include "./example4.html" %}
+
+<p><code>my-wrapper</code> still very much exists</p>
+
+<img
+  src="./my-wrapper-in-dom.png"
+  alt="DOM inspector showing my-wrapper element in DOM"
+/>
+
+<p>
+  <a href="../../8/web-components-and-you-10"
+    >As I discussed in a very long-winded post elsewhere</a
+  >, accessing live javascript values in memory through the DOM like this is
+  perilous and inconvenient. It turns out that the children of the wrapper end
+  up with the responsibility of knowing what's in the parent element instance,
+  and have to reach out for it manually. And this reaching out, traversing
+  upwards through possibly any number of nodes and shadow roots, is awkward to
+  say the least.
+</p>
+
+<p>
+  So while you can create provider components, the idea of a "virtual" component
+  is completely missing. If you are going to tie yourself to a DOM element being
+  created and then placed in the DOM, you are inherently unable to only create
+  an "abstract" component that works behind the scenes.
+</p>
+
+<p>
+  Here is a concrete example of how using a framework allows you to create these
+  renderless components to provide functionality without adding any elements to
+  the DOM:
+  <a
+    href="https://play.vuejs.org/#eNp9Uk1rKzEM/CvCl1zCLo/3Tn1LoV+HFvpBW+jFF3ejZt16LWNp00DJf6+8m7SBllwMo5lBI0sf5iSlajWgOTINt9knAUYZ0rGNvk+UBZ6ySwkzvGTqYVbVW1xMs/82NvVkU4MCwT4FJ6gIoNlKR6Cw+3P8QD1Ch26BuakVb5k0EYJrAR/BQXLZLdXdNXWJopJdX0VNvdfGzI1wS/HFL6tXpqiDfBSDNS31yQfMt0k8RbbmCEamcC4Eer8aa5IHnO/qbYft2y/1V16XmjV3GRnzCq354sTlJcpEXzzc6Ax7ZE+LIaj6AHmPTGEoGSfZ6RAXGntPN6a9HNfh4/KRL9aCkXdDlaBFuRn11uhizg6M/h33b/Vv9Nm40V/c2+svxwB1DY+dZyi/ShGjwLsaGKRDIH0yYMBe6zyH50Emx4KQ40ygcyvUrZ7fXu9U4GXG8Ew6KwhVAJdbi7bQEXyWwQVrgHKJnF1kPQn1WXP45DiQQP3jSDaft3f5Dg=="
+    >in the vue js playground</a
+  >.
+</p>
+
+<h2>Pain point 2: Web components don't have a "scope"</h2>
+
+<p>
+  Along with not having renderless components, you can't expose live javascript
+  values to a "scope" for other components to consume.
+</p>
+
+<p>
+  Take, for example, a react component has a pattern called "render props."
+  Because components are "just functions" you can pass non-string-values to and
+  fro in the template. This allows for
+  <a href="https://en.wikipedia.org/wiki/Inversion_of_control"
+    >inversion of control</a
+  >. You can have components that pass control up to the consumer using the
+  component, and the component can even give the controller specific pieces to
+  work with. The classic example would be a list: sometimes you just want
+  something to iterate throught a list, but the person using your "list"
+  component should be able to determine how the list is actually rendered.
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      // The list maps through the list
+      const List = (props) => {
+        return (
+          <ul>
+            {props.listItems.map((item) => {
+              return props.renderItem(item);
+            })}
+          </ul>
+        );
+      };
+
+      // Then consumers determine how the items are laid out:
+      const App = () => {
+        return (
+          <List
+            items={items}
+            renderItem={(item) => {
+              return (
+                <li key={item.id}>
+                  I determine the item template! {item.text}
+                </li>
+              );
+            }}
+          />
+        );
+      };
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  At base, the reason that this works is that the JSX you're looking at in the
+  return statements for React components <em>aren't the DOM</em>. Those tags are
+  a nice way to write out very nested objects. And because this JSX is only a
+  blueprint of what should be rendered into the DOM, we have the ability to use
+  "just javascript" on any level in that blueprint.
+</p>
+
+<p>
+  The same thing happens in other frameworks too, even if it's not jsx. Any
+  templating language or construct used by frameworks creates a model of what
+  the DOM should look like. You are not working with the DOM directly. Because
+  of this detached abstraction you can pass objects, functions, classes,
+  basically anything that's live javascript anywhere in that template.
+</p>
+
+<p>
+  So while frameworks have the ability to "scope" values in a template much like
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions#function_scope"
+    >Javascript functions do</a
+  >, web components are islands, instantiated and placed in the DOM with no
+  conception of what's above or below them. If a web component wants to provide
+  some real live value, it can't be passed like you can in the templates of
+  frameworks. Instead, it has to be put as a property on the web component for
+  someone to locate and take at run time, kind of like a pie placed on a window
+  sill for people to come along and take.
+</p>
+
+<h3>But, slots! Right?</h3>
+
+<p>
+  Slots are a great feature of the shadow DOM, and yes, this allows limited
+  inversion of control.
+</p>
+
+<p>
+  You'll quickly run into issues trying to implement things the way you're used
+  to in frameworks, though. Let's say you want to create a popover, and the
+  consumer can provide a button trigger and the content of the popover.
+  Something like this:
+</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-popover>
+      <button slot="trigger">Open</button>
+      <div slot="content">lorem ipsum...</div>
+    </my-popover>
+  </template>
+</code-highlight>
+
+<p>
+  You might already see a few things you wish you could do. For one, you wish
+  the text of the trigger could change based on the state of the popover. Also,
+  you might want to be provided the handler to attach where you want it
+  attached. Something like this... (Totally fake code below, not real markup)
+</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-popover provides="isOpen, toggleClick">
+      <button onclick="toggleClick" slot="trigger">
+        {isOpen ? "Open" : "Closed" }
+      </button>
+      <div slot="content">lorem ipsum...</div>
+    </my-popover>
+  </template>
+</code-highlight>
+
+<p>
+  Alas we have to abandon those patterns, because without adopting an
+  abstraction that handles a template, I know of no way to create this kind of
+  API for a web component with plain HTML.
+</p>
+
+<h3>Yeah, but you have attributes, right?</h3>
+
+<p>
+  Yep. But attributes can only be strings. We have been spoiled for a decade or
+  so with frameworks that never had to rightly differentiate between what an
+  attribute is versus a property of an element.
+</p>
+
+<aside>
+  <p>
+    If you are going to deal with web components at any significant level, take
+    a look at
+    <a href="https://jakearchibald.com/2024/attributes-vs-properties/"
+      >this definitive guide to attributes vs properties by Jake Archibald.</a
+    >
+    It is by far the best and most comprehensive guide.
+  </p>
+</aside>
+
+<p>
+  Basically, if you want to pass anything into a web component via an attribute,
+  it must be serialized as a string. Attributes cannot take live javascript
+  values. This means that any attempt to create an attribute for a web component
+  that inverts control like the react list component above is not possible. (And
+  I mean in a sane and safe way. There may be some frankenstein of javascript in
+  html that would get this to happen, but I would seriously doubt that any
+  attempt is truly a good pattern and/or safe from scripting hacks.)
+</p>
+
+<h2>
+  Pain point 3: Templating, especially template interpolation, is just not possible yet.
+</h2>
+
+<p>
+  This is why LitJS exists. It gives us a light framework that gives us the
+  templating functionality while melding it with web component's restrictions.
+  Because LitJS uses the <code>html</code> helper, you can pass live javascript
+  variables to children components. But be aware: this is a framework
+  abstraction! This is not vanilla web components.
+</p>
+
+<p>
+  In an ideal world, we should eventually have some sort of templating construct
+  in vanilla HTML. I created a concept stackblitz just to see what that might
+  look like to be able to interpolate live javascript data into the contents from a slot. Example
+  below, but be warned, this is just a toy demo and is not anywhere near robust
+  enough to actually do in the real world:
+</p>
+
+<embed src="https://stackblitz.com/edit/vitejs-vite-v6ih3h?embed=1&file=index.html"></embed>
+
+<h2>Well, crap.  Should we not use web components then?</h2>
+
+<p>
+  Emphatically, <em>web components are powerful and have great use cases</em>
+</p>
+
+<p>The reason I write so much about these nuances is to try to clarify why some people are having trouble with web components, not to say that web components are just bad.</p>
+
+<p>We are still figuring out web components, and I think many great solutions will be found and implemented by browsers very soon!</p>
+
+<p>In my experience, here are where web components are especially powerful:</p>
+
+<ul>
+  <li>Building component libraries,</li>
+  <li>Creating larger UI pieces that are pretty encapsulated- like a code playground</li>
+  <li>Creating presentational components that are re-used often (look at the inspector on reddit for example)</li>
+  <li>Needing to publish small parts of UI in a micro-framework-ish way</li>
+</ul>
+
+<p>If you want to see a great post with event more good use cases check out this <a href="https://daverupert.com/2024/10/super-web-components-sunshine/">summary by Dave Rupert</a>.
+
+<p>Welp, that's enough for now.</p>
+
+<p>{% socials %}</p>

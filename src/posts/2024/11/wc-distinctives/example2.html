@@ -1,0 +1,54 @@
+<play-ground>
+  <template>
+    <div class="counter">
+      <button class="counter__button counter__button--decrement">-1</button>
+      <output class="counter__output">0</output>
+      <button class="counter__button counter__button--increment">+1</button>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+      integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script>
+      class MyCounterComponent {
+        constructor($el) {
+          this.$el = $el;
+          this.$outputEl = $el.find(".counter__output");
+          this.$incrEl = $el.find(".counter__button--increment");
+          this.$decrEl = $el.find(".counter__button--decrement");
+
+          if (!($el && this.$outputEl && this.$incrEl && this.$decrEl)) {
+            throw new Error(
+              "Missing part of MyCounterComponent template in DOM",
+            );
+          }
+
+          this.state = Number(this.$outputEl.text());
+
+          this.attachListeners();
+        }
+
+        changeCounter(delta) {
+          this.state += delta;
+          this.updateView();
+        }
+
+        updateView() {
+          this.$outputEl.text(this.state);
+        }
+
+        attachListeners() {
+          this.$incrEl.on("click", this.changeCounter.bind(this, 1));
+          this.$decrEl.on("click", this.changeCounter.bind(this, -1));
+        }
+      }
+
+      // Search for all `.counter` divs, and instantiate my component on each
+      $(".counter").each(function () {
+        new MyCounterComponent($(this));
+      });
+    </script>
+  </template>
+</play-ground>

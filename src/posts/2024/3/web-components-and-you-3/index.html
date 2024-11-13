@@ -1,6 +1,6 @@
 ---
-title: "Web Components and You (part 3): Simplifying with LitJS"
-excerpt: It can be tedious to wire up reactivity in a web component ourselves.  Let's see how easy it can be with LitJS
+title: "Web Components and You (part 3): Simplifying with Lit"
+excerpt: It can be tedious to wire up reactivity in a web component ourselves.  Let's see how easy it can be with Lit
 layout: post
 tags:
   - posts
@@ -8,7 +8,7 @@ tags:
 date: 2024-03-06
 ---
 
-<h1>Web Components and You (part 3): Simplifying with LitJS</h1>
+<h1>Web Components and You (part 3): Simplifying with Lit</h1>
 
 <div class="post-details">
   Published {% prettyDate date %}, {% readTime page %}
@@ -18,9 +18,9 @@ date: 2024-03-06
 
 <h2>Enter Lit JS</h2>
 
-<p><a href="https://lit.dev/">LitJS</a> is a super light framework that smooths out all the wrinkles in using web compoenents.  Working with lit, it honestly makes you feel like you're working in a framework, and the nice thing is that it's all based on web components: the shadow dom, custom elements, attributes, everything.</p>
+<p><a href="https://lit.dev/">Lit</a> is a super light framework that smooths out all the wrinkles in using web compoenents.  Working with lit, it honestly makes you feel like you're working in a framework, and the nice thing is that it's all based on web components: the shadow dom, custom elements, attributes, everything.</p>
 
-<p>The two things that make LitJS really shine are (1) its reactivity system and (2) it's template.  Take a look at this example.  If you change the attribute of the custom element, the template will change the string.  And we didn't have to write code to make that change happen, it just reacted!</p>
+<p>The two things that make Lit really shine are (1) its reactivity system and (2) it's template.  Take a look at this example.  If you change the attribute of the custom element, the template will change the string.  And we didn't have to write code to make that change happen, it just reacted!</p>
 
 {% include "./example1.html" %}
 
@@ -29,8 +29,8 @@ date: 2024-03-06
 <p>The beauty of all this is that it's all basically <span class="decorate">just javascript</span>.  And when I say "just javascript," I mean that there's no precompilation of templates, no JSX template transformer to turn JSX into objects- you'll notice in this example, I'm loading the lit library at runtime and it works without any build.</p>
 
 <aside class="blue">
-  <p>Okay, okay, so you might need a build step... kind of- if you choose to use typescript.  LitJS really has a great developer experience.  There are many decorators that reduce the amount of boilerplate you need to write, and it also has great types that make discovering methods and properties very easy.</p>
-  <p>But, using LitJS without typescript is totally fine too, and I'm choosing to do that in my playground examples to show how you can do everything without a build.</p>
+  <p>Okay, okay, so you might need a build step... kind of- if you choose to use typescript.  Lit really has a great developer experience.  There are many decorators that reduce the amount of boilerplate you need to write, and it also has great types that make discovering methods and properties very easy.</p>
+  <p>But, using Lit without typescript is totally fine too, and I'm choosing to do that in my playground examples to show how you can do everything without a build.</p>
 </aside>
 
 <p>Reactivity is quite easy to use even if you don't want an attribute to go with it, for example:</p>
@@ -45,7 +45,7 @@ date: 2024-03-06
 
 <h2>Reacting to changing attributes and attribute reflection</h2>
 
-<p>Since LitJS allows you to either est up a property or set up internal state, there is a new case to consider when using attributes.  What if you want an attribute that your component reacts to, and you want that attribute to update in the dom if the component changes that attribute?</p>
+<p>Since Lit allows you to either est up a property or set up internal state, there is a new case to consider when using attributes.  What if you want an attribute that your component reacts to, and you want that attribute to update in the dom if the component changes that attribute?</p>
 
 <p>You might think this is common, but it isn't always a given.  In a text input, you can set the initial value by providing a value: <code>&lt;input type="text" value="initial string" /&gt;</code>.  What's interesting is that if you were to type in the input this value attribute doesn't change.  You can try it out:</p>
 
@@ -61,7 +61,7 @@ date: 2024-03-06
   <source src="open-attribute-toggle-detail.mp4" type="video/mp4" />
 </video>
 
-<p>LitJS can allow these attributes to be "reflected" back to  the DOM from internal changes.  This is one of the strengths of using Lit as well- you get a lot of this boilerplate state management handled for you.  For example, here we create a text component we call "Text" that has an attribute "str".  This acts as the initial value, but if text in changed, the actual attribute in the DOM is changed with it:</p>
+<p>Lit can allow these attributes to be "reflected" back to  the DOM from internal changes.  This is one of the strengths of using Lit as well- you get a lot of this boilerplate state management handled for you.  For example, here we create a text component we call "Text" that has an attribute "str".  This acts as the initial value, but if text in changed, the actual attribute in the DOM is changed with it:</p>
 
 {% include "./example5.html" %}
 
@@ -71,8 +71,8 @@ date: 2024-03-06
 
 <p>This is probably reserved for when HTML needs to have a <span class="decorate">declarative</span> API, like "open" for details.  The same can be said for the "disabled" attribute with inputs, or the "open" attribute for a dialog element.</p>
 
-<p>LitJS, of course, has a <a href="https://lit.dev/docs/components/properties/#reflected-attributes">nice discussion about this</a>.</p>
+<p>Lit, of course, has a <a href="https://lit.dev/docs/components/properties/#reflected-attributes">nice discussion about this</a>.</p>
 
 <h2>What's next?</h2>
 
-<p>We've talked about how to use LitJS to render web component templates and handle reactive changes. Maybe we should go back to styles and chat a bit how to use those with LitJS!  That's coming up.</p>
+<p>We've talked about how to use Lit to render web component templates and handle reactive changes. Maybe we should go back to styles and chat a bit how to use those with Lit!  That's coming up.</p>

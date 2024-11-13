@@ -183,7 +183,7 @@ Yes, we're using `this.shadowRoot.innerHTML` as a shortcut to add a template to 
   </template>
 </play-ground>
 
-But if you're unhappy with that, that makes complete sense! There are tools to help with more declarative templates. Check out [LitJS](https://lit.dev/) as an example of a library that helps make templates easy with a `render()` method.
+But if you're unhappy with that, that makes complete sense! There are tools to help with more declarative templates. Check out [Lit](https://lit.dev/) as an example of a library that helps make templates easy with a `render()` method.
 
 ## Cool, but what about reactivity?
 

@@ -1,6 +1,6 @@
 ---
 title: "Web Components and You (part 4): Style"
-excerpt: Let's visit how you would do CSS styles in a web component, and how LitJS includes styles.
+excerpt: Let's visit how you would do CSS styles in a web component, and how Lit includes styles.
 layout: post
 tags:
   - posts
@@ -42,29 +42,29 @@ date: 2024-03-11
 
 <p>Partly, I think this is a problem that has yet to be completely solved, but there are other ways to skin this cat...</p>
 
-<h2>Using the LitJS CSS helper</h2>
+<h2>Using the Lit CSS helper</h2>
 
-<p>By far one of the easiest ways to include CSS but still keep it somewhat separated from the template is to use LitJS' <code>css``</code> helper.</p>
+<p>By far one of the easiest ways to include CSS but still keep it somewhat separated from the template is to use Lit' <code>css``</code> helper.</p>
 
-<p>Here's the same example from above but using LitJS:</p>
+<p>Here's the same example from above but using Lit:</p>
 
 {% include "./example2.html" %}
 
 <p>Things feel much better here!  CSS has it's own place, HTML is separate and in a render function.  It just <strong>feels</strong> better.  If you want, you can define your css in a different file and import it.</p>
 
-<p>This is all depending on LitJS.  So maybe that's fine, but maybe you want to stay <em>more native</em>?</p>
+<p>This is all depending on Lit.  So maybe that's fine, but maybe you want to stay <em>more native</em>?</p>
 
 <h2>Adopting a constructed stylesheet</h2>
 
 <p>All modern browsers have the <code>Constructable Style Sheet</code> <a href="https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet">API</a>.  This allows you to create a style sheet object, parse styles, and add them to the object.  Then you can "adopt" the style using the <code>adoptedStyles</code> property on the shadowRoot.</p>
 
-<p>A few things have this <code>adoptedStylesheet</code>: the <code>Document</code>, shadow roots, and any document objects in an iframe.  This is essentially the way LitJS includes styles under the hood, but it's nice to be able to do this without a framework!</p>
+<p>A few things have this <code>adoptedStylesheet</code>: the <code>Document</code>, shadow roots, and any document objects in an iframe.  This is essentially the way Lit includes styles under the hood, but it's nice to be able to do this without a framework!</p>
 
 <p>Here is how you could adopt a style:</p>
 
 {% include "./example3.html" %}
 
-<p>Not too bad, right?  It's not as visually clean as LitJS, but it's almost there.  There's some ceremony you have to go through to create a sheet and adopt the style, and we probably could have made it more concise.</p>
+<p>Not too bad, right?  It's not as visually clean as Lit, but it's almost there.  There's some ceremony you have to go through to create a sheet and adopt the style, and we probably could have made it more concise.</p>
 
 <p>There is another way to do this that is really slick, but unfortunately Firefox and Safari don't support it! 😭 It's still nice to see it in action.  It involves a sweet new thing call <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#browser_compatibility">import assertions</a>!</p>
 

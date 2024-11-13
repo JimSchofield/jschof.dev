@@ -181,7 +181,7 @@ image: turtles.webp
   <a href="https://github.com/lit/lit/issues/4020"
     >for reasons is publicly available.</a
   >
-  Yes, you read that right. For LitJS to work well, access to the shadow root is
+  Yes, you read that right. For Lit to work well, access to the shadow root is
   made publicly available, closed or open. If you read the linked issue, this is
   for many good reasons- decorators depend on renderRoot to be able to function
   without a lot of overhead, and certain lifecycle methods depend on renderRoot
@@ -419,10 +419,10 @@ image: turtles.webp
 <p>Well, not really.</p>
 
 <p>
-  In the case of LitJS, the framework exposes the shadow root, open or closed.
+  In the case of Lit, the framework exposes the shadow root, open or closed.
   To get around this requires a lot of boilerplate and extra work, and even then
   many things will not work out of the box for things expecting the
-  <code>shadowRoot</code> to be available (like LitJS decorators
+  <code>shadowRoot</code> to be available (like Lit decorators
   <code>@query()</code>, etc.)
 </p>
 

@@ -1,0 +1,25 @@
+<play-ground>
+  <template>
+    <my-component>
+      <p>Something in the default slot!</p>
+    </my-component>
+    <script>
+      class MyComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+
+          this.shadowRoot.innerHTML = `
+<slot></slot>
+<slot></slot>
+<slot></slot>
+`;
+        }
+
+        static {
+          customElements.define("my-component", this);
+        }
+      }
+    </script>
+  </template>
+</play-ground>

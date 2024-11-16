@@ -1,0 +1,368 @@
+---
+title: "Some Web Component 'Render Prop' Patterns"
+excerpt: "Eventually while creating web components you're going to want to use something like render props, where you can let the consumer of your components decide how things look and feel.  In web components it requires a bit of a shift in mindset from what we're used to with frameworks.  In this post I'm going to share a few strategies to invert control with rendering."
+layout: post
+tags:
+  - posts
+  - web-components
+  - tips
+  - opinion
+date: 2024-11-14
+image: falls.webp
+---
+
+<h1>Some Web Component "Render Prop" Patterns</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  Web components provide a lot of solutions that frameworks provide: state
+  solutions, reactivity, mounting on the DOM, slots... So it's no surprise that
+  web components can also invert control to consumers. In my last post I argued
+  that this render props pattern, because web components don't fundamentally
+  have a template abstraction or a virtual DOM, is
+  <a
+    href="../wc-distinctives/#:~:text=If%20a%20web%20component%20wants%20to%20provide%20some%20real%20live%20value"
+    >a bit more awkward with web components</a
+  >
+</p>
+
+<p>But it's still very much possible!</p>
+
+<p>
+  Let's define inversion of control, and then look at some ways to do it with
+  web components.
+</p>
+
+<h2>Inversion of Control, or, the consumer is always right</h2>
+
+<p>
+  Inversion of control is the general principle that instead of offering a user
+  more and more configuration options, sometimes you can just hand the elements
+  and control to the consumer to do exactly what they want with them. Render
+  props is a strategy to do just that, and I'll use "render props" as a
+  catch-all for this sort of pattern in components.
+</p>
+
+<p>
+  To be clear here, using "render props" originates from passing rendering
+  instructions through a property on a component. I first encountered the
+  pattern
+  <a
+    href="https://react.dev/reference/react/cloneElement#passing-data-with-a-render-prop"
+    >in React</a
+  >, but it's defnitely present in all the other frameworks under various names.
+</p>
+
+<p>
+  Vue has a nice construct called
+  <a href="https://vuejs.org/guide/components/slots.html#scoped-slots"
+    >scoped slots</a
+  >
+  which allows you to create slots very much like web components, but also to
+  provide live values up to the consumer to use in those slots.
+</p>
+
+<p>
+  Ember allows <code>yield</code> with
+  <a href="https://guides.emberjs.com/release/components/block-content/"
+    >block content</a
+  >
+  which is effectively the same thing as scoped slots or render props, just in
+  Ember.
+</p>
+
+<p>
+  So how do we do this sort of thing with web components? (Note in the following
+  examples I'm trying to stay in the vanilla JS world mostly. But that means
+  it's easily done in any framework or abstraction like Lit.)
+</p>
+
+<h2>Slots, the OG inversion of control</h2>
+
+<p>
+  We have to quickly say that the <code>slot</code> element is a very powerful
+  way to invert control already. I've gone into detail on slots
+  <a href="../../4/web-components-and-you-6/">in another post</a>, so I won't
+  talk slot specifics here. There are some drawbacks in the current slot
+  implementation that make it not work well for render props.
+</p>
+
+<p>First, you can't render multiple instances of the same slot.</p>
+
+{% include "./example1.html" %}
+
+<p>
+  You can see that although we'd like to place the slot contents in the shadow
+  DOM three times, the browser only populates the first default slot:
+</p>
+
+<img
+  src="./multiple-default-slots.png"
+  alt="DOM inspector showing multiple slot elements in the my-component component, but only the first slot element has content"
+/>
+
+<p>
+  Why would you want to do this? Well, there's actually some use cases, for
+  example, in the <code>&lt;selectedoption&gt;</code> element in custom selects.
+  Being able to render one option (the selected one) in multiple places would be
+  nice. (If you're interested in diving into the problem, check out this recent
+  post by Jake Archibald:
+  <a href="https://jakearchibald.com/2024/how-should-selectedoption-work/"
+    >How should selectedoption work?</a
+  >)
+</p>
+
+<p>
+  It would be nice if you could make a component like <code>my-list</code> which
+  takes a slot with name "option" that allows you to determine the template for
+  the list items.
+</p>
+
+<p>
+  As you'll see, even if we could define a template for list items, we'd need to
+  somehow populate that template with interpolated values. In other words, the
+  template needs to be able to show values for each separate list item.
+</p>
+
+<h2>Pattern 1: Simply pass render functions as properties</h2>
+
+<p>All right, all right. Let's get down to brass tacks.</p>
+
+<p>
+  The simplest and most straighforward way is to have a component expect a
+  property to be filled with a function. That function should expect certain
+  data from the component and return a rendered element.
+</p>
+
+<p>
+  In our case, let's make <code>my-list</code> and have it expect a
+  <code>renderItem()</code> function. As the component renders out each item in
+  the list, it passes the item data to <code>renderItem()</code> to have the
+  consumer define how the items should be rendered.
+</p>
+
+<p>Maybe this is an option:</p>
+
+{% include "./example2.html" %}
+
+<p>
+  It works, but something feels off to me. Maybe it's that there's so much that
+  needs to be imperatively done. Maybe it's that a consumer needs to be aware of
+  so much to use this strategy (like that the
+  <code>renderItem()</code> method expects (string, number) as arguments and
+  should return an HTML string.)
+</p>
+
+<p>
+  It's a little easier ergonomically if you're consuming it from a Lit
+  component:
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  But really, this is just because Lit has niceties like html templating, and
+  being able to bind properties in the template using the
+  <a href="https://lit.dev/docs/templates/expressions/#property-expressions"
+    >period prefix</a
+  >.
+</p>
+
+<p>
+  If you're totally in Lit and your consumer and provider are both Lit
+  components, it's a little nicer because at the very least the components have
+  a common expectation of an
+  <code>html``</code> template object. The consumer has a more expected
+  convention of using a
+  <a href="https://lit.dev/docs/api/templates/#TemplateResult"
+    >Template result</a
+  >, so the consumer doesn't have to think about whether it should return actual
+  elements or an html string. But that's starting to head into framework land.
+  Let's stick to more vanilla JS for now...
+</p>
+
+<h2>Pattern 2: Can we use the <code>template</code> tag?</h2>
+
+<p>
+  The template tag is meant to hold sections of HTML that could be later used by
+  javascript. Perhaps we could use this to make render props more declarative
+  with vanilla js?
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  This is arguably the most vanilla way to <strong>declaratively</strong> pass
+  rendering instructions to a list component. All the other proposals on this
+  page really are imperative. But man, is it verbose.
+</p>
+
+<p>
+  We use <code>&lt;span data-___&gt;&lt;/span&gt;</code> as kind of placeholder.
+  We pick up a template in the light DOM that has a specific ID (in this case
+  "item"). We fill those placeholder spans with values from the items.
+</p>
+
+<p>
+  There is one serious issue with this approach: the issue of ownership and
+  control. Once the consumer has returned that function, the list owns any
+  elements it creates with that callback. That means styles can't be applied
+  from outside of the component, and the consumer can't (or maybe more accurate,
+  shouldn't) later reference these elements because they're covered over by the
+  shadow DOM.
+</p>
+
+<p>Maybe that's okay?</p>
+
+<p>
+  But there is one way to allow continued access to the items' styles. As a part
+  of making the item in the callback, you can actually attach a
+  <code>part</code> attribute to the element, which exposes the elements to the
+  <code>::part()</code> selector from outside of the shadow DOM.
+</p>
+
+{% include "./example7.html" %}
+
+<p>This feels way better, at least for styling by the consumer.</p>
+
+<p>
+  In the end, it's just a lot of coordinating and manual effort by the list
+  component. But it works! There might be a way to abstract a lot of this work
+  away. But let's move on.
+</p>
+
+<h2>Pattern 3: Why do a callback when you can use events?</h2>
+
+<p>
+  So far, in both patterns we've used some handshake where the providing
+  component is told how to render items: one way was through receiving a
+  function, the other is through receiving a declarative template. But how about
+  we try it with an event?
+</p>
+
+<p>
+  Here's the strategy. It's a little crazy, but we're going somewhere with this:
+</p>
+
+<ul>
+  <li>
+    The list component emits an event <code>list-render-item</code> that
+    provides data and index for a particular item
+  </li>
+  <li>
+    The consumer can subscribe to this event, take the item data, and then
+    determine exactly how the items should look in the list component
+  </li>
+  <li>
+    When the list component goes about rendering the items, it emits the event
+  </li>
+  <li>
+    The subscription runs, the item is made, and then we have to provide this
+    back to the component.
+  </li>
+  <li>
+    The consumer
+    <em>stores the rendered item as a property on the list component</em>
+  </li>
+  <li>
+    since events are synchronous, the list can pull the rendered item off of its
+    property and return the rendering
+  </li>
+</ul>
+
+<p>Okay, let's see this is in action:</p>
+
+{% include "./example5.html" %}
+
+<p>
+  It may seem crazy that we store item renderings on the element itself, but how
+  else are we going to provide live values back to the list? You can't use
+  attributes unless you want to serialize the renderings in to strings and parse
+  the html again for each item. So this might be the sanest way to do it? Or is
+  it...?
+</p>
+
+<h2>Pattern 4: A serious proposal</h2>
+
+<p>
+  There is a proposal in the web components community group protocols repo:
+  <a
+    href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/slottable-request.md"
+    >slottable requests.</a
+  >
+</p>
+
+<p>
+  The idea is the same as with the context protocol proposal that lives in the
+  same repo. These protocals are proposed ways for web components to interact-
+  sort of a common language to achieve certain things.
+</p>
+
+<p>
+  This "slottable request" is the logical conclusion of the "event" based render
+  prop we just looked at. The concept: when a component encounters something
+  that needs to be rendered, and wants to invert control, the component can emit
+  an event with name "slottable-request". The consumer listens for this event,
+  and provides a rendered something through the callback from the
+  "slottable-request" event. The difference is that this rendering is is
+  <span class="decorate">provided through a slot!</span>
+</p>
+
+<p>Check out this example:</p>
+
+{% include "./example6.html" %}
+
+<p>
+  That's right, the list makes a slot for each item, the consumer is making a
+  slot item, and they are coordinating with each other to pass the item in
+  through that slot! It's pretty crazy. But it's probably better than the
+  previous event-based proposal.
+</p>
+
+<p>
+  <strong
+    >This allows the consumer to retain control of the element and styles
+    through the light DOM.</strong
+  >
+  The consumer can style those items just by adding styles that target those
+  items in the light DOM, and those styles will show as the item is displayed in
+  their slot
+</p>
+
+<p>
+  <strong
+    >This avoids an awkward storing of rendering elements on the class list
+    instance.</strong
+  >
+  We leverage slots for what they're meant to do- allow consumers to place
+  elements that are reflected into the DOM.
+</p>
+
+<p>
+  <strong>This protocol is pure vanilla JS goodness.</strong> There are no
+  framework constructs in the example above. This doesn't mean there shouldn't
+  be abstractions to make this super easy, of course. But it is 100% supported
+  by just the platform.
+</p>
+
+<p>
+  Lit actually is toying with implementing the
+  <a
+    href="https://gist.github.com/kevinpschaaf/0fe117368411f340aa3019dceeaa465e"
+    >slottable request protocol</a
+  >, which would be fantastic because, like in the case of context, this would
+  be an easy way to use this strategy in lit which also maintains
+  interoperability with vanilla web components and other frameworks. The
+  protocol is, after all, just the platform.
+</p>
+
+<h2>Conclusion</h2>
+
+<p>
+  Well, hopefully listing out some strategies inverting control with rendering
+  templates was helpful and maybe inspires some solutions in your work with web
+  components!
+</p>
+
+<p>Let me know what you think. {% socials %}</p>

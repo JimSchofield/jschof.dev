@@ -1,0 +1,78 @@
+<play-ground>
+  <template>
+    <my-list id="myList"></my-list>
+
+    <script>
+      myList.listItems = ["Cat", "Dog", "Zebra"];
+
+      myList.addEventListener("slottable-request", (event) => {
+        const {
+          data: { item, index },
+          name,
+          slotName,
+          target,
+        } = event;
+
+        const li = document.createElement("li");
+        const div = document.createElement("div");
+
+        div.style.cssText = `
+          display: inline-block;
+          background: maroon;
+          color: white;
+          border-radius: .5em;
+          padding: .25em;
+          margin-top: .25em;
+        `;
+        div.textContent = item;
+
+        li.slot = slotName;
+
+        li.appendChild(div);
+        target.appendChild(li);
+      });
+    </script>
+
+    <script>
+      class SlottableRequestEvent extends Event {
+        constructor(name, data, key) {
+          super("slottable-request", { bubbles: false, composed: false });
+          this.name = name;
+          this.data = data;
+          this.slotName = key !== undefined ? `${name}.${key}` : name;
+        }
+      }
+
+      class MyListComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+        }
+
+        connectedCallback() {
+          const listEl = document.createElement("ul");
+
+          this.listItems.forEach((item, index) => {
+            const slot = document.createElement("slot");
+
+            const event = new SlottableRequestEvent("list-item", {
+              item,
+              index,
+            });
+
+            this.dispatchEvent(event);
+
+            // A slot is placed to receive the slotted conted generated
+            // from the event above
+            slot.name = event.slotName;
+            listEl.appendChild(slot);
+          });
+
+          this.shadowRoot.append(listEl);
+        }
+      }
+
+      customElements.define("my-list", MyListComponent);
+    </script>
+  </template>
+</play-ground>

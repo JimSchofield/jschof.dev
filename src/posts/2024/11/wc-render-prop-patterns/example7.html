@@ -1,0 +1,59 @@
+<play-ground fold="22">
+  <template>
+    <my-list>
+      <template id="item">
+        <div part="item">
+          <span data-text></span> - <span data-index></span>
+        </div>
+      </template>
+    </my-list>
+
+    <style>
+      my-list::part(item) {
+        display: inline-block;
+        background: cyan;
+        padding: .25rem;
+        margin-block: .25rem;
+      }
+    </style>
+
+    <script>
+      document.querySelector("my-list").listItems = ["Cat", "Dog", "Zebra"];
+    </script>
+
+    <script>
+      class MyListComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+        }
+
+        get template() {
+          return this.querySelector("template#item");
+        }
+
+        populateTemplate(item, index) {
+          const template = this.template.cloneNode(true).content;
+          template.querySelector("[data-text]").textContent = item;
+          template.querySelector("[data-index]").textContent = index;
+          return template;
+        }
+
+        connectedCallback() {
+          const listEl = document.createElement("ul");
+
+          this.listItems.forEach((item, index) => {
+            const listItemEl = document.createElement("li");
+            listItemEl.appendChild(this.populateTemplate(item, index));
+
+            listEl.appendChild(listItemEl);
+          });
+
+          this.shadowRoot.append(listEl);
+        }
+      }
+
+      customElements.define("my-list", MyListComponent);
+    </script>
+  </template>
+</play-ground>

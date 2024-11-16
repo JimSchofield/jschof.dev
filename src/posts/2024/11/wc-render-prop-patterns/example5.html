@@ -1,0 +1,64 @@
+<play-ground>
+  <template>
+    <my-list id="myList"></my-list>
+
+    <script>
+      myList.listItems = ["Cat", "Dog", "Zebra"];
+
+      myList.addEventListener("request-item-render", (event) => {
+        const {
+          detail: { text, index },
+          target,
+        } = event;
+
+        const div = document.createElement("div");
+
+        div.style.cssText = `
+          display: inline-block;
+          background: maroon;
+          color: white;
+          border-radius: .5em;
+          padding: .25em;
+          margin-top: .25em;
+        `;
+
+        div.textContent = text;
+
+        target["item" + index] = div;
+      });
+    </script>
+
+    <script>
+      class MyListComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+        }
+
+        connectedCallback() {
+          const listEl = document.createElement("ul");
+
+          this.listItems.forEach((item, index) => {
+            const listItemEl = document.createElement("li");
+
+            this.dispatchEvent(
+              new CustomEvent("request-item-render", {
+                detail: { text: item, index },
+              }),
+            );
+
+            // Since events are synchronous, the event
+            // will have stored the item rendering by
+            // this point on `this`
+            listItemEl.appendChild(this["item" + index]);
+            listEl.appendChild(listItemEl);
+          });
+
+          this.shadowRoot.append(listEl);
+        }
+      }
+
+      customElements.define("my-list", MyListComponent);
+    </script>
+  </template>
+</play-ground>

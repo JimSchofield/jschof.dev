@@ -1,0 +1,52 @@
+<play-ground fold="24">
+  <template>
+    <lit-component></lit-component>
+
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      class LitComponent extends LitElement {
+        items = ["Apple", "Banana", "Cherries"];
+
+        render() {
+          return html`<my-list
+            .listItems=${this.items}
+            .renderItem=${(item, index) => {
+              return `<span style="background:orange">${item} - ${index}</span>`;
+            }}
+          ></my-list>`;
+        }
+      }
+      customElements.define("lit-component", LitComponent);
+    </script>
+
+    <script>
+      class MyListComponent extends HTMLElement {
+        constructor() {
+          super();
+          this.attachShadow({ mode: "open" });
+
+        }
+
+        connectedCallback() {
+          const listEl = document.createElement("ul");
+
+          listEl.innerHTML = this.listItems
+            .map((item, index) => {
+              // my-list makes sure to wrap the item in an li here,
+              // but allows the consumer to define the contents of the li
+              return `<li>${this.renderItem(item, index)}</li>`;
+            })
+            .join("");
+
+          this.shadowRoot.append(listEl);
+        }
+      }
+
+      customElements.define("my-list", MyListComponent);
+    </script>
+  </template>
+</play-ground>

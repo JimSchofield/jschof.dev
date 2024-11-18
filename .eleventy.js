@@ -1,4 +1,5 @@
 const dateFns = require("date-fns");
+const pluginRss = require("@11ty/eleventy-plugin-rss");
 const pluginSEO = require("eleventy-plugin-seo");
 const path = require("node:path");
 const fs = require("node:fs/promises");
@@ -17,12 +18,9 @@ module.exports = function (eleventyConfig) {
     "./node_modules/baseline-status/baseline-status.min.js": "js/baseline-status.min.js"
   });
 
-  eleventyConfig.addPlugin(pluginSEO, {
-    title: "Jschof.dev",
-    description: "I love to collaborate and solve problems.",
-    url: "https://jschof.dev",
-    author: "Jim Schofield",
-  });
+  eleventyConfig.addPlugin(pluginSEO, require("./src/_data/seo.json"));
+
+  eleventyConfig.addPlugin(pluginRss);
 
   eleventyConfig.addPlugin(highlightPlugin);
 

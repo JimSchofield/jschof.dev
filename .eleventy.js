@@ -14,7 +14,8 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.webmanifest");
   eleventyConfig.addPassthroughCopy("./.well-known/atproto-did");
   eleventyConfig.addPassthroughCopy({
-    "./node_modules/baseline-status/baseline-status.min.js": "js/baseline-status.min.js"
+    "./node_modules/baseline-status/baseline-status.min.js":
+      "js/baseline-status.min.js",
   });
 
   eleventyConfig.addPlugin(pluginSEO, {
@@ -37,13 +38,9 @@ module.exports = function (eleventyConfig) {
     },
   );
 
-  eleventyConfig.addShortcode(
-    "socials",
-    () => {
-      return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.bsky.social">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>.';
-    }
-  )
-
+  eleventyConfig.addShortcode("socials", () => {
+    return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.bsky.social">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>.';
+  });
 
   eleventyConfig.addShortcode("joinPaths", function (...paths) {
     return path.join(...paths);

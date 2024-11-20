@@ -1,4 +1,4 @@
-module.exports = function (eleventyConfig, _options) {
+export default function (eleventyConfig, _options) {
   // eleventyConfig.addPassthroughCopy({
   //   "node_modules/highlight.js/styles/tokyo-night-dark.min.css":
   //     "css/highlight.min.css",

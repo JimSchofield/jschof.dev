@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "npx @11ty/eleventy --serve",
     "build": "npx @11ty/eleventy",
@@ -15,6 +16,7 @@
     "@11ty/eleventy": "^3.0.0"
   },
   "dependencies": {
+    "@11ty/eleventy-plugin-rss": "^2.0.2",
     "baseline-status": "^1.0.7",
     "date-fns": "^3.3.1",
     "eleventy-plugin-seo": "^0.5.2",

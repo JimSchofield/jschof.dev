@@ -1,10 +1,11 @@
-const dateFns = require("date-fns");
-const pluginSEO = require("eleventy-plugin-seo");
-const path = require("node:path");
-const fs = require("node:fs/promises");
-const highlightPlugin = require("./eleventy/highlight");
+import { lightFormat } from "date-fns";
+import pluginSEO from "eleventy-plugin-seo";
+import { feedPlugin } from "@11ty/eleventy-plugin-rss";
+import { join } from "node:path";
+import { readFile } from "node:fs/promises";
+import highlightPlugin from "./eleventy/highlight.js";
 
-module.exports = function (eleventyConfig) {
+export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
@@ -18,11 +19,35 @@ module.exports = function (eleventyConfig) {
       "js/baseline-status.min.js",
   });
 
+  const title = "Jschof.dev";
+  const description =
+    "I love to collaborate and solve problems. A front end dev blogging about html, css, javascript, web components... and more!";
+  const url = "https://jschof.dev";
+  const author = "Jim Schofield";
+
   eleventyConfig.addPlugin(pluginSEO, {
-    title: "Jschof.dev",
-    description: "I love to collaborate and solve problems.",
-    url: "https://jschof.dev",
-    author: "Jim Schofield",
+    title,
+    description,
+    url,
+    author,
+  });
+
+  eleventyConfig.addPlugin(feedPlugin, {
+    type: "rss", // or "rss", "json"
+    outputPath: "/rss.xml",
+    collection: {
+      name: "posts", // iterate over `collections.posts`
+      limit: 0, // 0 means no limit
+    },
+    metadata: {
+      language: "en",
+      title,
+      subtitle: description,
+      base: url,
+      author: {
+        name: author,
+      },
+    },
   });
 
   eleventyConfig.addPlugin(highlightPlugin);
@@ -34,20 +59,20 @@ module.exports = function (eleventyConfig) {
       const dtDateOnly = new Date(
         date.valueOf() + date.getTimezoneOffset() * 60 * 1000,
       );
-      return dateFns.lightFormat(dtDateOnly, format);
+      return lightFormat(dtDateOnly, format);
     },
   );
 
   eleventyConfig.addShortcode("socials", () => {
-    return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.bsky.social">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>.';
+    return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.dev">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>. I also have an <a href="/rss.xml">RSS feed here</a>';
   });
 
   eleventyConfig.addShortcode("joinPaths", function (...paths) {
-    return path.join(...paths);
+    return join(...paths);
   });
 
   eleventyConfig.addShortcode("readTime", async function (page) {
-    const contents = await fs.readFile(page.inputPath, { encoding: "utf8" });
+    const contents = await readFile(page.inputPath, { encoding: "utf8" });
 
     const wordsPerMinute = 225;
 
@@ -61,4 +86,4 @@ module.exports = function (eleventyConfig) {
       input: "src",
     },
   };
-};
+}

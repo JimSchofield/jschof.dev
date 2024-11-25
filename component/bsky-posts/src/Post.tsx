@@ -1,4 +1,5 @@
 import { LikeIcon } from "./icons/LikeIcon";
+import { OpenExternal } from "./icons/OpenExternalIcon";
 import { QuotedIcon } from "./icons/QuotedIcon";
 import { ReplyIcon } from "./icons/ReplyIcon";
 import { PostEmbed } from "./PostEmbed";
@@ -28,6 +29,10 @@ export function Post({ post }: { post: PostType }) {
           </div>
           <div class="bsky-post__footer-icon">
             <QuotedIcon />
+            {post.quoteCount}
+          </div>
+          <div class="bsky-post__footer-icon">
+            <OpenExternal />
             {post.quoteCount}
           </div>
         </div>

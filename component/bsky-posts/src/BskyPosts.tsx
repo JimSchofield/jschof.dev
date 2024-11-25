@@ -1,14 +1,14 @@
 import { Post } from "./Post";
 import useFetchPosts from "./useFetchPosts";
 
-export function BskyPosts({ did = "" }) {
+export function BskyPosts({ did = "", limit = 50 }) {
   if (!did) {
     throw new Error(
       "bsky-posts requires an argument 'did' where you can supply your profile did",
     );
   }
 
-  const [posts, status] = useFetchPosts(did);
+  const [posts, status] = useFetchPosts(did, limit);
 
   return (
     <>

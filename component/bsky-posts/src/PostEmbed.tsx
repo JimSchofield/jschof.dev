@@ -5,14 +5,12 @@ export function PostEmbed({ embed }: { embed: PostType["embed"] }) {
     return null;
   }
 
-  console.log(embed);
-
   if (embed.$type === "app.bsky.embed.record#view") {
     return (
       <div class="bsky-embed">
-        <a class="bsky-embed-card" href={embed.record.uri}>
+        <div class="bsky-embed-card">
           <div>{embed.record.value.text}</div>
-        </a>
+        </div>
       </div>
     );
   }
@@ -47,15 +45,5 @@ export function PostEmbed({ embed }: { embed: PostType["embed"] }) {
     );
   }
 
-  if (embed.$type === "app.bsky.embed.recordWithMedia#view") {
-    return (
-      <div class="bsky-embed">
-        <img
-          class="bsky-embed-card__media"
-          src={embed.media.external.uri}
-          alt={embed.media.external.title}
-        />
-      </div>
-    );
-  }
+  return null;
 }

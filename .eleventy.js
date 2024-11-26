@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import highlightPlugin from "./eleventy/highlight.js";
 
 export default function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy("./src/**/*.css");
+  eleventyConfig.addPassthroughCopy("./src/**/*.css", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
   eleventyConfig.addPassthroughCopy("./src/**/*.webp");

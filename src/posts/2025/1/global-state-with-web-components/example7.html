@@ -1,0 +1,42 @@
+<play-ground>
+  <template>
+    <script type="module">
+      import { atom } from "https://cdn.jsdelivr.net/npm/nanostores@0.11.3/+esm";
+
+      globalThis.myStore = atom("Intial text");
+    </script>
+    <script type="module">
+      import {
+        LitElement,
+        html,
+      } from "https://cdn.jsdelivr.net/gh/lit/dist@3/core/lit-core.min.js";
+
+      const { myStore } = globalThis;
+
+      class MyComponent extends LitElement {
+        connectedCallback() {
+          super.connectedCallback();
+          myStore.subscribe(() => this.requestUpdate());
+        }
+        render() {
+          return html`
+            <div>${myStore.value}</div>
+            <input
+              type="text"
+              @input=${this.handleInput}
+              .value=${myStore.value}
+            />
+          `;
+        }
+
+        handleInput = (event) => {
+          myStore.set(event.target.value);
+        };
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component id="1"></my-component>
+    <my-component id="2"></my-component>
+  </template>
+</play-ground>

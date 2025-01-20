@@ -1,0 +1,43 @@
+<play-ground>
+  <template>
+    <script type="module">
+      globalThis.myData = {
+        text: "Hello, Store!",
+      };
+    </script>
+    <script type="module">
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          this.render();
+
+          this.querySelector("input").addEventListener(
+            "input",
+            this.handleInput,
+          );
+        }
+
+        render() {
+          this.innerHTML = `
+<div>${globalThis.myData.text}</div>
+<input type="text" value="${globalThis.myData.text}" />
+`;
+        }
+
+        handleInput = (event) => {
+          globalThis.myData.text = event.target.value;
+          this.update();
+        };
+
+        update() {
+          const { text } = globalThis.myData;
+          this.querySelector('div').textContent = text;
+          this.querySelector('input').value = text;
+        }
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component id="1"></my-component>
+    <my-component id="2"></my-component>
+  </template>
+</play-ground>

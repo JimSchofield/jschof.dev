@@ -1,0 +1,22 @@
+<play-ground>
+  <template>
+    <script type="module">
+      globalThis.myData = {
+        text: "Hello, Store!",
+      };
+    </script>
+    <script type="module">
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          this.data = globalThis.myData;
+
+          this.innerHTML = `<div>${this.data.text}</div>`;
+        }
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component></my-component>
+    <my-component></my-component>
+  </template>
+</play-ground>

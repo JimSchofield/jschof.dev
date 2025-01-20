@@ -1,0 +1,46 @@
+<play-ground>
+  <template>
+    <script type="module">
+      import {
+        signal,
+        effect,
+      } from "https://cdn.jsdelivr.net/npm/@preact/signals-core@1.8.0/dist/signals-core.mjs";
+
+      globalThis.myStore = {
+        text: signal("Intial text"),
+        effect,
+      };
+    </script>
+    <script type="module">
+      import { html, render } from "//unpkg.com/lighterhtml?module";
+
+      const { text, effect } = globalThis.myStore;
+
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          // The next line hooks up `this.render` as the render function
+          // and lighterhtml handles updating only the parts of the DOM
+          // that need changing
+          this.render = render.bind(null, this, this.render.bind(this));
+          this.render();
+          effect(() => this.render());
+        }
+
+        render() {
+          return html`
+            <div>${text.value}</div>
+            <input type="text" oninput=${this.handleInput} .value=${text.value} />
+          `;
+        }
+
+        handleInput = (event) => {
+          text.value = event.target.value;
+        };
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component id="1"></my-component>
+    <my-component id="2"></my-component>
+  </template>
+</play-ground>

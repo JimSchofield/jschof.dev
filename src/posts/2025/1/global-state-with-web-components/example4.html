@@ -1,0 +1,54 @@
+<play-ground>
+  <template>
+    <script type="module">
+      globalThis.myStore = {
+        text: "Hello, Store!",
+        _subscribers: [],
+        subscribe(callback) {
+          this._subscribers.push(callback);
+        },
+        notify() {
+          this._subscribers.forEach((cb) => cb());
+        },
+      };
+    </script>
+    <script type="module">
+      const { myStore } = globalThis;
+
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          this.render();
+
+          this.querySelector("input").addEventListener(
+            "input",
+            this.handleInput,
+          );
+
+          myStore.subscribe(() => this.update());
+        }
+
+        render() {
+          this.innerHTML = `
+<div>${myStore.text}</div>
+<input type="text" value="${myStore.text}" />
+`;
+        }
+
+        handleInput = (event) => {
+          myStore.text = event.target.value;
+          myStore.notify();
+        };
+
+        update() {
+          const { text } = myStore;
+          this.querySelector("div").textContent = text;
+          this.querySelector("input").value = text;
+        }
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component id="1"></my-component>
+    <my-component id="2"></my-component>
+  </template>
+</play-ground>

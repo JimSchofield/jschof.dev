@@ -1,0 +1,57 @@
+<play-ground>
+  <template>
+    <script type="module">
+      const subscribers = [];
+      let _data = "initial data";
+
+      globalThis.myStore = {
+        get value() {
+          return _data;
+        },
+        set value(newValue) {
+          _data = newValue;
+          subscribers.forEach((cb) => cb());
+        },
+        effect(cb) {
+          subscribers.push(cb);
+        },
+      };
+    </script>
+    <script type="module">
+      const { myStore } = globalThis;
+
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          this.render();
+
+          this.querySelector("input").addEventListener(
+            "input",
+            this.handleInput,
+          );
+
+          myStore.effect(() => this.update());
+        }
+
+        render() {
+          this.innerHTML = `
+      <div>${myStore.value}</div>
+      <input type="text" value="${myStore.value}" />
+      `;
+        }
+
+        handleInput = (event) => {
+          myStore.value = event.target.value;
+        };
+
+        update() {
+          this.querySelector("div").textContent = myStore.value;
+          this.querySelector("input").value = myStore.value;
+        }
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component id="1"></my-component>
+    <my-component id="2"></my-component>
+  </template>
+</play-ground>

@@ -1,0 +1,337 @@
+---
+title: "Global state and stores with web components"
+excerpt: "Any larger application with web components will need some way to share state and notify consumers that the state has changed.    We can 'thread' props down through the DOM tree, or we could use something like context. Front end frameworks have solutions for this: sometimes it's a 'service.' Many times it's a 'store.' Let's talk about reactive stores in web components and start from the simplest possible examples!"
+layout: post
+tags:
+  - posts
+  - web-components
+  - state
+  - stores
+  - tips
+date: 2025-01-18
+image: moon-halo.webp
+---
+
+<h1>Global state and stores with web components</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  If you build an application that needs to scale at all, you probably started
+  to think about state. You might start to feel the pain of trying to
+  orchestrate state between components and making them react to each other
+  appropriately without creating a big bowl of spaghetti. This concern about
+  application architecture pops up naturally and quickly. Most people think "if
+  only this piece of data and it's logic
+  <a
+    href="https://github.com/nanostores/nanostores#:~:text=Designed%20to%20move%20logic%20from%20components%20to%20stores"
+    >could stand apart from components</a
+  >, and the components would just know when the data changes."
+</p>
+
+<p>Enter reactive stores.</p>
+
+<p>
+  So what if you're in the web component world? Or if you simply want to stay as
+  vanilla/platform-oriented as possible? Let's say you aren't in a framework
+  that supplies services or stores, and you want to think through what's
+  possible with some bare-bones Javascript?
+</p>
+
+<p>
+  We're going to start with the simplest of the simple as far as Javascript
+  goes. From there, we're going to build up and use more recent APIs and
+  paradigms, and let's see where we end up!
+</p>
+
+<h2>Simplest of the Simple: A shared reference</h2>
+
+<p>
+  And this is not just any shared reference! This reference is going to be
+  shared through the <em>Window</em>!
+</p>
+
+{% include "./example1.html" %}
+
+<aside>
+  <p>
+    Note that instead of referencing <code>window</code> I used
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis"
+      >globalThis</a
+    >. It's a handy thing to know, but in this example using either is exactly
+    the same.
+  </p>
+</aside>
+
+<p>
+  Mind blowing, I know! Now, as a front end dev one would cringe at this idea,
+  since this "pollutes the window" and the data provided here is also not
+  private. These are good points, but a whole different discussion...because as
+  I've lived in web component land I've come to question some long-time-held
+  beliefs- and
+  <a href="https://bsky.app/profile/tonyward.dev/post/3lf6oqxw5y22u"
+    >I'm not the only one.</a
+  >
+</p>
+
+<p>
+  Let's get back to focusing on the store. In this state it holds a reference to
+  an object. Each component gets a reference to the object, and if that object
+  changes each would see the data change inside the object. BUT, the way things
+  are right now, the component isn't aware if the data changes. Take a look at
+  the console logs in the next example.
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  Okay, so the global data actually does change, but the components just sit
+  there! So we need a way for the components to
+  <span class="decorate">react</span>.
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  Yes, the component will react now! But You will notice pretty quick, there's a
+  lot wrong with the above example.
+</p>
+
+<p>
+  First off: in order for our components to react, we need to call a method to
+  make the component "update" the DOM with the new state. This method is
+  <em>very imperative!</em>. We need to go through an update text in the DOM and
+  update the value of the text input directly. Why don't we just call
+  <code>this.render()</code> again? Well, the way we set up render right now
+  would wipe out the DOM as is and rerender everything... we would lose our
+  event listeners that handle the input and we would lose keyboard focus. Give
+  it a try, modify the example to just call render instead of update. It's an
+  unpleasant experience! Imperative updates are not ipso facto bad, but we are
+  definitely accustomed to just being able to re-render and having the
+  <em>framework</em> resolve the details.
+</p>
+
+<p>
+  Rendering details aside, you'll notice
+  <strong>it looks like each component has it's own private state</strong>. This
+  is an illusion, though, because we really are changing the global object. It's
+  just that other components that aren't making the change have no idea to
+  update as well. So in our case here, we have state ping-ponging between the
+  two components, and they are each keeping a private state in their own value
+  for their own input. They are effectively overwriting the state with their own
+  private state on every input.
+</p>
+
+<h2>The store should handle reactivity signalling, not our components</h2>
+
+<p>
+  In the spirit of trying to do the simplest possible change to incrementally
+  improve here, I'm going to keep the update method in the component. I'm going
+  to move the responsibility of who signals changes to the store.
+</p>
+
+<p>
+  This means however, that consumers need to subscribe to changes when they
+  happen- or at least opt in to be notified. So I'm going to create a pub/sub
+  system so the data object can notify any component that subscribes to changes.
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  The pub sub system doesn't event tell the consumer <em>what</em> has changed-
+  it just lets them know there is a change. We let the consumer tell the store
+  what function to run when the store changes.
+</p>
+
+<p>But can we do event better?</p>
+
+<p>
+  YES. Let's make things nice for the consumer. What if we made it that
+  consumers don't have to notify when something changes? A consumer like these
+  components may forget to call <code>this.notify()</code> whenever there are
+  state changes. So we have some Javascript magic we can employ.
+</p>
+
+<h2>Using getters and setters to improve the developer experience</h2>
+
+<p>
+  We're going to do something similar to signals. You may already be familiar
+  with these bad boys.
+  <a
+    href="https://vuejs.org/guide/extras/reactivity-in-depth.html#connection-to-signals"
+    >Vue used something nearly identical</a
+  >.
+  <a href="https://docs.solidjs.com/concepts/intro-to-reactivity#signals"
+    >Solid made them famous</a
+  >.
+  <a href="https://preactjs.com/guide/v10/signals/"
+    >Preact was an early adopter using them</a
+  >.
+  <a href="https://angular.dev/guide/signals"
+    >Angular just recently adopted them</a
+  >.
+  <a href="https://lit.dev/docs/data/signals/"
+    >Lit is investigating using them</a
+  >
+  (now it's available as an experimental feature), and there's even
+  <a href="https://github.com/tc39/proposal-signals"
+    >going to be a vanilla javascript API</a
+  >
+  for them hopefully soon™️.
+</p>
+
+<p>But for the uninitiated, here's what using a signal looks like:</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      const myReactiveData = signal(0);
+
+      effect(() => console.log("value has changed! ", myReactiveData.value));
+
+      myReactiveData.value = 1;
+
+      // console logs:
+      // "value has changed! 1"
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  You create data and register functions to run when that data gets changed.
+</p>
+
+<p>
+  So maybe you can see where I'm going with this? We'd like a store to provide
+  these two <code>signal</code> and <code>effect</code> functions so that we can
+  create data in a store, and components could register their update functions
+  with <code>effect()</code>.
+</p>
+
+<p>
+  The bonus for doing this extra work? We don't have to call a notification
+  function every time state changes and we need consumers to react.
+</p>
+
+<p>
+  Below is a very vanilla and very rough toy example of a signal-like
+  reactivity.
+</p>
+
+{% include "./example5.html" %}
+
+<aside class="blue">
+  <p>
+    This is not <em>exactly</em> how signals work. First, signals should allow
+    you to create a bunch of these reactive values and have them all trackable
+    (the implementation above is just for one value.) Second, signals only
+    affect effect functions that use that signal. But also, signals actually
+    track where they are being consumed with some fancy scope magic, and so you
+    can create very surgical updates.
+  </p>
+  <p>
+    I still think this example does a good job showing how to improved DX
+    experience, despite it's inaccuracies! If you'd like a deeper explanation, I
+    think this post has a good one:
+    <a
+      href="https://www.thisdot.co/blog/deep-dive-into-how-signals-work-in-solidjs"
+      >How signals work in solidjs</a
+    >
+  </p>
+</aside>
+
+<h2>Alright, let's use the real stuff</h2>
+
+<p>
+  Enough with the hand rolled toys! Let's pull in two libraries to make this
+  vanilla web component and homemade store work like a modern developer would
+  expect.
+</p>
+
+<p>
+  We're going to use
+  <a href="https://github.com/WebReflection/lighterhtml">lighterhtml</a> to
+  handle our rendering. And we're also going to pull in
+  <a href="https://github.com/preactjs/signals">preact signals</a> to handle our
+  reactivity
+</p>
+
+<p>
+  The end result is what we had above with a render function that doesn't
+  require the imperative updates that we are doing before, and we will use
+  <code>effect</code> to handle re-rendering when state changes.
+</p>
+
+<p>
+  It's interesting to me how close we can get to a web component framework with
+  web components, a reactivity system, and a DOM renderer.
+</p>
+
+{% include "./example6.html" %}
+
+<h2>The real stuff: redux</h2>
+
+<p>
+  At this point we can introduce a store library that is vanilla js (framework
+  agnostic) and serves us just as well as the signals do to this point.
+  <a href="">nanostores</a> is a nice, tiny library that creates a reactive
+  store for you.
+</p>
+
+<p>
+  Also, we're going to go back to using a lit element. We can set it up so that
+  when the store changes state values, we can run
+  <code>this.requestUpdate()</code> which is the lit way to ask a component to
+  re-render.
+</p>
+
+{% include "./example7.html" %}
+
+<p>
+  As you can see, we can get these components nearly as concise and clean as
+  components you would see in frameworks- without any compiling magic!
+</p>
+
+<h2>That's only just the beginning...</h2>
+
+<p>
+  One thing I expected to go into more was the mode of sharing stores. As I
+  continued writing this post, I realized the truth is there are lots of ways to
+  pass the reference of a store to different components. In this discussion, we
+  just passed it along by making the store available on the window. Maybe this
+  is something that will return to being in style?
+</p>
+
+<p>
+  Another solid way to pass a reference down the DOM is to
+  <a href="/posts/2024/8/web-components-and-you-10/"
+    >use events-based providers</a
+  >. If you don't make your own, Lit context is fantastic and is based on the
+  <a
+    href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md"
+    >web components community group context protocol</a
+  >.
+</p>
+
+<p>
+  And yet another viable way to pass stores is to simply import/export them in
+  modules if your web components are all part of the same monorepo. As long as
+  components are part of the same build process with the same node modules, if
+  two components import the same store from the same module they'll be importing
+  the same instance. This makes stores sharing super easy.
+</p>
+
+<p>
+  All that to say, the real linchpin for reactive stores is the reactivity and
+  re-rendering component. Passing the reference to your shared state shouldn't
+  be difficult.
+</p>
+
+<h2>That's all for now</h2>
+
+<p>
+  I hope building a reactive store with components using vanilla tools was
+  interesting. {% socials %}
+</p>

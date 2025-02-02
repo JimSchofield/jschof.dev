@@ -1,0 +1,69 @@
+<play-ground fold="1,28">
+  <template>
+    <script type="module">
+      class ServiceProvider {
+        constructor() {
+          this.instanceMap = new WeakMap();
+          window.addEventListener(
+            "get-service",
+            this.handleGetOrInit.bind(this),
+          );
+        }
+
+        handleGetOrInit(event) {
+          const { klass, callback } = event;
+
+          let instance;
+
+          if (this.instanceMap.has(klass)) {
+            callback(this.instanceMap.get(klass));
+          } else {
+            const newInstance = new klass();
+
+            this.instanceMap.set(klass, newInstance);
+
+            callback(newInstance);
+          }
+        }
+      }
+
+      new ServiceProvider();
+    </script>
+    <script>
+      function getService(klass) {
+        let klassInstance;
+
+        const getServiceEvent = new Event("get-service");
+
+        getServiceEvent.klass = klass;
+        getServiceEvent.callback = (instance) => {
+          klassInstance = instance;
+        };
+
+        window.dispatchEvent(getServiceEvent);
+
+        return klassInstance;
+      }
+    </script>
+    <script type="module">
+      import { createApp } from "https://unpkg.com/petite-vue?module";
+
+      class MyService {
+        data = "foo";
+
+        changeData() {
+          this.data = "bar";
+        }
+      }
+
+      createApp({
+        myService: getService(MyService),
+      }).mount();
+    </script>
+
+    <div v-scope>
+      <p>{% raw %} {{ myService.data }} {% endraw %}</p>
+      <button @click="myService.changeData()">Change text</button>
+    </div>
+  </template>
+</play-ground>

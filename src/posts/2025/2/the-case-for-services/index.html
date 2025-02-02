@@ -1,0 +1,358 @@
+---
+title: "The Case for Services"
+excerpt: "Services and dependency injection feel good with web components. The trick is to come up with a strategy that
+handles the run-time nature of web components. In this post I suggest a service/DI pattern that works so well with web
+components and frameworks as well!"
+layout: post
+tags:
+- posts
+- web-components
+- state
+- services
+- architecture
+date: 2025-02-02
+---
+
+<h1>The Case for Services</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  I've mentioned before that one of the first difficulties you encounter as you
+  adopt web components is
+  <a href="/posts/2024/8/web-components-and-you-10/"
+    >communicating between components.</a
+  >. If only we could reach out and share instances between web components,
+  especially when web components might be loading dynamically and at different
+  times.
+</p>
+
+<p>
+  Hear me out:
+  <strong
+    >Services are a <span class="decorate">fantastic</span> way to communicate
+    and share functionality and state between web components.</strong
+  >
+</p>
+
+<p>In this post, I'll talk about:</p>
+
+<ul>
+  <li>
+    What a service system is (according to yours truly) and what as service
+    system should provide
+  </li>
+  <li>
+    Draw some distinctions in how a service system differs from just using
+    events or context or the window to share things
+  </li>
+  <li>Sketch out an example for a service system.</li>
+  <li>Describe the benefits I see in choosing this strategy</li>
+</ul>
+
+<p>And I'll also share a project I've been working on!</p>
+
+<h2>Okay, so what is a "service"?</h2>
+
+<p>
+  A service is some object that contains functionality and sometimes contains
+  some state. This service is a singleton, and should be available for anyone to
+  use and subscribe to changes in state
+</p>
+
+<p>
+  Another important detail is that consumers of services should not have to
+  worry about the instantiation and lifecycle of a service. If a consumer calls
+  on a service, the service system should provide a reference by either just
+  providing it from some store of services or instantiating one for the
+  consumer. This means that services are often <strong>lazy</strong> and won't
+  exist until they're needed.
+</p>
+
+<p>
+  If you've ever used Ember.js, they have a
+  <a href="https://guides.emberjs.com/release/services/"
+    >construct called services</a
+  >
+  that are a big inspiration for what I'm proposing here. The services I'm
+  proposing is an implementation of
+  <a href="https://en.wikipedia.org/wiki/Dependency_injection"
+    >dependency injection</a
+  >
+  that works especially well with web components or micro-framework situations.
+</p>
+
+<p>So, my goal is to have a system that:</p>
+
+<ul>
+  <li>Lazily instantiates services, only when they're called on</li>
+  <li>The consumer does not have to worry about instantiation details</li>
+  <li>The system should be able to provide to any framework</li>
+  <li>
+    It should support reactivity, or be able to notify consumers when a change
+    of state happens
+  </li>
+  <li>Ideally should allow services to use services internally</li>
+</ul>
+
+<h3>So why not just use context?</h3>
+
+<p>
+  Okay, about <strong>context as a architecture</strong>: context is an
+  excellent way to avoid prop drilling.
+  <a href="https://legacy.reactjs.org/docs/context.html#before-you-use-context"
+    >If you had read the docs on react context</a
+  >
+  in its first versions it was included in, you would also have noticed a lot of
+  warnings about context. Context was meant to avoid prop drilling, but it makes
+  it hard for component re-use. Reading it now, it's kind of funny how much the
+  docs try to talk you out of using context.
+</p>
+
+<p>
+  In Lit, we run into some of the same restrictions outlined in those warnings
+  from React. Context can only be consumed by descendents of the provider of the
+  context in the DOM tree. Also, components need to set up specific context
+  events and code to receive specific contexts from its ancestors. Above all
+  this, the provider instantiates the context whether there are consumers or
+  not.
+</p>
+
+<p>
+  I guess I'm trying to say context is great for certain small scopes in an
+  application, but it was not meant to be a general way that "services" would be
+  instantiated and shared generally.
+</p>
+
+<h3>Why not just share references by events?</h3>
+
+<p>
+  Components really should use
+  <a href="/posts/2024/8/web-components-and-you-10/">provider patterns</a> if
+  tight coupling is expected. For example, a list and list items and
+  functionality with a list makes a perfect situation where communication is
+  heiarchical and coupled by design. So there are lots of places you wouldn't
+  reach for a service.
+</p>
+
+<p>
+  But that's just the thing- what if you need general APIs available globally?
+  What if you don't want components coupled tightly to where they are in the
+  DOM? What if you have components entering and leaving the DOM that need to
+  work with these APIs? Events and sending references with events is awkward and
+  not ideal.
+</p>
+
+<h3>Event ping pong</h3>
+
+<p>
+  One thing we tried early at my place of employment was using an event bus to
+  send/receive messages. This seems to work well for things, but there were a
+  few problems. First, if a component wasn't in the DOM yet, we had to set up an
+  event that notified all involved that the component was indeed now in the DOM.
+  Then, when the component finally announced it's arrival, components could send
+  it information. But second, events are annoying to set up, tear down, and
+  manage.
+</p>
+
+<p>It went something like this</p>
+
+<ol style="list-style: none">
+  <li>
+    <strong>Component 1:</strong> Hey, component two, I'm waiting for you to
+    mount in the DOM
+  </li>
+  <li><strong>Component 2:</strong> Alright, I'm mounted. What is it?</li>
+  <li>
+    <strong>Component 1:</strong> Sweet, I need <code>data</code> from you,
+    here's a callback, can you send it through this callback?
+  </li>
+  <li><strong>Component 2:</strong> Cool, here's <code>data</code></li>
+</ol>
+
+<p>
+  This. Was. Aweful. And not only was it painful to set up and tear down event
+  listerners like this (even when we abstracted that process out to nice
+  methods), we had trouble debugging, testing, and keeping track of all who were
+  subscribing and who needed to be subscribing for state changes.
+</p>
+
+<h3>Okay, so why not just share class instances on the <code>Window</code>?</h3>
+
+<p>
+  I'm growing increasingly less convinced we need to worry about window
+  pollution or keeping things private.
+  <a href="/posts/2025/1/global-state-with-web-components/"
+    >In my post on stores</a
+  >, I just slapped my store references in the <code>globalThis</code> and
+  retrieved them in other modules. This works... fine, but there's no system or
+  convention or expectation to organize code this way, and it's completely run
+  time.
+</p>
+
+<p>I'll just say, this is no way to run a ship! Let's make things formal...</p>
+
+<h2>Enough chit-chat, let's look at an implementation!</h2>
+
+<p>
+  For my implementation, I actually stick pretty close to the
+  <a
+    href="https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md"
+    >web components context protocol</a
+  >. The idea is there's one thing running that listens to
+  <code>get-service</code> events called the service provider. And this provides
+  services to all who dispatch that event.
+</p>
+
+<p>
+  The difference between context providers and this service-provider is that
+  this service-provider instantiates services if they don't exist, and keeps a
+  record of which services exist already. It also listens to and dispatches
+  events off of the window. This allows components to register services event if
+  they are not yet connected to the DOM.Lastly, this service provider doesn't
+  have to be a web component. It can be a class you run in a script, as long as
+  it's run first thing.
+</p>
+
+{% include "./example1.html" %}
+
+<p>
+  This is a very simple service- all it does it provide a string "foo." But
+  There's a couple nice things about this minimal example.
+</p>
+
+<p>
+  If you have multiple components reaching out for this service, only one
+  service is created and returned. The provider handles all this, and you' don't
+  have to worry about order or when the new consumers are brought into the app.
+  (The only exception being that the service provider needs to be instantiated
+  first.) Here's an example where you can add more
+  <code>my-component</code> components, and they retrieve the service just fine.
+</p>
+
+{% include"./example1.5.html" %}
+
+<p>
+  If you're using a web component, you can easily inspect the service, because
+  the service reference is attached as a property on that web component. If you
+  need to debug a service, it's easy to see and inspect. In a framework, it's
+  not too difficult either, you would just need to debug that component through
+  whatever component dev tools are availabe.
+</p>
+
+<img
+  src="./debug-service-through-wc.png"
+  alt="An open console that is debugging a web component, and seeng 'MyService' stored as a property on the web component"
+/>
+
+<p>
+  And speaking of frameworks, this would be super easy to do in
+  <em>any framework</em>. You can easily just use events to reach out to service
+  references, and the framework doesn't have to know how you got them.
+</p>
+
+<p>
+  Of course, you would need to deal with reactivity. This is something we
+  touched on a bit in the last
+  <a href="/posts/2025/1/global-state-with-web-components/">post about stores</a
+  >. I have a lot to say about this, but reactivity in this service system is a
+  bit complicated. (Maybe my next post?)
+</p>
+
+<p>
+  Here's an example using
+  <a href="https://github.com/vuejs/petite-vue">petite-vue</a>, a really cool
+  project which lets you sprinkle in vue-like components throughout a page. One
+  thing you'll notice in this example is that vue reactivity catches changes in
+  the service, and when the service changes its properties the view renders the
+  new value. Pretty nice perk to using petite-vue!
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  And, just to beat the proverbial dead horse, is an example with a service
+  being used in React:
+</p>
+
+{% include "./example3.html" %}
+
+<p>
+  I didn't try to hook up this service with reactivity to React, but if you're
+  interested, you could find a way to make a hook that uses
+  <code>useSyncExternalStore</code>
+  <a
+    href="https://react.dev/reference/react/useSyncExternalStore#usesyncexternalstore"
+    >to make React react to changes</a
+  >
+  from external sources. (Also probably a topic for a whole blog post 😅)
+</p>
+
+<h2>wc-services</h2>
+
+<p>
+  So I made a thing:
+  <a href="https://github.com/JimSchofield/wc-services">wc-services</a>. This
+  package provides a <code>service-provider</code> component, a
+  <code>service</code> fetching function, and some niceties to make using
+  services easier to work with and <em>reactive!</em>
+</p>
+
+<aside>
+  <p>
+    This package is very green, so there will be lots of iterations and
+    improvements over the next few weeks. I would love your feedback and thoughts.
+  </p>
+</aside>
+
+<p>
+  The only additional part of this package that isn't covered here is that
+  services need to extend a base class. This is required only so services can
+  track consumers and notify consumers when state changes. So a service might
+  look like this:
+</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      import { Service, reactive } from "wc-services";
+
+      class MyService extends Service {
+        @reactive text = "foo";
+
+        changeText() {
+          this.text = "bar";
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>And a Lit component might look like this:</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      import { LitElement, html } from "lit";
+      import { serviceLit } from "wc-services";
+
+      export default class MyComponent extends LitElement {
+        @serviceLit(MyService)
+        declare myService: MyService;
+
+        render() {
+          return html`<div>${this.myService.text}</div>`
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>To see this in action on stackblitz, check out this example:</p>
+
+<iframe src="https://stackblitz.com/edit/vitejs-vite-gouqeoz1?embed=1&file=index.html"></iframe>
+
+<h2>Let me know what you think!</h2>
+
+<p>Again, I would love to hear what you think and any suggestions you might have. {% socials %}</p>
+

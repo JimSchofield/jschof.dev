@@ -86,7 +86,7 @@ main {
 code {
   display: inline-block;
   padding: 0 0.25rem;
-  font-size: .85em;
+  font-size: 0.85em;
   border: 2px dashed var(--carrot);
   border-radius: 8px;
   line-height: 1.2;
@@ -94,7 +94,7 @@ code {
 }
 
 pre.shiki {
-  padding: 0.5rem .5rem;
+  padding: 0.5rem 0.5rem;
   border-radius: 8px;
   line-height: 1.2;
   font-family: "Fira Code", monospace;
@@ -147,7 +147,7 @@ aside.error {
     padding: 1em 0;
     border: none;
   }
-  
+
   &::before {
     display: block;
     position: absolute;
@@ -166,7 +166,7 @@ aside.shadow {
   border-color: var(--gunmetal);
 
   &::before {
-    content:""
+    content: "";
   }
 }
 
@@ -360,13 +360,15 @@ footer {
   justify-content: space-between;
 }
 
-embed {
+embed,
+iframe {
   margin-left: calc(50% - 42.5vw);
   width: 85vw;
   height: 80vh;
 }
 @media (max-width: 900px) {
-  embed {
+  embed,
+  iframe {
     margin-left: initial;
     width: 100%;
   }

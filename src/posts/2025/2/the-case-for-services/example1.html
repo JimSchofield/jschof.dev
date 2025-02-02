@@ -1,0 +1,64 @@
+<play-ground>
+  <template>
+    <my-component></my-component>
+    <script type="module">
+      class ServiceProvider {
+        constructor() {
+          this.instanceMap = new WeakMap();
+          window.addEventListener("get-service", this.handleGetOrInit.bind(this));
+        }
+
+        handleGetOrInit(event) {
+          const { klass, callback } = event;
+
+          let instance;
+
+          if (this.instanceMap.has(klass)) {
+            callback(this.instanceMap.get(klass));
+          } else {
+            const newInstance = new klass();
+
+            this.instanceMap.set(klass, newInstance);
+
+            callback(newInstance);
+          }
+        }
+      }
+
+      new ServiceProvider();
+    </script>
+    <script type="module">
+      class MyService {
+        data = "foo";
+      }
+
+      function getService(klass) {
+        let klassInstance;
+
+        const getServiceEvent = new Event('get-service');
+
+        getServiceEvent.klass = klass;
+        getServiceEvent.callback = (instance) => {
+          klassInstance = instance;
+        }
+        
+        window.dispatchEvent(getServiceEvent);
+
+        return klassInstance;
+      }
+
+      class MyComponent extends HTMLElement {
+        constructor() {
+          super();
+
+          this.myService = getService(MyService);
+        }
+
+        connectedCallback() {
+          this.innerHTML = `<div>${this.myService.data}</div>`;
+        }
+      }
+      customElements.define("my-component", MyComponent);
+    </script>
+  </template>
+</play-ground>

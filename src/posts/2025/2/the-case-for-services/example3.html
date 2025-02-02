@@ -1,0 +1,83 @@
+<play-ground fold="1,28, 43">
+  <template>
+    <script type="module">
+      class ServiceProvider {
+        constructor() {
+          this.instanceMap = new WeakMap();
+          window.addEventListener(
+            "get-service",
+            this.handleGetOrInit.bind(this),
+          );
+        }
+
+        handleGetOrInit(event) {
+          const { klass, callback } = event;
+
+          let instance;
+
+          if (this.instanceMap.has(klass)) {
+            callback(this.instanceMap.get(klass));
+          } else {
+            const newInstance = new klass();
+
+            this.instanceMap.set(klass, newInstance);
+
+            callback(newInstance);
+          }
+        }
+      }
+
+      new ServiceProvider();
+    </script>
+    <script>
+      function getService(klass) {
+        let klassInstance;
+
+        const getServiceEvent = new Event("get-service");
+
+        getServiceEvent.klass = klass;
+        getServiceEvent.callback = (instance) => {
+          klassInstance = instance;
+        };
+
+        window.dispatchEvent(getServiceEvent);
+
+        return klassInstance;
+      }
+    </script>
+    <div>
+      <script
+        src="https://unpkg.com/react@18/umd/react.development.js"
+        crossorigin
+      ></script>
+      <script
+        src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+        crossorigin
+      ></script>
+        <script
+        src="https://unpkg.com/@babel/standalone@7.10.3/babel.min.js"
+        crossorigin
+      ></script>
+    </div>
+    <script type="text/babel" data-presets="react,stage-3">
+      class MyService {
+        data = "foo";
+      }
+
+      const myService = getService(MyService);
+
+      const Example = () => {
+        return (
+          <div>
+            <p>{myService.data}</p>
+          </div>
+        );
+      };
+
+      const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<Example />);
+    </script>
+
+    <div id="root"></div>
+  </template>
+</play-ground>

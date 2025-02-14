@@ -12,6 +12,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.webp");
   eleventyConfig.addPassthroughCopy("./src/**/*.png");
   eleventyConfig.addPassthroughCopy("./src/**/*.mp4");
+  eleventyConfig.addPassthroughCopy("./src/**/*.ttf");
   eleventyConfig.addPassthroughCopy("./src/**/*.webmanifest");
   eleventyConfig.addPassthroughCopy("./.well-known/atproto-did");
   eleventyConfig.addPassthroughCopy({

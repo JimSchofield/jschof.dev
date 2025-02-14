@@ -3,15 +3,27 @@
 @import "./back-to-top.css";
 
 @font-face {
-  font-family: "Frank Ruhl Libre";
+  font-family: "Atkinson Hyperlegible Next";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../assets/fonts/FrankRuhlLibre-VariableFont_wght.ttf") format("ttf");
+  src: url('/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf');
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: bold;
+  font-variation-settings: "wght" 700;
+  font-display: swap;
+  src: url('/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf');
+}
+
+em {
+  font-style: italic;
+  font-variation-settings: "ital" 1;
 }
 
 :root {
-  --body-font: "Frank Ruhl Libre";
+  --body-font: "Atkinson Hyperlegible Next";
   --body-color: var(--gunmetal);
 
   --gradient-angle: 135deg;
@@ -309,7 +321,7 @@ footer {
   position: relative;
   display: inline-block;
   color: var(--paynes-gray);
-  font-weight: 550;
+  font-weight: bold;
 
   &::after {
     content: "";

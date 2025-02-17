@@ -1,8 +1,12 @@
 {% set previousPost = collections.posts | getPreviousCollectionItem %}
 {% set nextPost = collections.posts | getNextCollectionItem %}
+<span>
 {% if previousPost %}
 <a class="button" href="{{ previousPost.url }}" title="{{ previousPost.data.title }}">⬅️  Previous Post</a>
 {% endif %}
+</span>
+<span>
 {% if nextPost %}
 <a class="button" href="{{ nextPost.url }}" title="{{ nextPost.data.title }} ">Next Post ➡️</a>
 {% endif %}
+</span>

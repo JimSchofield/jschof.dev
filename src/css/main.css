@@ -285,6 +285,11 @@ footer {
   max-width: 100ch;
 }
 
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+}
+
 .v-space {
   margin-top: 2em;
 }

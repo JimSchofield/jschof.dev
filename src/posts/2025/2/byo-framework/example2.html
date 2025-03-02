@@ -1,0 +1,16 @@
+<play-ground>
+  <template>
+    <script type="module">
+      class MyComponent extends HTMLElement {
+        connectedCallback() {
+          this.innerHTML = `<div>Hello, World</div>`;
+        }
+      }
+
+      customElements.define('my-component', MyComponent);
+    </script>
+
+    <my-component></my-component>
+
+  </template>
+</play-ground>

@@ -1,0 +1,18 @@
+<play-ground>
+  <template>
+    <script type="module">
+      class MyComponent extends HTMLElement {
+        constructor() {
+          super();
+
+          this.innerHTML = `<div>Hello, World</div>`;
+        }
+      }
+
+      customElements.define('my-component', MyComponent);
+    </script>
+
+    <my-component></my-component>
+
+  </template>
+</play-ground>

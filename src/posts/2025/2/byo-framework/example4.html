@@ -1,0 +1,24 @@
+<play-ground>
+  <template>
+    <script type="module">
+      import { render, html } from "https://unpkg.com/lighterhtml?module";
+
+      class MyComponent extends HTMLElement {
+        name = "world";
+
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+          render(this.shadowRoot, () => this.render());
+        }
+
+        render() {
+          return html`<div>Hello, ${this.name}!</div> `;
+        }
+      }
+
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component></my-component>
+  </template>
+</play-ground>

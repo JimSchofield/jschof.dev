@@ -1,0 +1,34 @@
+<play-ground>
+  <template>
+    <script type="module">
+      import { render, html } from "https://unpkg.com/lighterhtml?module";
+
+      class MyComponent extends HTMLElement {
+        state = true;
+
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+          this.update();
+        }
+
+        update() {
+          render(this.shadowRoot, () => this.render());
+        }
+
+        toggleState() {
+          this.state = !this.state;
+          this.update();
+        }
+
+        render() {
+          return html`<div>Right now, state is: ${this.state.toString()}</div>
+          <button onclick=${() => this.toggleState()}>Toggle</button>`;
+        }
+      }
+
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component></my-component>
+  </template>
+</play-ground>

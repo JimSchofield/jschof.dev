@@ -1,0 +1,25 @@
+<play-ground>
+  <template>
+    <my-component></my-component>
+    <script type="module">
+      import { Component, html, signal } from "https://unpkg.com/minne";
+
+      class MyComponent extends Component {
+        counter = signal(0);
+
+        constructor() {
+          super();
+
+          setInterval(() => this.counter.value++, 1000);
+        }
+
+        render() {
+          return html`<div>Hello, world!</div>
+            <div>${this.counter.value}</div>`;
+        }
+      }
+
+      MyComponent.define("my-component");
+    </script>
+  </template>
+</play-ground>

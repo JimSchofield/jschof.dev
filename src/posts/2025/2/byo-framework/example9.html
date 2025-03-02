@@ -1,0 +1,35 @@
+<play-ground>
+  <template>
+    <script type="module">
+      import { render, html } from "https://unpkg.com/lighterhtml?module";
+      import {
+        effect,
+        signal,
+      } from "https://unpkg.com/@preact/signals-core?module";
+
+      class MyComponent extends HTMLElement {
+        state = signal(true);
+
+        connectedCallback() {
+          this.attachShadow({ mode: "open" });
+          effect(() => render(this.shadowRoot, () => this.render()));
+        }
+
+        toggleState() {
+          this.state.value = !this.state.value;
+        }
+
+        render() {
+          return html`<div>
+              Right now, state is: ${this.state.value.toString()}
+            </div>
+            <button onclick=${() => this.toggleState()}>Toggle</button>`;
+        }
+      }
+
+      customElements.define("my-component", MyComponent);
+    </script>
+
+    <my-component></my-component>
+  </template>
+</play-ground>

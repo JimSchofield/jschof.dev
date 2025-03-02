@@ -1,0 +1,395 @@
+---
+title: "BYOF: Build Your Own Framework"
+excerpt: "The platform is getting so good that it's not hard for us to get reactive and declarative components going with a few utilities and web components.  This is a look at how easy it is to build your own (web components) framework today."
+layout: post
+tags:
+  - posts
+  - web-components
+  - state
+  - services
+  - architecture
+  - frameworks
+date: 2025-02-24
+image: minne.webp
+---
+
+<script
+  type="module"
+  async
+  src="https://esm.sh/@tsukina-7mochi/github-cards"
+></script>
+
+<h1>BYOF: Build Your Own Framework</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  The platform is getting so good. You may remember when I gushed over how
+  <a href="/posts/2024/9/love-letter-to-the-platform"
+    >it's now easy to make a dropdown web component</a
+  >. We're
+  <a href="https://github.com/tc39/proposal-signals"
+    >hopefully getting signals natively</a
+  >. And someday we
+  <a
+    href="https://github.com/WICG/webcomponents/blob/gh-pages/proposals/DOM-Parts.md"
+    >might get declarative HTML rendering</a
+  >.
+</p>
+
+<p>
+  But the native features avilable to us <em>today</em> nearly cover all we need
+  to make a component framework ourself! To build your own component
+  system/framework you need:
+</p>
+
+<ul>
+  <li>A way to mount a component and run a component lifecycle</li>
+  <li>A declarative rendering system (like a template)</li>
+  <li>A way to react to state changes</li>
+</ul>
+
+<p>
+  Let's try assembling something and see how close to the metal and simple we
+  can be...
+</p>
+
+<h2>But hhwhy?</h2>
+
+<p>...you may ask.</p>
+
+<p>
+  And I get it. We have super nice things in web components already. We can use
+  Lit and get everything we need. We could build in vue, or svelte, or preact
+  and just compile to web components.
+</p>
+
+<p>
+  But this comes from an interesting place. While I was writing
+  <a href="/posts/2025/1/global-state-with-web-components/">a post on stores</a
+  >, I found that I was getting into some framework concerns like declarative
+  templating and reactivity. Instead of pulling in Lit, I was creating super
+  simple components in those cases to keep things simple, and it I found it
+  really wasn't hard to accomodate. The same happened when I was working on
+  <a href="/posts/2025/2/the-case-for-services/">an article with services</a>.
+</p>
+
+<p>
+  It turns out it's not hard to find the right utilities and platform abilities
+  to get what you need done, done. I think it shows you why frameworks are the
+  way they are- why things like signals and react hooks function the way they
+  do.
+</p>
+
+<p>Also, it's just a fun exercise. (At least, I think it is.)</p>
+
+<p>
+  So let's restrict ourselves to vanilla js modules in the browser, and try to
+  stick to super simple primitives that do one thing and do it super well, and
+  let's see what we can do.
+</p>
+
+<h2>Let's handle the component lifecycle part</h2>
+
+<p>
+  This is the easiest. For this example we're just going to use web components
+  and their lifecycles: <code>constructor</code>,<code> connectedCallback</code
+  >, <code>disconnectedCallback</code>
+</p>
+
+{% include "./example1.html" %}
+
+<p>Simple enough.</p>
+
+<p>
+  One thing to note: rendering should happen on the
+  <code>connectedCallback</code> phase of your component's life. Why? Well,
+  there are certain things that you can't do in the constructor according to
+  spec. When the constructor runs you can in practice make the DOM for your
+  component, and calling the element in the HTML will not error. BUT, if you
+  ever need to construct an element and imperatively manipulate it and place it
+  in the DOM, the browser enforces
+  <a
+    href="https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-conformance"
+    >"no children or attributes" being made in the constructor</a
+  >
+  when you try to create an element with <code>document.createElement()</code>.
+</p>
+
+<p>
+  The exception to this is adding children inside a shadow root... but probably
+  still not great practice. Beacuse, even if we forgot about the spec, your
+  component won't have access to some functionality because it's not yet
+  connected to the DOM. For example, you can't dispatch events on a document
+  fragment that isn't attached to the DOM. Or, you can, but you won't get the
+  results you'd like. Until it's connected do the document, global things like
+  styles might not affect your component template. You wouldn't be able to get
+  accurate style calculations with <code>getBoundingClientRect()</code>. You
+  might have unexpected slot content issues.
+</p>
+
+<p>
+  It's a finer point, but TLDR let's just render in connectedCallback, agreed?
+</p>
+
+{% include "./example2.html" %}
+
+<h2>Now for a rendering <em>strategy</em></h2>
+
+<p>The next part answers the question:</p>
+
+<blockquote>
+  How should we render <em>and update</em> DOM, event handlers, atttributes,
+  etc., when state changes?
+</blockquote>
+
+<p>
+  If you trust yourself enough, and say you've lived through the jQuery years
+  and actually didn't like switching to React back in the day, you might be able
+  to make DOM parts, put them in the DOM as needed, handle template changes,
+  handle setting up and tearing down handlers, and still have a smile on your
+  face at the end of the day.
+</p>
+
+<p>
+  If that's you, I'm happy for you, and you don't need to read the rest of this
+  article because native imperative web components are what we have already and
+  it sounds like they are already probably your jam.
+</p>
+
+<p>
+  In my humble opinion, I would say that it's better for developer's mental
+  health and overall wellbeing to use a library like
+  <a href="https://lit.dev/docs/libraries/standalone-templates/">lit-html</a>,
+  <a href="https://github.com/WebReflection/hyperhtml">hyperhtml</a>,
+  <a href="https://github.com/WebReflection/lighterhtml">lighterhtml</a>,
+  <a href="https://github.com/WebReflection/uhtml">uhtml</a>, or any other
+  number of templating libraries out there. I tend to lean into the tagged
+  template strategy instead of say JSX because I don't need any special build
+  process that magically turns my templates into javascript. I like that the
+  tagged template approach is completely runtime and just as nice to work with
+  as JSX.
+</p>
+
+<p>
+  In the future, we should be able to enjoy something similar and native, like
+  <a
+    href="https://github.com/WICG/webcomponents/blob/159b1600bab02fe9cd794825440a98537d53b389/proposals/Template-Instantiation.md"
+    >Template Instantiation</a
+  >
+  or
+  <a
+    href="https://github.com/WICG/webcomponents/blob/gh-pages/proposals/DOM-Parts.md"
+    >DOM parts</a
+  >.
+</p>
+
+<p>
+  We're going to use <code>lighterhtml</code> because it allows us declaratively
+  interpolate values, attach DOM event listeners, and update the rendering
+  surgically. We don't have to go in ourselves to find what part has changed and
+  imperatively change those parts- the template renderer smartly diffs the DOM
+  and does it for us.
+</p>
+
+<p>So this is what that could look like...</p>
+
+{% include "./example3.html" %}
+
+<p>
+  We've pulled our template out and made a <code>render()</code> function. Then,
+  in <code>connectedCallback</code> we use the lighterhtml render funtion to
+  attach the template to <code>this</code>, the host component. Want to do that
+  with a shadow DOM? Easy!
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  This takes care interpolating values, and adding event listeners. (In this
+  case, to make a click event, you would bind the event listener to the
+  <code>onclick</code> attributes. The details are particular to the rendering
+  library- ours being lighterhtml).
+</p>
+
+<p>What if we want to react to state changes?</p>
+
+<p>
+  It's just a little more work here- we need to create an "update" function that
+  can be called to render the template every time there is a change. Here's one
+  way to wire that up:
+</p>
+
+{% include "./example5.html" %}
+
+<p>
+  It still blows my mind that this library keeps a reference to the rendered DOM
+  and only changes what needs to be changed.
+</p>
+
+<video controls>
+  <source src="./surgical-dom-changes.mp4" type="video/mp4" />
+</video>
+
+<p>
+  This example demonstrates template rendering, adding event listeners, methods,
+  and properties that work together inside the component, and how to ask for a
+  rerender when the component state is changed. We don't have to be specific
+  about what changed, we can just call <code>this.update()</code> and the
+  renderer will take care of smart updates. This is the goal with delarative
+  components.
+</p>
+
+<p>
+  The downside? We have to let the component know when state has changed.
+  Wouldn't it be nice if we didn't have to do that?
+</p>
+
+<h2>The final piece: reactivity</h2>
+
+<p>
+  A quick and dirty way to do this might include class setters and getters to
+  trigger state updates when the setter is called
+</p>
+
+{% include "./example6.html" %}
+
+<p>
+  Now, instead of triggering renders in <code>toggleState</code>, the component
+  triggers update when the actual state is changing. This makes it nicer for the
+  user of this component to not have to worry about when to trigger updates, but
+  adding all those lines for one state change is annoying for a developer to do
+  for each reactive thing.
+</p>
+
+<p>
+  Another way which requires more understanding of javascript fundamentals and
+  more work to set up, is to create a function that sets up those setters and
+  getters for the user on the object. For example:
+</p>
+
+{% include "./example7.html" %}
+
+<p>
+  That works fine! You could have this property "setter" utility handy to make
+  it easier to create reactive properties when the need arises. But something
+  still doesn't feel great. It's not super clear that the resulting property
+  exists on the component. You'll see this pretty quick if you're using TS,
+  because you'll have to make a <code>declare state: boolean</code> property on
+  the class to make Typescript trust you that this property exists. And the
+  utility function we use is annoying to have to include on every component.
+</p>
+
+<p>We could use a Proxy...</p>
+
+<p>{% include "./example8.html" %}</p>
+
+<p>
+  And it works... but we're starting to get real complicated here, and this
+  proxy needs you to pass the update function to call on every state change. I'm
+  not sure this implementation is making our life easier.
+</p>
+
+<p>
+  How about we use something already made, like
+  <a href="https://preactjs.com/guide/v10/signals/">preact signals</a>? They are
+  agnostic enough for us not to worry about depending on preact. They have the
+  same niceties that our proxy example had, but signals are actually a much
+  nicer experience. Plus,
+  <a href="https://github.com/tc39/proposal-signals"
+    >signals may be native eventually</a
+  >. So why not pull this kind of primitive in?
+</p>
+
+<p>Here's how I would use it</p>
+
+<p>{% include "./example9.html" %}</p>
+
+<p>
+  Nice. We now have a way for users to make a reactive state. They have the
+  flexibility to put it outside a component, inside a component, or in a module-
+  anywhere, really. And the signals should handle the selective reactivity for
+  us.
+</p>
+
+<aside>
+  <p>
+    Just a friendly reminder: that signal subscription by using
+    <code>effect(...)</code> does need to be cleaned up. Otherwise you'll get a
+    memory leak. The solution is to run
+    <a
+      href="https://github.com/preactjs/signals/tree/main?tab=readme-ov-file#effectfn"
+      >the dispose callback</a
+    >
+    returned from <code>effect(...)</code> in the
+    <code>disconnectedCallback</code>, but I'm going to be that math teacher who
+    says "this is an exercise left to the reader."
+  </p>
+</aside>
+
+<h2>Tying it all together</h2>
+
+<p>
+  As you probably know, I'm a huge fan of Lit. I think it is the most tried and
+  true bulletproof framework for web components we have.
+</p>
+
+<p>But I have a few issues still with it.</p>
+
+<p>
+  I've never been a huge fan of decorators because of the paradigm they
+  introduce and the discrepancies between implementations between babel,
+  typescript, and native browsers. So I wanted to avoid them. In Lit, you kind
+  of sign up to use them- at least, the best experience is if you use typescript
+  and use the decorators. Alternatively, you can do everything in lit using
+  static configurations in vanilla javascript, but I wanted to avoid those too
+  if I could and make everything as concise and simple as possible.
+</p>
+
+<p>
+  So I made a mini-framework for components called
+  <a href="https://github.com/JimSchofield/minne">minne</a>
+</p>
+
+<gh-repo-card name="jimschofield/minne"></gh-repo-card>
+
+<p>
+  For the most part it's based off of the strategy we walked through in this
+  post: we use lighterhtml and preact signals in web components to make our
+  lives easy. But it also goes well past that and handles some other things for
+  web components:
+</p>
+
+<ul>
+  <li>
+    It handles attribute changes and reactivity. It can reflect values back to the DOM as well
+  </li>
+  <li>
+    It has a simple parse/serialize function to help with attributes that parse
+    to non-string things
+  </li>
+  <li>It applies styles in shadow DOM or adds them to the global stylesheet</li>
+  <li>
+    It provides destroyers for functionality you need to have happen at
+    component teardown
+  </li>
+  <li>
+    It even is playing around with being able to use Functional Components.
+  </li>
+</ul>
+
+<p>Check it out and let me know what you think!</p>
+
+<h2>In conclusion</h2>
+
+<p>
+  They say that creativity comes not from full freedom, but from working inside
+  of restrictions. This is what I found when I tried to keep my web component
+  demonstrations as vanilla and simple as possible. It was cool to see how much
+  we can do by assembling the component, template, and reactivity ourselves.
+</p>
+
+<p>
+  Hopefully this has been fun and inspires some creativity and scrappiness
+  in your coding. Let me know what you think. {% socials %}
+</p>

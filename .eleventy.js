@@ -9,6 +9,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
+  eleventyConfig.addPassthroughCopy("./src/**/*.gif");
   eleventyConfig.addPassthroughCopy("./src/**/*.webp");
   eleventyConfig.addPassthroughCopy("./src/**/*.png");
   eleventyConfig.addPassthroughCopy("./src/**/*.mp4");
@@ -65,7 +66,7 @@ export default function (eleventyConfig) {
   );
 
   eleventyConfig.addShortcode("socials", () => {
-    return 'Add a comment below or find me on <a href="https://bsky.app/profile/jschof.dev">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastadon</a>. I also have an <a href="/rss.xml">RSS feed here</a>';
+    return 'Find me on <a href="https://bsky.app/profile/jschof.dev">Bluesky</a> or <a href="https://c.im/deck/@oldcoyote">Mastodon</a>. I also have an <a href="/rss.xml">RSS feed here</a>';
   });
 
   eleventyConfig.addShortcode("joinPaths", function (...paths) {

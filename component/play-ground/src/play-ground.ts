@@ -9,9 +9,8 @@ import prettierPluginHtml from "prettier/plugins/html";
 import { EditorView, keymap, gutters, lineNumbers } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { customElement, property, state } from "lit/decorators.js";
-import { defaultKeymap } from "@codemirror/commands";
+import { indentWithTab, defaultKeymap } from "@codemirror/commands";
 import { html as htmlLang } from "@codemirror/lang-html";
-import { indentWithTab } from "@codemirror/commands";
 
 import { foldCode } from "@codemirror/language";
 
@@ -67,12 +66,12 @@ export class PlayGround extends LitElement {
     });
 
     if (!!this.fold) {
-      this.foldLines()
+      this.foldLines();
     }
   }
 
   private foldLines() {
-    const folds = this.fold.split(",").map(n => Number.parseInt(n));
+    const folds = this.fold.split(",").map((n) => Number.parseInt(n));
 
     folds.forEach((line) => {
       const fromLine = this.editorView.state.doc.line(line);

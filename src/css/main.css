@@ -427,6 +427,42 @@ play-ground::part(editor-format-button):focus-visible {
   background: var(--gradient);
 }
 
+/* specific to terminal-playground web component */
+terminal-playground {
+  margin: 1rem 0;
+}
+
+terminal-playground::part(container) {
+  margin-left: calc(50% - 42.5vw);
+  width: 85vw;
+}
+@media (max-width: 900px) {
+  terminal-playground::part(container) {
+    margin-left: initial;
+    width: 100%;
+  }
+}
+
+terminal-playground::part(editor-format-button) {
+  display: inline-block;
+  padding: 0.25em 1em;
+  background: var(--gunmetal);
+  color: var(--seasalt);
+  box-shadow: var(--shadow);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+terminal-playground::part(editor-format-button):active,
+terminal-playground::part(editor-format-button):hover {
+  color: var(--sunset);
+}
+terminal-playground::part(editor-format-button):focus-visible {
+  color: var(--seasalt);
+  outline: 2px solid var(--raw-umber);
+  background: var(--gradient);
+}
+
 code-highlight {
   margin: 1rem 0;
   max-width: 100%;

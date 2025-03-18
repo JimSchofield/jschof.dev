@@ -2,13 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Terminal Playground</title>
-    <script type="module" src="/src/index.ts"></script>
+    <script type="module" src="/src/terminal-playground.ts"></script>
   </head>
   <body>
     <terminal-playground>
+      <template>
+        <script>
+          const { log } = console;
+
+          console.log("Hello from typescript!");
+
+          class Foo {
+            bar = "baz";
+          }
+
+          console.log(Foo);
+
+          console.log({
+            testing: "Some",
+            values: [42, 33, 22],
+            from: true,
+            something: undefined,
+          });
+        </script>
+      </template>
     </terminal-playground>
+    <!-- <terminal-playground> -->
+    <!--   <template> -->
+    <!--     <script> -->
+    <!--       class Something { -->
+    <!--         foo = "bar"; -->
+    <!---->
+    <!--         static foo = "baz"; -->
+    <!--       } -->
+    <!--     </script> -->
+    <!--   </template> -->
+    <!-- </terminal-playground> -->
   </body>
 </html>

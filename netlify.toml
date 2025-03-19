@@ -1,0 +1,5 @@
+[[headers]]
+  for = "/posts/2025/3/secret-lives-of-objects/"
+  [headers.values]
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Cross-Origin-Opener-Policy = "same-origin"

@@ -1,0 +1,1 @@
+../../component/terminal-playground/dist/terminal-playground.js

@@ -1,0 +1,17 @@
+<play-ground>
+  <template>
+    <my-component></my-component>
+    <script type="module">
+      import { Component, html, signal } from "https://unpkg.com/minne";
+
+      class MyComponent extends Component {
+        someProp = this.publicReactive("someProp", "defaultValue");
+        render() {
+          return html` <div>${this.someProp}</div> `;
+        }
+      }
+
+      MyComponent.define("my-component");
+    </script>
+  </template>
+</play-ground>

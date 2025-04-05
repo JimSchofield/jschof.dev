@@ -1,0 +1,21 @@
+<play-ground>
+  <template>
+    <my-custom-element></my-custom-element>
+    <script type="module">
+      function MyCustomElement(someArg = []) {
+        return Reflect.construct(HTMLElement, someArg, MyCustomElement);
+      }
+
+      MyCustomElement.prototype = Object.create(HTMLElement.prototype);
+      MyCustomElement.prototype.constructor = MyCustomElement;
+
+      MyCustomElement.prototype.connectedCallback = function () {
+        console.log("MyCustomElement has entered the DOM!")
+
+        this.innerHTML = `<p>I'm here!</p>`; 
+      };
+
+      customElements.define('my-custom-element', MyCustomElement)
+    </script>
+  </template>
+</play-ground>

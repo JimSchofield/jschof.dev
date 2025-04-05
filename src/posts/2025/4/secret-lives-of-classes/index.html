@@ -1,0 +1,723 @@
+---
+title: "The Secret Lives of Classes: A deep dive into javascript prototypes and classes"
+excerpt: 'What started out as adding syntactic sugar to javascript prototypes fundamentally changed javascript forever.  Classes are no longer "just" a simpler layer over prototypes.  Classes are becoming the expected unit of abstraction and are affecting the way specifications are written.  Let''s dive deep into classes, objects, and prototypes!'
+layout: post
+tags:
+  - posts
+  - web-components
+  - javascript
+  - deep dive
+  - prototypes
+  - ecmascript
+  - es5
+  - class fields
+date: 2025-04-05
+---
+
+<h1>
+  The Secret Lives of Classes: A deep dive into javascript prototypes and
+  classes
+</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  You can be a succesful dev in javascript land and not think about prototypes
+  much at all. They are a quaint relic, an oddball basis for the pet scripting
+  language
+  <a href="https://en.wikipedia.org/wiki/JavaScript#Creation_at_Netscape"
+    >written in a week for Netscape</a
+  >.
+</p>
+
+<p>
+  As I spend time working on architectural and library-based applications in
+  browser-land I find that prototypes and their advantages are being completely
+  forgotten. Typescript has nudged the great masses of javascript developers
+  into the habit of using a <code>class</code>. And unless you've been coding
+  for more than 8 or 9 years, you may have not known that classes were added
+  late to the language, and there was... <em>something else</em> that allowed
+  people to encapsulate data, create multiple similar instances, and provide
+  structures that could abstract your code.
+</p>
+
+<p>
+  I think this is a shame. I wonder often what life would be like if we stuck
+  with prototypes and didn't get bullied into copying Java. Perhaps that alone
+  would be a good post to write about.
+</p>
+
+<p>
+  My thesis in this post is that prototypical programming is dead. And it's so
+  dead that specifications and the way the browser implements classes is making
+  prototypes not even all the helpful to understand.
+</p>
+
+<aside>
+  <p>
+    I'll be using "Javascript" mostly, but it's important to note that the term
+    is technically not the name of the language. Since Oracle holds the
+    trademark for "Javascript," our language is actually called "ECMAscript."
+    For all intents and purposes these are interchangeable, and
+    <a href="https://deno.com/blog/deno-v-oracle"
+      >I hope Oracle will drop the trademark</a
+    >, but
+    <a href="https://deno.com/blog/deno-v-oracle3"
+      >it looks like Oracle is a soulless legal team mascarading as a technology
+      company</a
+    >, so I'm not holding my breath.
+  </p>
+</aside>
+
+<h2>Okay, let's talk about prototypes</h2>
+
+<p>
+  For the uninitiated, javascript was written with
+  <a href="https://en.wikipedia.org/wiki/Prototype-based_programming"
+    >prototypical inheritance</a
+  >
+  at its core. Instead of making a special template "cookie cutter" thing called
+  a class, you would actually just use other objects as a template to re-use
+  functionality.
+</p>
+
+<p>
+  It's quite brilliant, if you think about it. Why make a special entity apart
+  from objects? If you want a whole class of objects to have the same behavior,
+  point them to a single object called their "prototype." If you try to use a
+  method on the original object and the object doesn't have that method, it will
+  look at its prototype to see if <em>that</em> object has it, and if that one
+  doesn't, it will look at <em>its</em> prototype, and so on, until the method
+  is found. If it isn't, we get <code>undefined</code> back, because, well, that
+  thing was never defined in the prototype chain.
+</p>
+
+<p>Here's an example where we make a Cat "class" using prototypes only.</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      const catProto = {
+        speak() {
+          console.log("Meow");
+        },
+        scratch() {
+          console.log("Scratches couch");
+        },
+      };
+
+      let cat = { name: "Buford" };
+
+      Object.setPrototypeOf(cat, catProto); // Where the magic happens!
+
+      cat.name; // "Buford"
+      cat.speak(); // logs "Meow", becuase it finds this method on the prototype
+      cat.scratch(); // "Scratches couch"
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  This is extremely flexible, because you can more easily compose behavior. Want
+  your objects to do X? Put X on its prototype object. Easy.
+</p>
+
+<p>
+  This also did something very nice regarding inheritance. You could avoid the
+  <a href="https://en.wikipedia.org/wiki/Multiple_inheritance"
+    >diamond problem</a
+  >
+  pretty easily by just being smart about mixing and creating your prototype
+  objects.
+</p>
+
+<p>
+  Don't want to have to manually create a new object for every instance?
+  Javascript had you covered. Every function is actually a constructor. If you
+  attached a prototype to that function, you had yourselve a constructor with a
+  prototype already attached to any instance you created.
+</p>
+
+<p>
+  So, normally for the "cat" example above, you probably would have this
+  instead:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function Cat(name) {
+        // This is the constructor, and `this` is a reference to the
+        // new object (instance) you're creating when you use "new"
+        this.name = name;
+      }
+
+      Cat.prototype = {
+        speak() {
+          console.log("Meow");
+        },
+        scratch() {
+          console.log("Scratches couch");
+        },
+      };
+
+      const buford = new Cat("Buford");
+
+      buford.name; // "Buford"
+      buford.speak(); // logs "Meow", becuase it finds this method on the prototype
+      buford.scratch(); // "Scratches couch"
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  This is where Javascript's distinctive <code>this</code> comes in.
+  <code>this</code> is someting so uniquely javascript, that also could probably
+  be its own blog post. For this discussion, it's important to note that
+  <code>this</code> exists because when you're writing prototypes you need a way
+  to reference whatever object you're ending up on. And with Javascript, the
+  context of where functions are called changes all the time.
+</p>
+
+<p>
+  Why is this flexible? Well, if you want to share functionality, you just "mix
+  it in."
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function Cat(name) {}
+
+      Cat.prototype = {
+        speak() {
+          console.log("Meow");
+        },
+      };
+
+      function Dog(name) {}
+
+      Dog.prototype = {
+        speak() {
+          console.log("Roof");
+        },
+      };
+
+      // NEW functionality dogs and cats should have
+      const shedding = {
+        shed() {
+          console.log("This animal sheds a bunch of fur");
+        },
+      };
+
+      Object.assign(Cat.prototype, shedding);
+      Object.assign(Dog.prototype, shedding);
+
+      // yay, they both shed now
+    </script>
+  </template>
+</code-highlight>
+
+<h2>Typescript enters the chat</h2>
+
+<p>
+  There were many that weren't so happy with prototypes alone. This is
+  understandable, because with the power of prototypical inheritance and mixing
+  prototypes came great responsibility. It's hard to ensure that methods are on
+  an object or its prototype chain if they could change at any moment at
+  runtime.
+</p>
+
+<p>
+  One way to make this process a bit streamlined is to use classes. The way
+  they're presented makes them seem like their behavior is set in stone and
+  reliable. And this is very true in other languages that use class inheritance.
+  So Typescript creates classes that transpile into javascript.
+</p>
+
+<p>
+  This is how it started: classes are just "syntactic sugar." You can write
+  classes, and out comes typescript prototypes.
+</p>
+
+<p>Here is a class in Typescript...</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      class Greeter {
+        name = "default";
+
+        constructor(nameArg: string) {
+          this.name = nameArg;
+        }
+        sayHi() {
+          console.log("Hi, name")
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>And here's how that's desugared into ES5...</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      "use strict";
+      var Greeter = /** @class */ (function () {
+        function Greeter(nameArg) {
+          this.name = "default";
+          this.name = nameArg;
+        }
+        Greeter.prototype.sayHi = function () {
+          console.log("Hi, name");
+        };
+        return Greeter;
+      })();
+    </script>
+  </template>
+</code-highlight>
+
+<aside class="blue">
+  <p>
+    About "ES5" and "ES6": Along with typescript adopting usage of classes,
+    ECMAscript had written the next specifications that included classes. This
+    was called "ES6." It seems this is the diving line between pre-class and
+    post-class almost everything, because when tools like typescript "target
+    ES5," that means that any transpiling that happens must account for the spec
+    of ES5 and that means no classes, only prototypes.
+  </p>
+
+  <p>
+    So, when MDN talks about how something is not possible in "pre-ES6" code,
+    this means that it literally cannot be even transpiled to ES5 or earlier
+    because the spec did not support the functionality at all. More on that
+    later.
+  </p>
+</aside>
+
+<h2>It's not as simple as "just syntactic sugar" anymore</h2>
+
+<p>
+  As more and more features are added to javascript, it's harder and harder to
+  maintain simple transpilation.
+</p>
+
+<p>
+  Decorators were added to Typescript in version 1.5 in 2015, and ever since
+  then you can enable them with the <code>--experimentalDecorators</code> flag,
+  even though today they're a totally legit typescript feature that's in no way
+  unstable.
+</p>
+
+<p>
+  They are still called "experimental" because there are competitors... kind of.
+  Decorators have also been talked about in various forms in babel transpilation
+  and natively in TC39 proposals. To support all these variations and new
+  features being written into future spec proposals very smart people had to
+  start making adjustments to how things in a class are transpiled.
+</p>
+
+<p>
+  In Typescript 3.7, the folks at Microsoft wrote an
+  <a
+    href="https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#the-usedefineforclassfields-flag-and-the-declare-property-modifier"
+    >interesting explanation</a
+  >
+  of why they were changing how class profields were transpiled.
+</p>
+
+<p>
+  In a nutshell, this is how Typescript (and many others) thought class fields
+  would transpile:
+</p>
+
+<code-highlight>
+  <template>
+    <script>
+      class Foo {
+        field = "Default value";
+        uninitializedField;
+      }
+
+      // Transpiles to
+
+      function Foo() {
+        this.field = "Default value";
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>When in reality, this is what needs to get transpiled</p>
+
+<code-highlight>
+  <template>
+    <script>
+      class Foo {
+        field = "Default value";
+        uninitializedField;
+      }
+
+      // Transpiles to
+
+      class Foo {
+        constructor() {
+          Object.defineProperty(this, "field", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: 100,
+          });
+          Object.defineProperty(this, "uninitializedField", {
+            enumerable: true,
+            configurable: true,
+            writable: true,
+            value: void 0,
+          });
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  I actually can't tell you exactly why... but this is not the expected
+  behavior, at least, not if this were simple desugaring of prototypes. There is
+  something extra going on to accomodate classes. I think this mostly is a way
+  to define properties on the class that have an undefined value (the
+  <code>uninitializedField</code>.)
+</p>
+
+<p>
+  What's interesting is that today-
+  <strong
+    >this is how fields are initialized natively in the browser when using
+    classes.</strong
+  >
+</p>
+
+<p>
+  That's right, if you use a field in plain ol' javascript in the browser, it's
+  actually applied to the constructed instance using defineProperty.
+</p>
+
+<h3>That's really specific</h3>
+
+<p>
+  Why does that matter? Well, I ran into this error while working on my
+  <a href="https://github.com/JimSchofield/minne">Minne</a> library:
+</p>
+
+{% include "./example1.html" %}
+
+<p>You will see this error in the console</p>
+
+<img
+  src="./error-example.png"
+  alt="An error in the console: Uncaught TypeError: Cannot redefine property: someProp"
+/>
+
+<p>
+  It turns out that browsers interpret and run field initializers using
+  basically <code>Object.defineProperty</code> under the hood. When I try to run
+  my method for Minne, I'm also using the same method to set properties with
+  special functionality. It conflicts!
+</p>
+
+<p>
+  The solution is to run my Minne method in the constructor only... which is
+  fine, but not as nice for the consumer. That means some fields are field
+  definitions on the class, and some might be in the constructor.
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  This isn't just my problem though. If you look at the Lit documentation,
+  <a href="https://lit.dev/docs/components/decorators/#decorators-typescript"
+    >they run into this same issue</a
+  >
+  for intializing values on class fields
+</p>
+
+<p>
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Public_class_fields#:~:text=Because%20class%20fields%20are%20added%20using%20the"
+    >MDN explains how this is so under the hood</a
+  >, which leads to some unexpected behavior with invoking setters on a base
+  class.
+</p>
+
+<p><strong>So here's a TLDR of this class fields thing:</strong></p>
+
+<p>
+  Browsers are making native behavior with javascript classes that are not
+  intuitively mapped to javascript prototypes. If you were to be writing a
+  javascript prototype of the examples above, I think you would be
+  <em>very surprised</em> by the <code>defineProperty</code> native behavior.
+</p>
+
+<p>
+  I think for better or worse classes are the main entity now for abstractions
+  and reuse, so the behavior under the hood does not have to be expected or
+  consistent with prior prototype patterns.
+</p>
+
+<h3>Another example: making a custom element</h3>
+
+<p>Have you tried to make a custom element with just Javascript prototypes?</p>
+
+<p>
+  First off, we need to talk about how to subclass with prototypes, because to
+  make a custom element you are required to extend <code>HTMLElement</code>, and
+  you must call `super()` in the constructor.
+</p>
+
+<p>
+  Let's say that you have a Base prototype - Animal, and you want to extend off
+  of that prototype. Let's make a Cat. First, what it looks like with classes.
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      class Animal {
+        constructor(name) {
+          this.name = name;
+        }
+
+        eat() {
+          console.log(this.name + " eats");
+        }
+      }
+
+      class Cat extends Animal {
+        constructor(name, color) {
+          super(name);
+
+          this.color = color;
+        }
+
+        groom() {
+          console.log(this.name + " grooms its " + this.color + " fur");
+        }
+      }
+
+      const larry = new Cat("larry", "orange");
+
+      larry.eat(); // "Larry eats"
+      larry.groom(); // "Larry grooms its orange fur"
+
+      larry instanceof Cat; // true
+      larry instanceof Animal; // true,
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  Okay, fair enough. Now let's see what you need to do with prototypes.
+  Conceivably, classes are just shorthand for the following:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function Animal(name) {
+        this.name = name;
+      }
+
+      Animal.prototype.eat = function () {
+        console.log(this.name + " eats");
+      };
+
+      function Cat(name, color) {
+        // We need to instantiate the Animal base of our cat
+        // This is basically calling `super()`
+        Animal.call(this, name);
+
+        this.color = color;
+      }
+
+      // Also, we need to make sure the Cat prototype starts out
+      // as an instance of the Animal prototype, since it inherits
+      // everything about Animal
+      Cat.prototype = Object.create(Animal.prototype);
+
+      // And we need to set the constructor this object would be made with
+      // which is Cat itself
+      Cat.prototype.constructor = Cat;
+
+      Cat.prototype.groom = function () {
+        console.log(this.name + " grooms its " + this.color + " fur");
+      };
+
+      const larry = new Cat("larry", "orange");
+
+      larry.eat(); // "Larry eats"
+      larry.groom(); // "Larry grooms its orange fur"
+
+      larry instanceof Cat; // true
+      larry instanceof Animal; // true,
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  Okay, so lots of code. And this prototype thing can be confusing if you're not
+  used to it. I can see why people wanted to retreat to classes.
+</p>
+
+<p>
+  Now, let's try to make a custom element in prototype land. You do the exact
+  same process as above...
+</p>
+
+{% include "./example3.html" %}
+
+<p>We run into an error:</p>
+
+<aside class="error">
+  <p>
+    Failed to construct 'HTMLElement': Please use the 'new' operator, this DOM
+    object constructor cannot be called as a function.
+  </p>
+</aside>
+
+<p>What the heck? HTMLElement can't be called like any other function?</p>
+
+<p>
+  It turns out that you can't. There are some "Functions" or classes like
+  <code>HTMLElement</code> that you can't call directly. When you try to
+  subclass with a prototype, and you call <code>HTMLElement.apply(this)</code>,
+  you run into an issue where the constructor function can't be called. If you
+  try to use <code>new</code> and spin up a new <code>HTMLElement</code> like
+  the error suggest, you get a different error
+</p>
+
+<aside class="error">
+  <p>
+    Uncaught TypeError: Failed to construct 'HTMLElement': Illegal constructor
+  </p>
+</aside>
+
+<p>
+  So what is a web component connoisseur like us supposed to do if we want to do
+  it with ES5, pre-class, prototypes? It turns out it's
+  <strong>not possible</strong> in strictly ES5.
+</p>
+
+<h4>The need for <code>Reflect.construct</code></h4>
+
+<p>
+  What we need is a way to "extend" our prototype by constructing a new
+  sub-class instance while maintaining the prototype link of the base class.
+  This is actually
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/new.target#new.target_using_reflect.construct:~:text=In%20fact%2C%20due%20to%20the%20lack%20of"
+    >just not possible pre-es6</a
+  >
+</p>
+
+<p>
+  What we need is a new feature housed in the <code>Reflect</code> API which was
+  included in ES6 and finalized in 2015
+</p>
+
+<p>
+  <code>Reflect.construct</code> Is basically <em>the function</em> that
+  performs <code>new</code>, and effectively allows us to do
+  <code>super()</code>. This is perfect for classes, because that's what
+  <code>extends</code> and <code>constructor()</code> do.
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function Base() {}
+
+      function A(...args) {
+        Base.apply(this, ...args);
+      }
+
+      // Is functionally the same as
+
+      function A(...args) {
+        return Reflect.construct(Base, args, A);
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  This is how we get around that issue of using HTMLElement as a function. This
+  is how we "call super" with prototypes. This is how we can extend
+  <code>HTMLElement</code> for custom elements.
+</p>
+
+{% include "./example4.html" %}
+
+<aside>
+  <p>
+    By the way, this isn't the only place where
+    <code>Reflect.construct</code> is required to extend what's called
+    "built-ins". The same happens for <code>Error</code> and
+    <code>Array</code> and <code>Map</code>(see the warning MDN provides here
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error#:~:text=Builtin%20subclassing%20cannot%20be%20reliably%20transpiled"
+      >here</a
+    >).
+  </p>
+</aside>
+
+<h2>Class internals aren't what they used to be</h2>
+
+<p>So what am I trying to say? We're well past the world of prototypes.</p>
+
+<p>
+  If we're well past prototypes and not willing to risk using prototypes for
+  fear of their dangers, I'm wondering if it's important <em>at all</em> that
+  people dig into prototype intracacies. We can understand everything in terms
+  of classes. I've always heard "it's good to learn about to understand what
+  goes on under the hood" but it's actually way more confusing to look under the
+  hood, and trying to model classes using prototypes is complicated. Why not
+  just live in the world of that extra type abstraction of classes?
+</p>
+
+<p>
+  I asked someone to explain the difference between javascript class inheritance
+  and java class inheritance, and they couldn't actually say that anything was
+  different <em>except</em> that javascript has this prototype primitive that
+  can be changed at run time, and Java class inheritance can't be changed at run
+  time. Otherwise, for all intents and purposes, the inheritances, the methods,
+  the class fields, behave nearly identically to other languages.
+</p>
+
+<p>
+  On a personal note, this makes me a little sad. The one distinct feature of
+  javascript was this experimental mode of inheritance that allowed exceptional
+  flexibility at runtime. I don't think we truly found the benefits of this
+  extra flexibility, and most people just complained about its unfamiliarity
+  instead of learning to use prototypes correctly. And now it's been eclipsed by
+  a lumbering abstraction used by all the "big boy" languages.
+</p>
+
+<p>
+  This matters in a world where javascript is (practically and really) the only
+  language for web apps
+</p>
+
+<br />
+
+<p>
+  Oh well. There's always Rust. And maybe someday we can compile to web
+  assembly?
+</p>
+
+<br />
+
+<p>
+  I had to do a lot of research for this post and I probably made some mistakes.
+  Let me know. {% socials %}
+</p>

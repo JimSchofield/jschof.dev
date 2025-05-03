@@ -38,7 +38,7 @@ export class CodeHighlight extends LitElement {
   connectedCallback() {
     super.connectedCallback();
 
-    if (["javascript", "typescript"].includes(this.lang)) {
+    if (["javascript", "typescript", "tsx", "jsx"].includes(this.lang)) {
       this.handleScript();
     } else if ("css" === this.lang) {
       this.handleStyle();
@@ -51,6 +51,9 @@ export class CodeHighlight extends LitElement {
     // Not sure someone could mess with it...
     // Array.from(this.children).forEach((child) => child.remove());
   }
+
+  @property({ attribute: "dont-pretty", type: Boolean })
+  dontPretty = false;
 
   private handleTemplate() {
     // We expect a single script tag in a template to hold content in DOM
@@ -70,9 +73,7 @@ export class CodeHighlight extends LitElement {
       );
     }
 
-    prettier
-      .format(content, { parser: this.lang, plugins })
-      .then((result) => (this.content = result));
+    this.prettifyAndSet(content);
   }
 
   private handleScript() {
@@ -88,11 +89,22 @@ export class CodeHighlight extends LitElement {
       );
     }
 
-    const parser = this.lang === "javascript" ? "babel" : "typescript";
+    let parser: string;
+    switch (this.lang) {
+      case "javascript":
+      case "jsx":
+        parser = "babel";
+        break;
+      case "typescript":
+      case "tsx":
+        parser = "typescript";
+        break;
+      default:
+        parser = "babel";
+        break;
+    }
 
-    prettier
-      .format(content, { parser, plugins })
-      .then((result) => (this.content = result));
+    this.prettifyAndSet(content, parser);
   }
 
   private handleStyle() {
@@ -106,9 +118,17 @@ export class CodeHighlight extends LitElement {
       );
     }
 
-    prettier
-      .format(content, { parser: this.lang, plugins })
-      .then((result) => (this.content = result));
+    this.prettifyAndSet(content);
+  }
+
+  prettifyAndSet(content: string, parser = this.lang) {
+    if (this.dontPretty) {
+      this.content = content;
+    } else {
+      prettier
+        .format(content, { parser, plugins })
+        .then((result) => (this.content = result));
+    }
   }
 
   @property()

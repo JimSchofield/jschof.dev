@@ -1,0 +1,11 @@
+<play-ground>
+  <template>
+    <p bool-attr>hi</p>
+    <p bool-attr="foo">hi</p>
+    <style>
+      p::after {
+        content: " (This element's bool-attr value is: \"" attr(bool-attr) "\")"
+      }
+    </style>
+  </template>
+</play-ground>

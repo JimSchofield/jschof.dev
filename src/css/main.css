@@ -7,14 +7,14 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf');
+  src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
 }
 @font-face {
   font-family: "Atkinson Hyperlegible Next";
   font-style: bold;
   font-variation-settings: "wght" 700;
   font-display: swap;
-  src: url('/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf');
+  src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
 }
 
 em {
@@ -176,6 +176,14 @@ aside.error {
 aside.shadow {
   padding: 1em;
   border-color: var(--gunmetal);
+
+  &::before {
+    content: "";
+  }
+}
+
+aside.no-decoration {
+  margin: 1rem 0;
 
   &::before {
     content: "";

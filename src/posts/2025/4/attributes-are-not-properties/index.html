@@ -1,0 +1,314 @@
+---
+title: "Element Attributes Are Not Element Properties"
+excerpt: "We discuss why attributes and properties are often confused, and I share my super-secret of learning and coding."
+layout: post
+tags:
+  - posts
+  - web-components
+  - javascript
+  - attribtues
+  - frameworks
+  - the platform
+date: 2025-04-30
+image: duck.webp
+---
+
+<h1>Element Attributes Are Not Element Properties</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  Something that has come up a number of times as people are stepping away from
+  their javascript frameworks and leaping into web components is that they don't
+  know the difference between attributes and properties. This matters because
+  there's a <em>big difference</em> between the two, and you need to know when
+  to use either or both with your custom elements.
+</p>
+
+<p>Let's jump right in.</p>
+
+<h2>Element Attributes</h2>
+
+<p>
+  An attribute are those things in html that allow us to attach key-value
+  information to elements:
+</p>
+
+<code-highlight>
+  <template>
+    <my-custom-element attribute="value"></my-custom-element>
+  </template>
+</code-highlight>
+
+<p>
+  These are in HTML, XML, and XHTML. In all those cases, the values are only
+  ever strings.
+</p>
+
+<p>
+  The one exception to this is in HTML where you can have an attribute without a
+  value, in which the value is just an empty string <code>""</code> if you were
+  to retrieve it in javascript. These are generally considered for boolean
+  states like <code>disabled</code> or <code>hidden</code>.
+</p>
+
+{% include "./example1.html" %}
+
+<aside>
+  <p>
+    In the example above, it's perfectly legal to remove <code>=""</code> from
+    the attribute and have no value assignment. The attr value will still be an
+    empty string, and will be considered a "boolean" attribute. (It's either
+    there or it isn't.)
+  </p>
+
+  <p>
+    The reason there's a <code>=""</code> in the example above is that I use
+    <code>innerHTML</code> in the play-ground custom element code to serialize
+    the markup from the example, and it automatically adds an empty string to
+    attributes with no value. Seems like this is just a weird quirk with
+    <code>innerHTML</code>.
+  </p>
+</aside>
+
+<h2>Element Properties</h2>
+
+<p>
+  Properties have a special meaning for Elements. When you inspect the DOM in
+  the browser, and inspect a particular node, you have an
+  <code>Element</code> in hand. That <code>Element</code> is an object (in
+  particular, an Element instance object) and can have its own properties.
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  Take a look- if you select that custom element in the DOM, it will have that
+  property. You may not see it right away, because if you log the node or use
+  <code>$0</code> in Chrome it will not print the object, but the node
+  representation:
+</p>
+
+<video controls>
+  <source src="./attr-vs-property.mp4" type="video/mp4" />
+</video>
+
+<p>
+  So, properties are plain ol' javascript properties, just in this case we more
+  concisely call this a <em>field</em> becuase it's defined on the class
+  explicitly.
+</p>
+
+<h2>Why the confusion?</h2>
+
+<p>
+  I have opinions about how we came to this mess where people confuse the two. I
+  had to spend a while diving into attributes and properties while first
+  learning Lit. I'm convinced it has to do with how frameworks use templates.
+</p>
+
+<p>
+  Take React. They famously switched over to JSX to include templating inside
+  the actual javascript files. As best I can tell and remember
+  <a href="https://legacy.reactjs.org/docs/introducing-jsx.html"
+    >this happened around 2013-2014</a
+  >.
+</p>
+
+<p>
+  Despite React saying explicitly in its introductory explanation of JSX that
+  JSX is not HTML, most people took for granted how important this distinction
+  was, and continue to do so. JSX is an abstraction that represents components
+  and elements using XML-like syntax. Because you can freely call components or
+  regular web elements in the XML you write, this produced a whole generation of
+  developers that didn't need to distinguish between the abstraction and the
+  platform API for DOM.
+</p>
+
+<p>I'm pretty certain that as people got used to seeing this:</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      function RenderSomeHTML() {
+        return <p attribute="value"></p>;
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  They forgot completely about the JSX pragma and desugaring that was happening
+  under the hood:
+</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      function RenderSomeHTML() {
+        return React.createElement("p", { attribute: "value" }, null);
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  JSX is a shorthand for creating a <em>representation</em> of a DOM tree. It is
+  not HTML or a DOM tree itself.
+</p>
+
+<p>
+  The important thing here is that <code>attribute</code> above is actually a
+  <em>property</em> and not an attribute, even though it looks like an attribtue
+  in JSX. And what confuses things further is that that property could be a
+  valid attribute <em>eventually</em> when the element is rendered by React if
+  React recognizes that property is actually a valid HTML attribute.
+</p>
+
+<p>
+  This is not specific to React, though, because in every other javascript
+  framework that has declarative templates you have the same issue. The template
+  is a representation of the DOM tree you want the framework to eventually
+  render, and so bindings <strong>could be either:</strong> a property at
+  runtime that never translates into an attribute in the DOM
+  <strong>or</strong> a property that is recognized as a valid HTML attribute
+  and eventually placed in the DOM as such.
+</p>
+
+<h2>So why are they conflated in Lit?</h2>
+
+<p>
+  I think this is easily seen in how decorators are used to automatically set up
+  attribute bindings in the background. In Lit, you can add a decorator, and
+  magically the field you're defining on this class has an attribute
+  automatically set up for that particular property on the custom element
+</p>
+
+<code-highlight lang="typescript">
+  <template>
+    <script>
+      class MyElement extends LitElement {
+        @property()
+        myProperty = "foo";
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  Under the hood, Lit makes <code>this.myProperty</code> reactive to changes if
+  set directly. It <em>also</em> deduces a corresponding attribute (in this case
+  <code>myproperty</code> because it doesn't try to guess what the kebab casing
+  would be) and sets up reactivity so that if the attribute changes in the DOM,
+  the property changes as well.
+</p>
+
+<p>
+  This is a <em>great</em> convenience for users of Lit. But it also can mislead
+  people to think that there is an inherent binding between properties on a
+  class and the attributes in the DOM. Of course there isn't a binding like this
+  automatically. Lit just does it for you.
+</p>
+
+<p>
+  To be fair, Lit also is very explicit about the distinction between attributes
+  and properties. In
+  <a href="https://lit.dev/docs/templates/expressions/"
+    >lit-html template bindings</a
+  >
+  you have to specify when you're passing a property binding or an attribue:
+</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-component
+      .property="${thing}"
+      attribute="string-thing"
+      ?boolean="${bool}"
+    ></my-component>
+  </template>
+</code-highlight>
+
+<p>
+  <strong>But again this is not HTML!</strong> This is the template language
+  abstraction for elements in
+  <a href="https://lit.dev/docs/libraries/standalone-templates/">lit-html</a> In
+  HTML you must use attributes with plain strings or use good 'ol scripts:
+</p>
+
+<code-highlight lang="html">
+  <template>
+    <my-component attribute="string-thing"></my-component>
+    <script>
+      const myComponentEl = document.querySelector("my-component");
+      myComponentEl.property = thing;
+      myComponentEl.boolean = bool;
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  If you want <strong>the definitive guide</strong> of HTML attributes vs DOM
+  properties, check
+  <a href="https://jakearchibald.com/2024/attributes-vs-properties/"
+    >this article by Jake Archibald</a
+  >
+  out. It is exhaustive, and an excellent dive into details
+</p>
+
+<h2>My Law for Learning</h2>
+
+<p>
+  I have an aphorism of sorts I like to live by, and I think it's sound advice
+  for anyone learning and developing their craft in coding:
+</p>
+
+<aside class="blue no-decoration">
+  <p>
+    A software engineer should understand at least one level below the
+    abstraction level they primarily work in.
+  </p>
+</aside>
+
+<p>
+  This is not "grumpy ol' neckbeard who's upset that kids these days can't do
+  vanilla javascript" advice. This is "I've learned over time that this helps me
+  be a better developer" advice. Here's what working with vanilla javascript can
+  unlock if you work in a framework:
+</p>
+
+<ul>
+  <li>
+    Poking around at the internals of the framework set you up to better
+    contribute to open source
+  </li>
+  <li>
+    Understanding what's happening under the hood allows you to know almost
+    immediately what can and cannot be the source of bugs you encounter
+  </li>
+  <li>
+    Understanding internals frees you to take advantage of escape hatches built
+    into frameworks (and when to actually use them!)
+  </li>
+  <li>
+    Understanding internals allows you to know when the problem is framework
+    problem or an inherent problem in general
+  </li>
+  <li>Poking at internals or re-creating framework things is fun</li>
+  <li>
+    Internals teach you what's actually available in browser APIs or in
+    Javascript already
+  </li>
+  <li>
+    Understanding low level docs (like the
+    <a href="https://tc39.es/ecma262/">ECMAscript spec</a> or internal specs on
+    MDN) is an extremely transferrable skill and allows you to transfer to other
+    frameworks and languages more easily
+  </li>
+  <li>
+    You are able to optimize only the things you understand, and so you are
+    better able to optimize operations in a framework
+  </li>
+</ul>
+
+{% socials %}

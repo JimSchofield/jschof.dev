@@ -1,0 +1,17 @@
+<play-ground>
+  <template>
+    <my-element></my-element>
+    <script type="module">
+      customElements.define(
+        "my-element",
+        class MyElement extends HTMLElement {
+          myProperty = "foo";
+
+          connectedCallback() {
+            this.innerHTML = `<p>I'm right here!</p>`
+          }
+        },
+      );
+    </script>
+  </template>
+</play-ground>

@@ -1,20 +1,20 @@
-@import "./posts.css";
-@import "./menu-popover.css";
-@import "./back-to-top.css";
-
 @font-face {
   font-family: "Atkinson Hyperlegible Next";
   font-style: normal;
   font-weight: 400;
-  font-display: swap;
+  font-display: block;
   src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
 }
 @font-face {
   font-family: "Atkinson Hyperlegible Next";
   font-style: bold;
   font-variation-settings: "wght" 700;
-  font-display: swap;
+  font-display: block;
   src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
+}
+
+@view-transition {
+  navigation: auto;
 }
 
 em {
@@ -456,5 +456,214 @@ code-highlight {
 @media (prefers-color-scheme: dark) {
   baseline-status {
     background: var(--gunmetal);
+  }
+}
+
+/*--- BACK TO TOP ---*/
+@property --gradient-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes rotate-gradient {
+  to {
+    --gradient-angle: 360deg;
+  }
+}
+
+#back-to-top {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+
+  display: flex;
+  padding: 0.2rem 0.6rem;
+  border: 4px solid transparent;
+  border-radius: 1rem;
+
+  color: var(--teal);
+  font-weight: bold;
+  text-decoration: none;
+
+  background: linear-gradient(white, white) padding-box,
+    conic-gradient(
+        var(--teal) 0deg var(--gradient-angle),
+        var(--carrot) var(--gradient-angle) 360deg
+      )
+      border-box;
+
+  animation-name: rotate-gradient;
+  animation-duration: 1ms;
+  animation-timeline: scroll(block nearest);
+}
+
+
+/*--- posts ---*/
+
+article h1 {
+  text-wrap: initial;
+}
+
+.posts-grid {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  list-style: none;
+}
+
+@media (max-width: 600px) {
+  .posts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.posts-grid__item {
+  display: flex;
+}
+
+.card {
+  display: block;
+  width: 100%;
+  text-decoration: none;
+  line-height: 1.2;
+  background: var(--seasalt);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--gunmetal);
+  box-shadow: var(--shadow);
+}
+
+.card__image {
+  display: block;
+  aspect-ratio: 1.619;
+  object-fit: cover;
+  object-position: center center;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.card__detail {
+  position: relative;
+  padding: 0.5em;
+}
+
+.card__title {
+  color: var(--gunmetal);
+  font-weight: 800;
+  margin-bottom: 0.25em;
+}
+
+.card__date {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  padding: 0 0.5em;
+  background: var(--seasalt);
+  border-top-left-radius: 8px;
+}
+
+.card__excerpt {
+  color: var(--gunmetal);
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.card__placeholder {
+  width: 100%;
+  background: var(--gradient);
+  aspect-ratio: 1.619;
+}
+
+.post-details {
+  font-weight: bold;
+}
+
+@media (max-width: 600px) {
+  .card__placeholder,
+  .card__image {
+    aspect-ratio: 4 / 1;
+  }
+}
+
+/*---MENU---*/
+
+#menu {
+  display: none;
+}
+
+#mobile-menu-popover {
+  isolation: isolate;
+  position: absolute;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  width: 150px;
+  text-align: center;
+  background: transparent;
+  box-shadow: var(--shadow);
+  border-radius: 8px;
+  z-index: 1;
+
+  transform-origin: top right;
+  transform: rotateX(60deg) scale3d(0.8, 0.8, 1);
+  opacity: 0;
+  visibility: hidden;
+
+  transition:
+    transform 300ms,
+    opacity 300ms,
+    visibility 300ms 1ms;
+
+  & .button {
+    width: 100%;
+    border-radius: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  & .button:focus-visible {
+    /* To stop outline from hiding under next element */
+    z-index: 2;
+  }
+
+  & .button:first-child {
+    border-top-right-radius: 8px;
+    border-top-left-radius: 8px;
+  }
+
+  & .button:last-child {
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+  }
+
+  &.open {
+    transform: rotateX(0deg) scale3d(1, 1, 1);
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+button.hamburger-button {
+  display: flex;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+
+  & svg {
+    stroke: white;
+    fill: white;
+  }
+}
+
+@media (width > 625px) {
+  #menu {
+    display: flex;
+    gap: 6px;
+  }
+
+  #mobile-menu {
+    display: none;
   }
 }

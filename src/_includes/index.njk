@@ -11,13 +11,14 @@
     <link rel="manifest" href="/site.webmanifest">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="expect" href="#body" blocking="render">
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap" rel="stylesheet">
 
     <script src="/index.js" type="module"></script>
 
     {% seo "" %}
   </head>
-  <body>
+  <body id="body">
     {% include "nav.njk" %}
     {{ content | safe }}
     {% include "footer.njk" %}

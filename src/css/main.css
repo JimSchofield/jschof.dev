@@ -261,6 +261,7 @@ small,
 a {
   color: var(--raw-umber);
   text-decoration-style: dotted;
+  overflow-wrap:break-word;
 
   &:focus-visible {
     outline: 2px dashed var(--gunmetal);

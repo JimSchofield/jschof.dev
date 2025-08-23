@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading List - jschof.dev</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --text-color: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --bg-color: #ffffff;
+            --bg-hover: #f9fafb;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: #fafafa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 1rem 0;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin: 0;
+        }
+
+        .filters {
+            background: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .table-container {
+            background: var(--bg-color);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--bg-hover);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.025em;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+            background-color: var(--bg-hover);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-transform: lowercase;
+        }
+
+        .status-reading {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-finished {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-on-deck {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-not-started {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .status-aww-nah {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .book-title {
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 0.25rem;
+        }
+
+        .book-author {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .year-badge {
+            background-color: var(--bg-hover);
+            color: var(--text-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+            min-width: 2rem;
+        }
+
+        .grade-a {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .grade-b {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .grade-c {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .grade-d {
+            background-color: #fed7aa;
+            color: #c2410c;
+        }
+
+        .grade-f {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .completion-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .not-applicable {
+            color: #9ca3af;
+            font-style: italic;
+            font-size: 0.875rem;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .filters {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-container {
+                overflow-x: auto;
+            }
+            
+            table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Reading List</h1>
+            <p class="subtitle">Books I'm reading, have read, and plan to read</p>
+        </header>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="search">Search Books</label>
+                <input type="text" id="search" placeholder="Search by title or author...">
+            </div>
+            <div class="filter-group">
+                <label for="status-filter">Filter by Status</label>
+                <select id="status-filter">
+                    <option value="">All Statuses</option>
+                    <option value="reading">Reading</option>
+                    <option value="finished">Finished</option>
+                    <option value="on-deck">On Deck</option>
+                    <option value="not-started">Not Started</option>
+                    <option value="aww-nah">Aww Nah</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="year-filter">Filter by Year</label>
+                <select id="year-filter">
+                    <option value="">All Years</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="books-table">
+                <thead>
+                    <tr>
+                        <th>Book</th>
+                        <th>Status</th>
+                        <th>Grade</th>
+                        <th>Year</th>
+                        <th>Completed</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="books-tbody">
+                </tbody>
+            </table>
+            <div class="no-results" id="no-results" style="display: none;">
+                No books found matching your filters.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data - replace with your actual books
+        const books = [
+            {
+                title: "The Pragmatic Programmer",
+                author: "David Thomas, Andrew Hunt",
+                status: "finished",
+                grade: "A",
+                year: 2023,
+                completionDate: "2023-08-15",
+                notes: "Essential reading for any developer. Great insights on code quality and career development."
+            },
+            {
+                title: "Clean Code",
+                author: "Robert C. Martin",
+                status: "reading",
+                grade: null,
+                year: 2024,
+                completionDate: null,
+                notes: "Currently working through the refactoring examples."
+            },
+            {
+                title: "JavaScript: The Good Parts",
+                author: "Douglas Crockford",
+                status: "finished",
+                grade: "B",
+                year: 2023,
+                completionDate: "2023-11-22",
+                notes: "Classic JS book. Some parts feel dated but fundamentals are solid."
+            },
+            {
+                title: "You Don't Know JS: Scope & Closures",
+                author: "Kyle Simpson",
+                status: "on-deck",
+                grade: null,
+                year: 2024,
+                completionDate: null,
+                notes: "Next up after Clean Code."
+            },
+            {
+                title: "Design Patterns",
+                author: "Gang of Four",
+                status: "not-started",
+                grade: null,
+                year: 2024,
+                completionDate: null,
+                notes: "Been meaning to read this for ages."
+            },
+            {
+                title: "Learning React",
+                author: "Alex Banks, Eve Porcello",
+                status: "aww-nah",
+                grade: "D",
+                year: 2023,
+                completionDate: "2023-06-10",
+                notes: "Started this but found better resources online. Didn't click with me."
+            },
+            {
+                title: "Web Components in Action",
+                author: "Ben Farrell",
+                status: "finished",
+                grade: "A",
+                year: 2024,
+                completionDate: "2024-03-05",
+                notes: "Perfect timing with my recent web components posts. Excellent practical examples."
+            },
+            {
+                title: "DOM Enlightenment",
+                author: "Cody Lindley",
+                status: "reading",
+                grade: null,
+                year: 2024,
+                completionDate: null,
+                notes: "Deep dive into vanilla DOM manipulation. Great for understanding the platform."
+            }
+        ];
+
+        let filteredBooks = [...books];
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return null;
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        function renderGrade(grade) {
+            if (!grade) return '<span class="not-applicable">—</span>';
+            return `<span class="grade-badge grade-${grade.toLowerCase()}">${grade}</span>`;
+        }
+
+        function renderCompletionDate(date, status) {
+            if (!date) {
+                return status === 'finished' 
+                    ? '<span class="not-applicable">No date</span>'
+                    : '<span class="not-applicable">—</span>';
+            }
+            return `<span class="completion-date">${formatDate(date)}</span>`;
+        }
+
+        // Initialize year filter options
+        function initializeYearFilter() {
+            const years = [...new Set(books.map(book => book.year))].sort((a, b) => b - a);
+            const yearFilter = document.getElementById('year-filter');
+            
+            years.forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearFilter.appendChild(option);
+            });
+        }
+
+        // Render books table
+        function renderBooks() {
+            const tbody = document.getElementById('books-tbody');
+            const noResults = document.getElementById('no-results');
+            
+            if (filteredBooks.length === 0) {
+                tbody.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+            
+            noResults.style.display = 'none';
+            
+            tbody.innerHTML = filteredBooks.map(book => `
+                <tr>
+                    <td>
+                        <div class="book-title">${book.title}</div>
+                        <div class="book-author">by ${book.author}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${book.status}">
+                            ${book.status.replace('-', ' ')}
+                        </span>
+                    </td>
+                    <td>${renderGrade(book.grade)}</td>
+                    <td>
+                        <span class="year-badge">${book.year}</span>
+                    </td>
+                    <td>${renderCompletionDate(book.completionDate, book.status)}</td>
+                    <td>${book.notes}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Filter functions
+        function applyFilters() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            const yearFilter = document.getElementById('year-filter').value;
+
+            filteredBooks = books.filter(book => {
+                const matchesSearch = !searchTerm || 
+                    book.title.toLowerCase().includes(searchTerm) || 
+                    book.author.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || book.status === statusFilter;
+                
+                const matchesYear = !yearFilter || book.year.toString() === yearFilter;
+
+                return matchesSearch && matchesStatus && matchesYear;
+            });
+
+            renderBooks();
+        }
+
+        // Event listeners
+        document.getElementById('search').addEventListener('input', applyFilters);
+        document.getElementById('status-filter').addEventListener('change', applyFilters);
+        document.getElementById('year-filter').addEventListener('change', applyFilters);
+
+        // Initialize
+        initializeYearFilter();
+        renderBooks();
+    </script>
+</body>
+</html>

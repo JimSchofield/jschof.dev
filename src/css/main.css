@@ -314,6 +314,10 @@ footer {
   max-width: 100ch;
 }
 
+.constrain--reading-list {
+  max-width: 1200px;
+}
+
 .side-by-side {
   display: flex;
   gap: 16px;
@@ -660,7 +664,7 @@ button.hamburger-button {
   }
 }
 
-@media (width > 625px) {
+@media (width > 735px) {
   #menu {
     display: flex;
     gap: 6px;

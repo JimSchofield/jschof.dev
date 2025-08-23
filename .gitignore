@@ -31,6 +31,12 @@ pnpm-debug.log*
 .env.test.local
 .env.production.local
 
+# Service account keys
+service-account-key.json
+
 # Temporary files
 *.tmp
 *.temp
+
+# Local Netlify folder
+.netlify

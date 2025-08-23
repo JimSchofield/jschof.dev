@@ -107,7 +107,24 @@ export class PlayGround extends LitElement {
   async format(template: string = "") {
     const doc = await prettier.format(template, { parser: "html", plugins });
 
-    return doc;
+    // Convert boolean attributes from attr="" back to just attr
+    // Common boolean attributes in HTML and custom elements
+    const booleanAttrs = [
+      'open', 'disabled', 'checked', 'selected', 'readonly', 'required', 
+      'autofocus', 'autoplay', 'controls', 'defer', 'hidden', 'loop', 
+      'multiple', 'muted', 'reversed', 'scoped', 'async', 'default',
+      // Custom element boolean attributes that might be used in examples
+      'visible', 'active', 'expanded', 'loading', 'invalid', 'complete', 'bool-attr'
+    ];
+    
+    let formatted = doc;
+    booleanAttrs.forEach(attr => {
+      // Replace attr="" with just attr
+      const regex = new RegExp(`\\s${attr}=""`, 'g');
+      formatted = formatted.replace(regex, ` ${attr}`);
+    });
+
+    return formatted;
   }
 
   async doFormat() {

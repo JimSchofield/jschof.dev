@@ -9,6 +9,7 @@ layout: index
 <ul>
     <li><a href="https://github.com/JimSchofield/minne"><strong>Minne</strong></a>: A light, signals-based web component framework</li>
     <li><a href="https://github.com/JimSchofield/wc-services"><strong>wc-services</strong></a>: A framework agnostic service provider</li>
+    <li><a href="https://potterly.net"><strong>Potterly</strong></a>: a simple pottery journal web app to track your ceramics pieces</li>
 </ul>
 
 In a past life I was a math teacher, and my students used to affectionately call me "prof schof." I studied html, css, and javascript at night so I could eventually transition to being a front end engineer. That's my profession now. I currently work at Crowdstrike.

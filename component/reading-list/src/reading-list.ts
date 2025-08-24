@@ -45,6 +45,12 @@ export class ReadingList extends LitElement {
   @state()
   private gradeFilter = "";
 
+  @state()
+  private sortColumn: string | null = null;
+
+  @state()
+  private sortDirection: 'asc' | 'desc' = 'asc';
+
   async connectedCallback() {
     super.connectedCallback();
     await this.fetchBooks();
@@ -97,13 +103,11 @@ export class ReadingList extends LitElement {
 
   private renderGrade(grade?: string) {
     if (!grade) return html`<span class="not-applicable">—</span>`;
-    
+
     // Extract the base letter (A, B, C, D, F) from grades like A+, A-, B+, etc.
     const baseLetter = grade.charAt(0).toLowerCase();
-    
-    return html`<span class="grade-badge grade-${baseLetter}"
-      >${grade}</span
-    >`;
+
+    return html`<span class="grade-badge grade-${baseLetter}">${grade}</span>`;
   }
 
   private renderFinishedDate(date?: string, status?: string) {
@@ -131,7 +135,7 @@ export class ReadingList extends LitElement {
       ...new Set(
         this.books
           .map((book) => book.year)
-          .filter((year): year is number => typeof year === 'number'),
+          .filter((year): year is number => typeof year === "number"),
       ),
     ];
     return years.sort((a, b) => b - a); // Sort descending (newest first)
@@ -144,7 +148,7 @@ export class ReadingList extends LitElement {
   private getAvailableGrades(): string[] {
     // Normalize grades to uppercase and remove duplicates
     const gradesSet = new Set<string>();
-    
+
     this.books
       .map((book) => book.grade)
       .filter((grade): grade is string => Boolean(grade?.trim()))
@@ -152,36 +156,48 @@ export class ReadingList extends LitElement {
         // Normalize to uppercase (B+ instead of b+)
         gradesSet.add(grade.toUpperCase());
       });
-    
+
     const grades = Array.from(gradesSet);
-    
+
     // Sort grades in a logical order: A+, A, A-, B+, B, B-, etc.
     return grades.sort((a, b) => {
       const getGradeValue = (grade: string) => {
         const letter = grade.charAt(0).toUpperCase();
         const modifier = grade.slice(1);
         let value = 0;
-        
+
         switch (letter) {
-          case 'A': value = 400; break;
-          case 'B': value = 300; break;
-          case 'C': value = 200; break;
-          case 'D': value = 100; break;
-          case 'F': value = 0; break;
-          default: value = -100; // Unknown grades go last
+          case "A":
+            value = 400;
+            break;
+          case "B":
+            value = 300;
+            break;
+          case "C":
+            value = 200;
+            break;
+          case "D":
+            value = 100;
+            break;
+          case "F":
+            value = 0;
+            break;
+          default:
+            value = -100; // Unknown grades go last
         }
-        
-        if (modifier === '+') value += 30;
-        else if (modifier === '-') value -= 30;
-        
+
+        if (modifier === "+") value += 30;
+        else if (modifier === "-") value -= 30;
+
         return value;
       };
-      
+
       return getGradeValue(b) - getGradeValue(a); // Sort descending (A+ to F)
     });
   }
 
   private applyFilters() {
+    // First filter the books
     this.filteredBooks = this.books.filter((book) => {
       const matchesSearch =
         !this.searchTerm ||
@@ -196,14 +212,87 @@ export class ReadingList extends LitElement {
       const matchesSeries =
         !this.seriesFilter || book.series === this.seriesFilter;
 
-      const matchesYear = 
+      const matchesYear =
         !this.yearFilter || book.year?.toString() === this.yearFilter;
 
       const matchesGrade =
         !this.gradeFilter || book.grade?.toUpperCase() === this.gradeFilter;
 
-      return matchesSearch && matchesStatus && matchesSeries && matchesYear && matchesGrade;
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesSeries &&
+        matchesYear &&
+        matchesGrade
+      );
     });
+
+    // Then sort the filtered results
+    if (this.sortColumn) {
+      this.filteredBooks.sort((a, b) => {
+        let aValue: any;
+        let bValue: any;
+
+        switch (this.sortColumn) {
+          case 'name':
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+            break;
+          case 'author':
+            aValue = a.author.toLowerCase();
+            bValue = b.author.toLowerCase();
+            break;
+          case 'series':
+            aValue = (a.series || '').toLowerCase();
+            bValue = (b.series || '').toLowerCase();
+            break;
+          case 'status':
+            aValue = a.status.toLowerCase();
+            bValue = b.status.toLowerCase();
+            break;
+          case 'year':
+            aValue = a.year || 0;
+            bValue = b.year || 0;
+            break;
+          case 'grade':
+            // Sort grades by their value (A+ > A > A- > B+ etc.)
+            const getGradeValue = (grade?: string) => {
+              if (!grade) return -1;
+              const letter = grade.charAt(0).toUpperCase();
+              const modifier = grade.slice(1);
+              let value = 0;
+              
+              switch (letter) {
+                case 'A': value = 400; break;
+                case 'B': value = 300; break;
+                case 'C': value = 200; break;
+                case 'D': value = 100; break;
+                case 'F': value = 0; break;
+                default: value = -100;
+              }
+              
+              if (modifier === '+') value += 30;
+              else if (modifier === '-') value -= 30;
+              
+              return value;
+            };
+            aValue = getGradeValue(a.grade);
+            bValue = getGradeValue(b.grade);
+            break;
+          case 'finished':
+            // Sort by date, treating empty dates as very old
+            aValue = a.finished ? new Date(a.finished).getTime() : 0;
+            bValue = b.finished ? new Date(b.finished).getTime() : 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
   }
 
   private handleSearch(e: Event) {
@@ -236,12 +325,26 @@ export class ReadingList extends LitElement {
     this.applyFilters();
   }
 
+  private handleSort(column: string) {
+    if (this.sortColumn === column) {
+      // Toggle direction if same column
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      // New column, start with ascending
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
   private clearAllFilters() {
     this.searchTerm = "";
     this.statusFilter = "";
     this.yearFilter = "";
     this.gradeFilter = "";
     this.seriesFilter = "";
+    this.sortColumn = null;
+    this.sortDirection = 'asc';
     this.applyFilters();
   }
 
@@ -271,7 +374,9 @@ export class ReadingList extends LitElement {
             @change=${this.handleStatusFilter}
           >
             <option value="">All Statuses</option>
-            ${statuses.map((status) => html`<option value="${status}">${status}</option>`)}
+            ${statuses.map(
+              (status) => html`<option value="${status}">${status}</option>`,
+            )}
           </select>
         </div>
         <div class="filter-group">
@@ -282,7 +387,9 @@ export class ReadingList extends LitElement {
             @change=${this.handleYearFilter}
           >
             <option value="">All Years</option>
-            ${years.map((year) => html`<option value="${year}">${year}</option>`)}
+            ${years.map(
+              (year) => html`<option value="${year}">${year}</option>`,
+            )}
           </select>
         </div>
         <div class="filter-group">
@@ -293,7 +400,9 @@ export class ReadingList extends LitElement {
             @change=${this.handleGradeFilter}
           >
             <option value="">All Grades</option>
-            ${grades.map((grade) => html`<option value="${grade}">${grade}</option>`)}
+            ${grades.map(
+              (grade) => html`<option value="${grade}">${grade}</option>`,
+            )}
           </select>
         </div>
         <div class="filter-group">
@@ -308,7 +417,7 @@ export class ReadingList extends LitElement {
           </select>
         </div>
         <div class="filter-group">
-          <button 
+          <button
             class="clear-filters-btn"
             @click=${this.clearAllFilters}
             type="button"
@@ -331,12 +440,42 @@ export class ReadingList extends LitElement {
       <table>
         <thead>
           <tr>
-            <th>Book</th>
-            <th>Series</th>
-            <th>Status</th>
-            <th>Year</th>
-            <th>Finished</th>
-            <th>Grade</th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('name')}>
+                Book
+                ${this.sortColumn === 'name' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('series')}>
+                Series
+                ${this.sortColumn === 'series' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('status')}>
+                Status
+                ${this.sortColumn === 'status' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('year')}>
+                Year
+                ${this.sortColumn === 'year' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('finished')}>
+                Finished
+                ${this.sortColumn === 'finished' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
+            <th>
+              <button class="sort-header" @click=${() => this.handleSort('grade')}>
+                Grade
+                ${this.sortColumn === 'grade' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+              </button>
+            </th>
             <th>Notes</th>
           </tr>
         </thead>
@@ -354,12 +493,18 @@ export class ReadingList extends LitElement {
                     : html`<span class="not-applicable">—</span>`}
                 </td>
                 <td>
-                  <span class="status-badge status-${book.status.toLowerCase().replace(/\s+/g, '-')}">
+                  <span
+                    class="status-badge status-${book.status
+                      .toLowerCase()
+                      .replace(/\s+/g, "-")}"
+                  >
                     ${book.status}
                   </span>
                 </td>
                 <td>
-                  ${book.year ? html`<span class="year-badge">${book.year}</span>` : html`<span class="not-applicable">—</span>`}
+                  ${book.year
+                    ? html`<span class="year-badge">${book.year}</span>`
+                    : html`<span class="not-applicable">—</span>`}
                 </td>
                 <td>${this.renderFinishedDate(book.finished, book.status)}</td>
                 <td>${this.renderGrade(book.grade)}</td>
@@ -501,28 +646,50 @@ export class ReadingList extends LitElement {
       border-color: var(--primary-color);
     }
 
+    .filter-group:has(.clear-filters-btn) {
+      justify-content: center;
+      align-items: stretch;
+    }
+
     .clear-filters-btn {
-      padding: 0.75rem 1rem;
-      background-color: var(--text-secondary);
-      color: white;
-      border: none;
+      display: inline-block;
+      padding: 0.25em 1em;
+      background: #1b2f36; /* --gunmetal from main.css */
+      color: #fafafa; /* --seasalt from main.css */
       border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* --shadow from main.css */
+      text-decoration: none;
+      font: inherit;
+      border: none;
       cursor: pointer;
-      transition: background-color 0.2s;
-      text-transform: uppercase;
-      letter-spacing: 0.025em;
-      align-self: end;
+      align-self: center;
     }
 
+    .clear-filters-btn:active,
     .clear-filters-btn:hover {
-      background-color: var(--text-color);
+      color: #fafafa; /* --seasalt */
+      background: linear-gradient(
+        135deg,
+        #4d5963 0% 20%,
+        #f79103 20% 40%,
+        #376170 40% 60%,
+        #906b56 60% 80%,
+        #1b2f36 80% 100%
+      ); /* --gradient */
     }
 
-    .clear-filters-btn:focus {
-      outline: none;
-      background-color: var(--primary-color);
+    .clear-filters-btn:focus-visible {
+      color: #fafafa; /* --seasalt */
+      outline: 2px solid #906b56; /* --raw-umber */
+      outline-offset: 1px;
+      background: linear-gradient(
+        135deg,
+        #4d5963 0% 20%,
+        #f79103 20% 40%,
+        #376170 40% 60%,
+        #906b56 60% 80%,
+        #1b2f36 80% 100%
+      ); /* --gradient */
     }
 
     .table-container {
@@ -539,7 +706,7 @@ export class ReadingList extends LitElement {
 
     th {
       background: var(--bg-hover);
-      padding: 1rem;
+      padding: 0;
       text-align: left;
       font-weight: 600;
       color: var(--text-secondary);
@@ -547,6 +714,33 @@ export class ReadingList extends LitElement {
       font-size: 0.875rem;
       letter-spacing: 0.025em;
       border-bottom: 2px solid var(--border-color);
+    }
+
+    .sort-header {
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      border: none;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-size: 0.875rem;
+      letter-spacing: 0.025em;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+      white-space: nowrap;
+    }
+
+    .sort-header:hover {
+      background-color: var(--border-color);
+      color: var(--text-color);
+    }
+
+    .sort-header:focus {
+      outline: none;
+      background-color: var(--primary-color);
+      color: white;
     }
 
     td {
@@ -569,7 +763,7 @@ export class ReadingList extends LitElement {
       border-radius: 20px;
       font-size: 0.875rem;
       font-weight: 500;
-      text-transform: lowercase;
+      text-transform: capitalize;
     }
 
     .status-reading {
@@ -582,17 +776,20 @@ export class ReadingList extends LitElement {
       color: #065f46;
     }
 
-    .status-ah.naw, .status-ah-naw {
+    .status-ah.naw,
+    .status-ah-naw {
       background-color: #fee2e2;
       color: #991b1b;
     }
 
-    .status-not.started, .status-not-started {
+    .status-not.started,
+    .status-not-started {
       background-color: #f3f4f6;
       color: #374151;
     }
 
-    .status-maybe.later, .status-maybe-later {
+    .status-maybe.later,
+    .status-maybe-later {
       background-color: #fef3c7;
       color: #92400e;
     }
@@ -601,11 +798,13 @@ export class ReadingList extends LitElement {
       font-weight: 600;
       color: var(--text-color);
       margin-bottom: 0.25rem;
+      text-transform: capitalize;
     }
 
     .book-author {
       color: var(--text-secondary);
       font-size: 0.9rem;
+      text-transform: capitalize;
     }
 
     .series-badge {

@@ -1,4 +1,5 @@
 const { JWT } = require("google-auth-library");
+const { Gaxios } = require("gaxios");
 
 exports.handler = async (event, context) => {
   // Set CORS headers for browser requests
@@ -55,33 +56,48 @@ exports.handler = async (event, context) => {
     const spreadsheetId = process.env.GOOGLE_SHEETS_READING_ID;
     const range = "A:G"; // Try without sheet name first - Name, Author, Series, Status, Finished, Notes, Grade
 
+    // Return debug info in response (temporarily for troubleshooting)
+    const debugInfo = {
+      GOOGLE_PROJECT_ID: !!process.env.GOOGLE_PROJECT_ID,
+      GOOGLE_PRIVATE_KEY_ID: !!process.env.GOOGLE_PRIVATE_KEY_ID,
+      GOOGLE_PRIVATE_KEY: !!process.env.GOOGLE_PRIVATE_KEY,
+      GOOGLE_CLIENT_EMAIL: !!process.env.GOOGLE_CLIENT_EMAIL,
+      GOOGLE_CLIENT_ID: !!process.env.GOOGLE_CLIENT_ID,
+      GOOGLE_SHEETS_READING_ID: !!process.env.GOOGLE_SHEETS_READING_ID,
+      privateKeyLength: process.env.GOOGLE_PRIVATE_KEY?.length,
+      privateKeyStart: process.env.GOOGLE_PRIVATE_KEY?.substring(0, 30),
+    };
+
     if (
       !serviceAccount.private_key ||
       !serviceAccount.client_email ||
       !spreadsheetId
     ) {
-      console.error('Missing env vars:', {
-        hasPrivateKey: !!serviceAccount.private_key,
-        hasClientEmail: !!serviceAccount.client_email,
-        hasSpreadsheetId: !!spreadsheetId,
-        privateKeyStart: serviceAccount.private_key?.substring(0, 50)
-      });
-      
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           error: "Missing required environment variables",
+          debug: debugInfo,
+          serviceAccount: {
+            hasPrivateKey: !!serviceAccount.private_key,
+            hasClientEmail: !!serviceAccount.client_email,
+            hasSpreadsheetId: !!spreadsheetId,
+          }
         }),
       };
     }
 
-    // Create JWT client
+    // Create JWT client with explicit request client
+    const gaxios = new Gaxios();
     const jwtClient = new JWT({
       email: serviceAccount.client_email,
       key: serviceAccount.private_key,
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
+    
+    // Set the request client explicitly
+    jwtClient.gaxios = gaxios;
 
     // Get access token
     const tokens = await jwtClient.authorize();

@@ -706,7 +706,7 @@ export class ReadingList extends LitElement {
 
     th {
       background: var(--bg-hover);
-      padding: 0;
+      padding: 1rem;
       text-align: left;
       font-weight: 600;
       color: var(--text-secondary);
@@ -714,6 +714,10 @@ export class ReadingList extends LitElement {
       font-size: 0.875rem;
       letter-spacing: 0.025em;
       border-bottom: 2px solid var(--border-color);
+    }
+
+    th:has(.sort-header) {
+      padding: 0;
     }
 
     .sort-header {

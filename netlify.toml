@@ -9,4 +9,4 @@
   command = "pnpm dlx @11ty/eleventy --serve"
   publish = "_site"
   framework = "#auto"
-  targetPort = 8081
+  targetPort = 8080

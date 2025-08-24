@@ -93,7 +93,7 @@ const processSheet = async (sheet, spreadsheetId, accessToken) => {
           series: row[2] || "",
           status: row[3] || "not-started",
           finished: row[4] || "",
-          notes: row[5] || "",
+          notes: (row[5] || "").replace(/^[\s\n\r]+/, "").replace(/[\s\n\r]+$/, ""),
           grade: grade,
           year: year, // Add year information from sheet name
           sheetName: sheetName, // Keep track of which sheet this came from

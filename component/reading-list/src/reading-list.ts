@@ -508,9 +508,7 @@ export class ReadingList extends LitElement {
                 </td>
                 <td>${this.renderFinishedDate(book.finished, book.status)}</td>
                 <td>${this.renderGrade(book.grade)}</td>
-                <td>
-                  ${book.notes || html`<span class="not-applicable">—</span>`}
-                </td>
+                <td class="notes-cell">${book.notes?.trim() ? book.notes.trim() : html`<span class="not-applicable">—</span>`}</td>
               </tr>
             `,
           )}
@@ -874,6 +872,10 @@ export class ReadingList extends LitElement {
       color: #9ca3af;
       font-style: italic;
       font-size: 0.875rem;
+    }
+
+    .notes-cell {
+      white-space: pre-line;
     }
 
     .no-results {

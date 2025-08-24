@@ -140,7 +140,7 @@
           </tr>
         </thead>
         <tbody>
-          ${this.filteredBooks.map(s=>d`
+          ${this.filteredBooks.map(s=>{var e;return d`
               <tr>
                 <td>
                   <div class="book-title">${s.name}</div>
@@ -161,11 +161,9 @@
                 </td>
                 <td>${this.renderFinishedDate(s.finished,s.status)}</td>
                 <td>${this.renderGrade(s.grade)}</td>
-                <td>
-                  ${s.notes||d`<span class="not-applicable">—</span>`}
-                </td>
+                <td class="notes-cell">${(e=s.notes)!=null&&e.trim()?s.notes.trim():d`<span class="not-applicable">—</span>`}</td>
               </tr>
-            `)}
+            `})}
         </tbody>
       </table>
     `}render(){return this.loading?d`
@@ -511,6 +509,10 @@
       color: #9ca3af;
       font-style: italic;
       font-size: 0.875rem;
+    }
+
+    .notes-cell {
+      white-space: pre-line;
     }
 
     .no-results {

@@ -31,6 +31,10 @@ pnpm-debug.log*
 .env.test.local
 .env.production.local
 
+
 # Temporary files
 *.tmp
 *.temp
+
+# Local Netlify folder
+.netlify

@@ -261,7 +261,7 @@ small,
 a {
   color: var(--raw-umber);
   text-decoration-style: dotted;
-  overflow-wrap:break-word;
+  overflow-wrap: break-word;
 
   &:focus-visible {
     outline: 2px dashed var(--gunmetal);
@@ -312,6 +312,16 @@ footer {
 
 .constrain--wide {
   max-width: 100ch;
+}
+
+.main--reading-list {
+  width: 100%;
+  max-width: 1200px;
+}
+
+.constrain--reading-list {
+  /* to match reading list padding */
+  padding: 0 1rem;
 }
 
 .side-by-side {
@@ -464,7 +474,7 @@ code-highlight {
 
 /*--- BACK TO TOP ---*/
 @property --gradient-angle {
-  syntax: '<angle>';
+  syntax: "<angle>";
   initial-value: 0deg;
   inherits: false;
 }
@@ -488,7 +498,8 @@ code-highlight {
   font-weight: bold;
   text-decoration: none;
 
-  background: linear-gradient(white, white) padding-box,
+  background:
+    linear-gradient(white, white) padding-box,
     conic-gradient(
         var(--teal) 0deg var(--gradient-angle),
         var(--carrot) var(--gradient-angle) 360deg
@@ -499,7 +510,6 @@ code-highlight {
   animation-duration: 1ms;
   animation-timeline: scroll(block nearest);
 }
-
 
 /*--- posts ---*/
 
@@ -660,7 +670,7 @@ button.hamburger-button {
   }
 }
 
-@media (width > 625px) {
+@media (width > 735px) {
   #menu {
     display: flex;
     gap: 6px;

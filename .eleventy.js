@@ -54,6 +54,10 @@ export default function (eleventyConfig) {
 
   eleventyConfig.addPlugin(highlightPlugin);
 
+  eleventyConfig.addFilter("jsonify", function(value) {
+    return JSON.stringify(value);
+  });
+
   eleventyConfig.addShortcode(
     "prettyDate",
     function (date, format = "yyyy-MM-dd") {

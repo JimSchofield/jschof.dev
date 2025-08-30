@@ -49,7 +49,7 @@ export class ReadingList extends LitElement {
   private sortColumn: string | null = null;
 
   @state()
-  private sortDirection: 'asc' | 'desc' = 'asc';
+  private sortDirection: "asc" | "desc" = "asc";
 
   async connectedCallback() {
     super.connectedCallback();
@@ -142,7 +142,7 @@ export class ReadingList extends LitElement {
   }
 
   private getAvailableStatuses(): string[] {
-    return ["Finished", "Ah Naw", "Reading", "Not started", "Maybe Later"];
+    return ["Finished", "Ah Naw", "Reading", "On Deck", "Not started", "Maybe Later"];
   }
 
   private getAvailableGrades(): string[] {
@@ -234,52 +234,63 @@ export class ReadingList extends LitElement {
         let bValue: any;
 
         switch (this.sortColumn) {
-          case 'name':
+          case "name":
             aValue = a.name.toLowerCase();
             bValue = b.name.toLowerCase();
             break;
-          case 'author':
+          case "author":
             aValue = a.author.toLowerCase();
             bValue = b.author.toLowerCase();
             break;
-          case 'series':
-            aValue = (a.series || '').toLowerCase();
-            bValue = (b.series || '').toLowerCase();
+          case "series":
+            aValue = (a.series || "").toLowerCase();
+            bValue = (b.series || "").toLowerCase();
             break;
-          case 'status':
+          case "status":
             aValue = a.status.toLowerCase();
             bValue = b.status.toLowerCase();
             break;
-          case 'year':
+          case "year":
             aValue = a.year || 0;
             bValue = b.year || 0;
             break;
-          case 'grade':
+          case "grade":
             // Sort grades by their value (A+ > A > A- > B+ etc.)
             const getGradeValue = (grade?: string) => {
               if (!grade) return -1;
               const letter = grade.charAt(0).toUpperCase();
               const modifier = grade.slice(1);
               let value = 0;
-              
+
               switch (letter) {
-                case 'A': value = 400; break;
-                case 'B': value = 300; break;
-                case 'C': value = 200; break;
-                case 'D': value = 100; break;
-                case 'F': value = 0; break;
-                default: value = -100;
+                case "A":
+                  value = 400;
+                  break;
+                case "B":
+                  value = 300;
+                  break;
+                case "C":
+                  value = 200;
+                  break;
+                case "D":
+                  value = 100;
+                  break;
+                case "F":
+                  value = 0;
+                  break;
+                default:
+                  value = -100;
               }
-              
-              if (modifier === '+') value += 30;
-              else if (modifier === '-') value -= 30;
-              
+
+              if (modifier === "+") value += 30;
+              else if (modifier === "-") value -= 30;
+
               return value;
             };
             aValue = getGradeValue(a.grade);
             bValue = getGradeValue(b.grade);
             break;
-          case 'finished':
+          case "finished":
             // Sort by date, treating empty dates as very old
             aValue = a.finished ? new Date(a.finished).getTime() : 0;
             bValue = b.finished ? new Date(b.finished).getTime() : 0;
@@ -288,8 +299,8 @@ export class ReadingList extends LitElement {
             return 0;
         }
 
-        if (aValue < bValue) return this.sortDirection === 'asc' ? -1 : 1;
-        if (aValue > bValue) return this.sortDirection === 'asc' ? 1 : -1;
+        if (aValue < bValue) return this.sortDirection === "asc" ? -1 : 1;
+        if (aValue > bValue) return this.sortDirection === "asc" ? 1 : -1;
         return 0;
       });
     }
@@ -328,11 +339,11 @@ export class ReadingList extends LitElement {
   private handleSort(column: string) {
     if (this.sortColumn === column) {
       // Toggle direction if same column
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+      this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
     } else {
       // New column, start with ascending
       this.sortColumn = column;
-      this.sortDirection = 'asc';
+      this.sortDirection = "asc";
     }
     this.applyFilters();
   }
@@ -344,7 +355,7 @@ export class ReadingList extends LitElement {
     this.gradeFilter = "";
     this.seriesFilter = "";
     this.sortColumn = null;
-    this.sortDirection = 'asc';
+    this.sortDirection = "asc";
     this.applyFilters();
   }
 
@@ -441,39 +452,81 @@ export class ReadingList extends LitElement {
         <thead>
           <tr>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('name')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("name")}
+              >
                 Book
-                ${this.sortColumn === 'name' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "name"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('series')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("series")}
+              >
                 Series
-                ${this.sortColumn === 'series' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "series"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('status')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("status")}
+              >
                 Status
-                ${this.sortColumn === 'status' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "status"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('year')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("year")}
+              >
                 Year
-                ${this.sortColumn === 'year' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "year"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('finished')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("finished")}
+              >
                 Finished
-                ${this.sortColumn === 'finished' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "finished"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>
-              <button class="sort-header" @click=${() => this.handleSort('grade')}>
+              <button
+                class="sort-header"
+                @click=${() => this.handleSort("grade")}
+              >
                 Grade
-                ${this.sortColumn === 'grade' ? (this.sortDirection === 'asc' ? ' ↑' : ' ↓') : ''}
+                ${this.sortColumn === "grade"
+                  ? this.sortDirection === "asc"
+                    ? " ↑"
+                    : " ↓"
+                  : ""}
               </button>
             </th>
             <th>Notes</th>
@@ -508,7 +561,11 @@ export class ReadingList extends LitElement {
                 </td>
                 <td>${this.renderFinishedDate(book.finished, book.status)}</td>
                 <td>${this.renderGrade(book.grade)}</td>
-                <td class="notes-cell">${book.notes?.trim() ? book.notes.trim() : html`<span class="not-applicable">—</span>`}</td>
+                <td class="notes-cell">
+                  ${book.notes?.trim()
+                    ? book.notes.trim()
+                    : html`<span class="not-applicable">—</span>`}
+                </td>
               </tr>
             `,
           )}
@@ -730,7 +787,9 @@ export class ReadingList extends LitElement {
       font-size: 0.875rem;
       letter-spacing: 0.025em;
       cursor: pointer;
-      transition: background-color 0.2s, color 0.2s;
+      transition:
+        background-color 0.2s,
+        color 0.2s;
       white-space: nowrap;
     }
 
@@ -794,6 +853,12 @@ export class ReadingList extends LitElement {
     .status-maybe-later {
       background-color: #fef3c7;
       color: #92400e;
+    }
+
+    .status-on.deck,
+    .status-on-deck {
+      background-color: #f3e8ff;
+      color: #7c3aed;
     }
 
     .book-title {

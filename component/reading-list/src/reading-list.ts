@@ -567,11 +567,7 @@ export class ReadingList extends LitElement {
                 </td>
                 <td>${this.renderFinishedDate(book.finished, book.status)}</td>
                 <td>${this.renderGrade(book.grade)}</td>
-                <td class="notes-cell">
-                  ${book.notes?.trim()
-                    ? book.notes.trim()
-                    : html`<span class="not-applicable">—</span>`}
-                </td>
+                <td class="notes-cell">${book.notes?.trim() ? html`${book.notes.trim()}` : html`<span class="not-applicable">—</span>`}</td>
               </tr>
             `,
           )}

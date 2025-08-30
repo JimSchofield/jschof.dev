@@ -1,3 +1,9 @@
+/*
+ * This was heavily generated using Claude code.  I guided it
+ * to clean up its work, but I used this to learn how to
+ * use netlify functions
+ */
+
 import { JWT } from "google-auth-library";
 import { Gaxios } from "gaxios";
 
@@ -83,9 +89,7 @@ const processSheet = async (sheet, spreadsheetId, accessToken) => {
       .filter((row) => row[0] && row[1]) // Require at least name and author
       .map((row) => {
         const rawGrade = row[gradeColumnIndex] || "";
-        const grade = isStarsColumn
-          ? convertStarsToGrade(rawGrade)
-          : rawGrade;
+        const grade = isStarsColumn ? convertStarsToGrade(rawGrade) : rawGrade;
 
         return {
           name: row[0] || "",
@@ -93,7 +97,9 @@ const processSheet = async (sheet, spreadsheetId, accessToken) => {
           series: row[2] || "",
           status: row[3] || "not-started",
           finished: row[4] || "",
-          notes: (row[5] || "").replace(/^[\s\n\r]+/, "").replace(/[\s\n\r]+$/, ""),
+          notes: (row[5] || "")
+            .replace(/^[\s\n\r]+/, "")
+            .replace(/[\s\n\r]+$/, ""),
           grade: grade,
           year: year, // Add year information from sheet name
           sheetName: sheetName, // Keep track of which sheet this came from
@@ -127,7 +133,7 @@ const fetchAllBooks = async (spreadsheetId, accessToken) => {
 
   // Process all sheets and collect books
   let allBooks = [];
-  
+
   for (const sheet of sheets) {
     const sheetBooks = await processSheet(sheet, spreadsheetId, accessToken);
     allBooks = allBooks.concat(sheetBooks);

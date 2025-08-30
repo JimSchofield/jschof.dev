@@ -1,5 +1,8 @@
 ---
 layout: index
+title: "My Reading List"
+description: "My reading journal presented as a searchable table."
+image: "/assets/profile-pic.jpeg"
 ---
 
 <main class="main--reading-list">

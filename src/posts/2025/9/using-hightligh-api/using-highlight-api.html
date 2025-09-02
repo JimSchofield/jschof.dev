@@ -1,0 +1,171 @@
+---
+title: "Using the Browser Highlight API"
+excerpt: "I'm celebrating the Highlight API being available in all browsers with some examples!"
+layout: post
+tags:
+  - posts
+date: 2025-09-01
+---
+
+<h1>Using the Browser Highligh API</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>The Hightligh API just recently became broadly available!</p>
+
+<baseline-status featureId="highlight"></baseline-status>
+
+<p>
+  (Well, at the time of writing this I know it's
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API#api.Highlight"
+  >
+    generally</a
+  >
+  <a href="https://caniuse.com/mdn-api_highlight">available</a>, so hopefully
+  the above widget information updates!) This API unlocks the ability to
+  highlight portions of text
+  <strong>without having to inject or modify DOM</strong>.
+</p>
+
+<p>
+  In this post I'll describe the problems we had with marking DOM text before,
+  the problems Highlight API solves, and how to possibly encapsulate this API in
+  a web component.
+</p>
+
+<h2>So what is the problem with using <code>&lt;mark&gt;</code>?</h2>
+
+<p>
+  Turns out, we already have a semantic element for highlighting or marking
+  certain regions of text:
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/mark"
+    >the mark element</a
+  >. It's a handy element that has a nice, out-of-the-box styling.
+</p>
+
+{% include "./example1.html" %}
+
+<p>
+  There are some nice libraries out there to help with this task as well and
+  highlight content programatically. <a href="">Mark.js</a> is one with a
+  straightforward API: hand Mark.js the node and the range to highlight. Mark.js
+  inserts <code>mark</code> tags for you where your text matches the content.
+</p>
+
+{% include "./example2.html" %}
+
+<p>
+  This is perfect if you have a lot of text and you want to programatically find
+  just like the browser:
+</p>
+
+{% include "./example3.html" %}
+
+<p>So what's the issue?</p>
+
+<p>
+  Mark.js searches through the portion of the DOM tree that you give it,
+  searching for text content matches and wrapping those matches in more markup.
+  That extra markup can mess up your styles and your intended DOM structure!
+  Check this example out:
+</p>
+
+{% include "./example4.html" %}
+
+<p>
+  This isn't a contrived example. The structure of these buttons aren't
+  expecting extra <code>mark</code> elements, and <code>flex</code> notices that
+  there's a new child node and properly arranges those new nodes. This sort of
+  thing happened at work when I tried to just use Mark.js on a larger content
+  area that had tabs and tab panels. The tab layout and the content in the
+  panels would jump around because new <code>mark</code> elements were being
+  added from someone (me), and you could argue that we shouldn't have to change
+  DOM internally to get this highlight effect.
+</p>
+
+<p>
+  What's even worse is there's no way to have the <code>mark</code> elements say
+  "ignore me, please!" If we set <code>mark</code> to have
+  <code>display: contents</code>, we lose the highlighting color.
+</p>
+
+<h2>The Highlight API</h2>
+
+<p>
+  The Highlight API lets us manually mark regions of text as "highlighted", and
+  highlight these special regions using a <code>::highlight</code> selector.
+  There are no new elements being added to the DOM.
+</p>
+
+<p>
+  In the example below, whenever the search string is changed, we regex search
+  the content of the blockquote. From the <code>matchAll</code> results, we can
+  pull out the character indices of where the string matches occur. For each of
+  those ranges, we create a new <code>Range</code>, and feed those ranges to
+  <code>Highlight</code>
+</p>
+
+{% include "./example5.html" %}
+
+<p>
+  Works like a charm! We're not going to run into issues with injected markup
+  becuase there is none!
+</p>
+
+<h2>Let's make our lives a bit easier...</h2>
+
+<p>
+  Admittedly, that's a lot of manual work to highlight text. Perhaps we could
+  encapsulate some of this work by creating a
+  <strong>web component</strong> that can take in text and an array of ranges to
+  highlight, and do it for us?
+</p>
+
+{%include "./example6.html" %}
+
+<p>
+  Yes, it's a bit of work to get going, but now we can simply do this in a lit
+  template, for example:
+</p>
+
+<code-highlight>
+  <template>
+    <high-lighter .ranges="${[[0,5], [7,20]]}">
+      <p>${content}</p>
+    </high-lighter>
+  </template>
+</code-highlight>
+
+<p>And the important thing is that these ranges are reactive!</p>
+
+<p>Let's see this with a live search...</p>
+
+{%include "./example7.html" %}
+
+<p>
+  You may ask, "Why not pass a search term to the highlighter?" That's not a bad
+  idea, but we would be coupling the searching strategy with the highlighting.
+  We could take the example above and instead of doing a regex match, use
+  something like <a href="https://www.fusejs.io/">fuse.js</a> to do a fuzzy
+  search. Fuse.js provides index ranges as well, so we could just grab those and
+  assign them to our highligter <code>ranges</code> property.
+</p>
+
+<p>
+  One thing to note here is that every instance of
+  <code>high-lighter</code> shares the same highlight instance and highlight
+  registry. You have to create a highlight instance and register it with
+  <code>CSS.highlights.set</code>. We use only one highlight instance so that if
+  you're customizing the highlighting style using
+  <code>::highlight()</code> psuedo-element, you would only have to target one
+  highlight name.
+</p>
+
+<h2>That's it!</h2>
+
+<p>
+  I hope the examples have spurred some creativity and made the Highlight API a
+  little more understandable. Let me know what you think!  {% socials %}
+</p>

@@ -1,0 +1,36 @@
+<play-ground>
+  <template>
+    <style>
+      .content {
+        display: flex;
+      }
+
+      button {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+    <label for="search">
+      Search the text for:
+      <input type="text" id="search" placeholder="Search string" />
+    </label>
+    <div class="content">
+      <button>Some text <span class="icon">🌶️</span></button>
+      <button>Some more text <span class="icon">🌼</span></button>
+    </div>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.es6.js"
+      integrity="sha512-f5x7/TNoU0+GTUi+u+FgPejOlqswO2E8NiasRAHlu/ugCcu/C6L8Kk9xbMSSSVubNSL+vpSXThxUy+/Pmx9kow=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    ></script>
+    <script type="module">
+      const markInstance = new Mark(document.querySelector(".content"));
+
+      window["search"].addEventListener("input", (event) => {
+        markInstance.unmark();
+        markInstance.mark(event.target.value);
+      });
+    </script>
+  </template>
+</play-ground>

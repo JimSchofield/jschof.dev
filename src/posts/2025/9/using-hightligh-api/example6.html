@@ -1,5 +1,11 @@
 <play-ground>
   <template>
+    <style>
+      ::highlight(my-highlight) {
+        background: purple;
+        color: white;
+      }
+    </style>
     <blockquote>
       <high-lighter
         ><p>
@@ -106,12 +112,7 @@
         }
 
         render() {
-          this.shadowRoot.innerHTML = `<style>
-          ::highlight(my-highlight) {
-            background: purple;
-            color: white;
-          }
-          </style><slot></slot>`;
+          this.shadowRoot.innerHTML = `<slot></slot>`;
         }
       }
 

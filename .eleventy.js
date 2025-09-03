@@ -16,6 +16,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.ttf");
   eleventyConfig.addPassthroughCopy("./src/**/*.webmanifest");
   eleventyConfig.addPassthroughCopy("./.well-known/atproto-did");
+  eleventyConfig.addPassthroughCopy("./_redirects");
   eleventyConfig.addPassthroughCopy({
     "./node_modules/baseline-status/baseline-status.min.js":
       "js/baseline-status.min.js",

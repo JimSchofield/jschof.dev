@@ -1,5 +1,11 @@
 <play-ground fold="29">
   <template>
+    <style>
+      ::highlight(my-highlight) {
+        background: purple;
+        color: white;
+      }
+    </style>
     <blockquote>
       <label for="search">
         Search the text for:
@@ -111,12 +117,7 @@
         }
 
         render() {
-          this.shadowRoot.innerHTML = `<style>
-          ::highlight(my-highlight) {
-            background: purple;
-            color: white;
-          }
-          </style><slot></slot>`;
+          this.shadowRoot.innerHTML = `<slot></slot>`;
         }
       }
 

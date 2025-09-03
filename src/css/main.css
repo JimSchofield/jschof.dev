@@ -466,8 +466,13 @@ code-highlight {
   }
 }
 
+baseline-status {
+  color: inherit;
+  background: inherit;
+}
 @media (prefers-color-scheme: dark) {
   baseline-status {
+    color: white;
     background: var(--gunmetal);
   }
 }

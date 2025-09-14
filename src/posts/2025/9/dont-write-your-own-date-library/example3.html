@@ -1,0 +1,64 @@
+<play-ground fold="2">
+  <template>
+    <pre id="output"></pre>
+    <script type="module">
+      // just a log utility so we can log to the preview pane!
+      window.log = (str) => {
+        const container = document.querySelector("#output");
+        const el = document.createTextNode(
+          typeof str === "object" ? JSON.stringify(str, null, 2) : str,
+        );
+        el.textContent += "\n\n";
+        container.appendChild(el);
+      };
+    </script>
+    <script type="module">
+      const dates = [
+        "2024-03-15T23:59:59.999Z",
+        "2024-07-04T23:59:59.999-07:00",
+        "2025-01-01T23:59:59.999+09:00",
+        "2023-12-25T23:59:59.999Z",
+        "2024-11-28T23:59:59.999-05:00",
+        "2025-02-14T23:59:59.999+01:00",
+        "2024-10-31T23:59:59.999Z",
+        "2025-05-01T23:59:59.999-08:00",
+        "2023-06-21T23:59:59.999+02:00",
+        "2025-09-13T23:59:59.999Z",
+      ];
+
+      function getUTCHour(date) {
+        const offset = date.getTimezoneOffset();
+
+        const utcHour = date.getHours() + offset / 60;
+
+        return utcHour;
+      }
+
+      function isEndOfDay(date) {
+        if (
+          date.getHours() === 23 &&
+          date.getMinutes() === 59 &&
+          date.getSeconds() === 59 &&
+          date.getMilliseconds() === 999
+        ) {
+          return true;
+        }
+
+        if (
+          getUTCHour(date) === 23 &&
+          date.getMinutes() === 59 &&
+          date.getSeconds() === 59 &&
+          date.getMilliseconds() === 999
+        ) {
+          return true;
+        }
+
+        return false;
+      }
+
+      for (const date of dates) {
+        log(date + " isEndOfDay? " + isEndOfDay(new Date(date)).toString());
+      }
+    </script>
+  </template>
+</play-ground>

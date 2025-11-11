@@ -23,6 +23,7 @@
     "gaxios": "^6.1.1",
     "google-auth-library": "^10.2.1",
     "google-logging-utils": "^1.1.1",
+    "happy-dom": "^20.0.10",
     "shiki": "^1.29.2"
   }
 }

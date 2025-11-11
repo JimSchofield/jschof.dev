@@ -4,6 +4,7 @@ import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import highlightPlugin from "./eleventy/highlight.js";
+import autoHeadingIds from "./plugins/auto-heading-ids.js";
 
 export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
@@ -54,6 +55,7 @@ export default function (eleventyConfig) {
   });
 
   eleventyConfig.addPlugin(highlightPlugin);
+  eleventyConfig.addPlugin(autoHeadingIds);
 
   eleventyConfig.addFilter("jsonify", function(value) {
     return JSON.stringify(value);

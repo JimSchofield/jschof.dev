@@ -96,7 +96,7 @@ export default function (eleventyConfig) {
         const link = document.createElement("a");
         link.href = `#${finalId}`;
         link.className = "heading-link";
-        link.setAttribute("onclick", `copyHeadingUrl(event, '${finalId}')`);
+        link.setAttribute("data-heading-id", finalId);
         link.setAttribute("aria-label", `Copy link to ${text}`);
         link.setAttribute("title", "Copy link to this heading");
         link.textContent = "📎";

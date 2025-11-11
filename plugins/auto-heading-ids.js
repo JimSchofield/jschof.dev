@@ -65,9 +65,10 @@ export default function (eleventyConfig) {
       const headings = document.querySelectorAll("h2, h3, h4, h5, h6");
 
       headings.forEach((heading) => {
-        // Skip if already has an ID
-        if (heading.id) {
-          return;
+        // Skip if already has an ID (but still add paperclip if missing)
+        const hasExistingId = heading.id;
+        if (hasExistingId && heading.querySelector('.heading-link')) {
+          return; // Already has both ID and paperclip link
         }
 
         // Skip if inside a web component

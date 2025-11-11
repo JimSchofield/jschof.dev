@@ -24,5 +24,31 @@ The build system uses 11ty with these key features:
 - Custom syntax highlighting using Shiki with Tokyo Night theme
 - RSS feed generation
 - SEO plugin integration
+- Auto-heading IDs with paperclip links (posts only)
+
+### Auto-Heading IDs Plugin
+The site includes a custom 11ty plugin that automatically generates IDs and shareable links for headings:
+
+**Location**: `plugins/auto-heading-ids.js`
+
+**Features**:
+- Auto-generates IDs for h2-h6 headings (h1 excluded)
+- Only processes blog posts (files under `/posts/` directory)
+- Limits IDs to first 10 words for readability
+- Adds paperclip (📎) links for copying heading URLs
+- Uses Happy DOM for reliable HTML parsing
+- Skips headings inside web components
+
+**Dependencies**: 
+- `happy-dom` for HTML parsing and manipulation
+
+**JavaScript Integration**: 
+- `src/js/heading-links.js` - Global clipboard functionality
+- Imported in `src/index.js`
+
+**CSS Styling**: 
+- `.heading-link` class styles the paperclip icons
+- Hidden by default, visible on heading hover
+- Styled at `0.6em` font size for subtlety
 
 [... rest of the existing file content remains unchanged ...]

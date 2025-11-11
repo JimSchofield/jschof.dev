@@ -365,7 +365,7 @@ footer {
 
 .button {
   display: inline-block;
-  padding: 0.25em 1em;
+  padding: 0.25em 1em 0.2em;
   background: var(--gunmetal);
   color: var(--seasalt);
   border-radius: 8px;
@@ -496,7 +496,7 @@ baseline-status {
   right: 1rem;
 
   display: flex;
-  padding: 0.2rem 0.6rem;
+  padding: 0.2rem 0.6rem 0.1rem;
   border: 4px solid transparent;
   border-radius: 1rem;
 
@@ -666,6 +666,7 @@ article h1 {
 
 button.hamburger-button {
   display: flex;
+  padding: 0.5em;
   align-items: center;
   position: relative;
   cursor: pointer;

@@ -43,6 +43,12 @@ export default function (eleventyConfig) {
         return content;
       }
 
+      // Only process posts (files under /posts/ directory)
+      const isPost = outputPath.includes("/posts/");
+      if (!isPost) {
+        return content;
+      }
+
       const window = new Window();
       const document = window.document;
       document.body.innerHTML = content;

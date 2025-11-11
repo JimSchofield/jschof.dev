@@ -38,6 +38,8 @@ export class PlayGround extends LitElement {
   @property()
   fold = "";
 
+  private iframe?: HTMLIFrameElement;
+
   get template() {
     return this.querySelector("template");
   }
@@ -102,6 +104,30 @@ export class PlayGround extends LitElement {
 
   async firstUpdated() {
     this.initEditorView();
+    this.setupIframe();
+  }
+
+  private setupIframe() {
+    this.iframe = this.shadowRoot?.querySelector('#view') as HTMLIFrameElement;
+    if (this.iframe) {
+      // Set initial content using about:blank to avoid history issues
+      this.iframe.src = 'about:blank';
+      this.iframe.onload = () => {
+        this.updateIframeContent();
+      };
+    }
+  }
+
+  private updateIframeContent() {
+    if (this.iframe?.contentWindow) {
+      const content = this.docContents || "<!DOCTYPE html><p>Loading...</p>";
+      
+      // Use document.write to avoid creating history entries
+      const doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
+      doc.open();
+      doc.write(content);
+      doc.close();
+    }
   }
 
   async format(template: string = "") {
@@ -148,6 +174,7 @@ export class PlayGround extends LitElement {
     );
 
     this.docContents = res;
+    this.updateIframeContent();
   };
 
   debouncedHandleDocUpdate = debounce(this.handleDocUpdate, 200);
@@ -166,9 +193,8 @@ export class PlayGround extends LitElement {
           </button>
         </div>
         <iframe
-          sandbox="allow-scripts allow-forms"
+          sandbox="allow-scripts allow-forms allow-same-origin"
           id="view"
-          srcdoc=${this.docContents || "<!DOCTYPE html><p>Loading...</p>"}
         ></iframe>
       </div>
     </div>`;

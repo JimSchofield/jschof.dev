@@ -686,3 +686,18 @@ button.hamburger-button {
     display: none;
   }
 }
+
+/* Heading Links */
+.heading-link {
+  text-decoration: none;
+  font-size: 0.6em;
+  cursor: pointer;
+}
+
+h2:hover .heading-link,
+h3:hover .heading-link,
+h4:hover .heading-link,
+h5:hover .heading-link,
+h6:hover .heading-link {
+  opacity: 0.7;
+}

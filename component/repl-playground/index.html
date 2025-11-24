@@ -7,6 +7,26 @@
     <script type="module" src="src/repl-playground.ts"></script>
   </head>
   <body>
-    <repl-playground></repl-playground>
+    <repl-playground>
+      <template>
+        <script>
+          class Foo {
+            constructor() {
+              console.log("I'm here!");
+            }
+
+            saySomething() {
+              const arr = new Array(20).fill("foo");
+
+              return arr;
+            }
+          }
+
+          const a = new Foo();
+
+          a.saySomething();
+        </script>
+      </template>
+    </repl-playground>
   </body>
 </html>

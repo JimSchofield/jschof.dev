@@ -26,7 +26,7 @@ export class ReplPlaygroundState {
     } catch (error) {
       console.warn(
         "Failed to parse repl-playground state from localStorage:",
-        error,
+        error
       );
     }
 
@@ -57,7 +57,7 @@ export class ReplPlaygroundState {
     } catch (error) {
       console.warn(
         "Failed to save repl-playground state to localStorage:",
-        error,
+        error
       );
     }
 
@@ -68,7 +68,7 @@ export class ReplPlaygroundState {
     window.dispatchEvent(
       new CustomEvent(this.STATE_CHANGE_EVENT, {
         detail: newState,
-      }),
+      })
     );
   }
 
@@ -90,7 +90,7 @@ export class ReplPlaygroundState {
    * Notify all subscribers of state change
    */
   private static notifySubscribers(newState: ReplPlaygroundStateData): void {
-    this.subscribers.forEach((callback) => {
+    this.subscribers.forEach(callback => {
       try {
         callback(newState);
       } catch (error) {
@@ -105,7 +105,7 @@ export class ReplPlaygroundState {
    */
   static initializeStorageListener(): void {
     // Listen for storage changes from other tabs
-    window.addEventListener("storage", (event) => {
+    window.addEventListener("storage", event => {
       if (event.key === this.STORAGE_KEY && event.newValue) {
         try {
           const newState: ReplPlaygroundStateData = JSON.parse(event.newValue);
@@ -113,17 +113,16 @@ export class ReplPlaygroundState {
         } catch (error) {
           console.warn(
             "Failed to parse state change from storage event:",
-            error,
+            error
           );
         }
       }
     });
 
     // Listen for custom events from same page
-    window.addEventListener(this.STATE_CHANGE_EVENT, ((_event: CustomEvent) => {
+    window.addEventListener(this.STATE_CHANGE_EVENT, (() => {
       // Don't notify for events we dispatched ourselves
       // The notifySubscribers call in setVimMode already handles same-page updates
     }) as EventListener);
   }
 }
-

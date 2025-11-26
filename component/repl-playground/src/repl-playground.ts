@@ -1,15 +1,18 @@
 import { LitElement, html, css } from "lit";
 import { customElement, state } from "lit/decorators.js";
-import { EditorView, keymap } from "@codemirror/view";
+import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
+import { history } from "@codemirror/commands";
+import { vim } from "@replit/codemirror-vim";
 
 @customElement("repl-playground")
 export class ReplPlayground extends LitElement {
   @state() private output: string[] = [];
   @state() private isExecuting = false;
   @state() private initialCode = "";
+  @state() private vimMode = false;
 
   private editor?: EditorView;
   private sandboxFrame?: HTMLIFrameElement;
@@ -114,6 +117,32 @@ export class ReplPlayground extends LitElement {
       font-size: 11px;
       color: #888;
       font-style: italic;
+    }
+
+    .vim-toggle {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s;
+      margin-left: 8px;
+    }
+
+    .vim-toggle:hover {
+      background: #777;
+    }
+
+    .vim-toggle.active {
+      background: #007acc;
+      color: white;
+    }
+
+    .vim-toggle.active:hover {
+      background: #005a9e;
     }
 
     .output-pane {
@@ -245,62 +274,105 @@ export class ReplPlayground extends LitElement {
     const editorContainer = this.shadowRoot?.querySelector(".editor-container");
     if (!editorContainer) return;
 
+    this.buildEditor();
+  }
+
+  private buildEditor() {
+    const editorContainer = this.shadowRoot?.querySelector(".editor-container");
+    if (!editorContainer) return;
+
+    // Build extensions array following replit/codemirror-vim basic setup
+    const extensions = [];
+
+    // Add vim mode first if enabled (must be before other keymaps)
+    if (this.vimMode) {
+      extensions.push(vim());
+    }
+
+    // Add drawSelection for proper vim visual mode rendering
+    extensions.push(drawSelection());
+
+    // Add history for undo/redo functionality
+    extensions.push(history());
+
+    // Add other extensions
+    extensions.push(
+      javascript(),
+      oneDark,
+      keymap.of([
+        {
+          key: "Mod-Enter",
+          run: () => {
+            this.runCode();
+            return true;
+          },
+        },
+      ]),
+      EditorView.theme(
+        {
+          "&": {
+            height: "100%",
+            backgroundColor: "#1a1b26",
+            maxHeight: "100%",
+          },
+          ".cm-content": {
+            caretColor: "#c0caf5",
+            color: "#c0caf5",
+          },
+          ".cm-scroller": {
+            fontSize: "14px",
+            fontFamily: "inherit",
+            backgroundColor: "#1a1b26",
+            maxHeight: "100%",
+            overflow: "auto",
+          },
+          ".cm-focused": {
+            outline: "none",
+          },
+          ".cm-editor": {
+            height: "100%",
+            maxHeight: "100%",
+          },
+          ".cm-editor.cm-focused": {
+            backgroundColor: "#1a1b26",
+          },
+          ".cm-line": {
+            color: "#c0caf5",
+          },
+          ".cm-cursor": {
+            borderColor: "#c0caf5",
+          },
+          "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
+            backgroundColor: "#364A82",
+          },
+          ".cm-vim-panel": {
+            backgroundColor: "#1a1b26",
+            color: "#c0caf5",
+            border: "1px solid #333",
+            borderRadius: "4px",
+          },
+          ".cm-vim-panel input": {
+            backgroundColor: "#1a1b26",
+            color: "#c0caf5",
+            border: "none",
+            outline: "none",
+            fontFamily: "inherit",
+            fontSize: "14px",
+          },
+        },
+        { dark: true },
+      ),
+    );
+
     const startState = EditorState.create({
-      doc: this.initialCode,
-      extensions: [
-        javascript(),
-        oneDark,
-        keymap.of([
-          {
-            key: "Mod-Enter",
-            run: () => {
-              this.runCode();
-              return true;
-            },
-          },
-        ]),
-        EditorView.theme(
-          {
-            "&": {
-              height: "100%",
-              backgroundColor: "#1a1b26",
-              maxHeight: "100%",
-            },
-            ".cm-content": {
-              caretColor: "#c0caf5",
-              color: "#c0caf5",
-            },
-            ".cm-scroller": {
-              fontSize: "14px",
-              fontFamily: "inherit",
-              backgroundColor: "#1a1b26",
-              maxHeight: "100%",
-              overflow: "auto",
-            },
-            ".cm-focused": {
-              outline: "none",
-            },
-            ".cm-editor": {
-              height: "100%",
-              maxHeight: "100%",
-            },
-            ".cm-editor.cm-focused": {
-              backgroundColor: "#1a1b26",
-            },
-            ".cm-line": {
-              color: "#c0caf5",
-            },
-            ".cm-cursor": {
-              borderColor: "#c0caf5",
-            },
-            "&.cm-focused .cm-selectionBackground, .cm-selectionBackground": {
-              backgroundColor: "#364A82",
-            },
-          },
-          { dark: true },
-        ),
-      ],
+      doc: this.editor?.state.doc.toString() || this.initialCode,
+      extensions,
     });
+
+    // Dispose of old editor if it exists
+    if (this.editor) {
+      this.editor.destroy();
+    }
 
     this.editor = new EditorView({
       state: startState,
@@ -546,6 +618,11 @@ export class ReplPlayground extends LitElement {
     this.clearOutput();
   }
 
+  private toggleVimMode() {
+    this.vimMode = !this.vimMode;
+    this.buildEditor(); // Rebuild editor with/without vim mode
+  }
+
   render() {
     return html`
       <div class="container">
@@ -560,6 +637,12 @@ export class ReplPlayground extends LitElement {
               ${this.isExecuting ? "Running..." : "Run"}
             </button>
             <button class="reset-button" @click=${this.resetCode}>Reset</button>
+            <button 
+              class="vim-toggle ${this.vimMode ? 'active' : ''}" 
+              @click=${this.toggleVimMode}
+            >
+              Vim mode
+            </button>
             <span class="keyboard-hint">${this.getKeyboardHint()}</span>
           </div>
         </div>

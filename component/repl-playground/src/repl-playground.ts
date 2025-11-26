@@ -6,16 +6,18 @@ import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { history } from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
+import { ReplPlaygroundState } from "./repl-playground-state.js";
 
 @customElement("repl-playground")
 export class ReplPlayground extends LitElement {
   @state() private output: string[] = [];
   @state() private isExecuting = false;
   @state() private initialCode = "";
-  @state() private vimMode = false;
+  @state() private vimMode = false; // This will be synced with global state
 
   private editor?: EditorView;
   private sandboxFrame?: HTMLIFrameElement;
+  private stateChangeCallback?: (newState: any) => void;
   static styles = css`
     :host {
       display: block;
@@ -217,6 +219,31 @@ export class ReplPlayground extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.extractInitialCode();
+
+    // Initialize global state management
+    ReplPlaygroundState.initializeStorageListener();
+
+    // Set initial vim mode from global state
+    this.vimMode = ReplPlaygroundState.getVimMode();
+
+    // Subscribe to global state changes
+    this.stateChangeCallback = (newState) => {
+      const newVimMode = newState.vimMode === "enabled";
+      if (this.vimMode !== newVimMode) {
+        this.vimMode = newVimMode;
+        this.buildEditor(); // Rebuild editor when vim mode changes
+      }
+    };
+    ReplPlaygroundState.subscribe(this.stateChangeCallback);
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+
+    // Unsubscribe from global state changes
+    if (this.stateChangeCallback) {
+      ReplPlaygroundState.unsubscribe(this.stateChangeCallback);
+    }
   }
 
   private extractInitialCode() {
@@ -619,8 +646,8 @@ export class ReplPlayground extends LitElement {
   }
 
   private toggleVimMode() {
-    this.vimMode = !this.vimMode;
-    this.buildEditor(); // Rebuild editor with/without vim mode
+    // Update global state - this will automatically notify all other instances
+    ReplPlaygroundState.setVimMode(!this.vimMode);
   }
 
   render() {
@@ -637,8 +664,8 @@ export class ReplPlayground extends LitElement {
               ${this.isExecuting ? "Running..." : "Run"}
             </button>
             <button class="reset-button" @click=${this.resetCode}>Reset</button>
-            <button 
-              class="vim-toggle ${this.vimMode ? 'active' : ''}" 
+            <button
+              class="vim-toggle ${this.vimMode ? "active" : ""}"
               @click=${this.toggleVimMode}
             >
               Vim mode
@@ -655,10 +682,14 @@ export class ReplPlayground extends LitElement {
             </button>
           </div>
           <div class="terminal-output">
-${this.output.length === 0
-  ? 'Click "Run" to execute your code...'
-  : this.output.map((line) => html`<div class="output-line ${this.getOutputClass(line)}">${line}</div>`)
-}
+            ${this.output.length === 0
+              ? 'Click "Run" to execute your code...'
+              : this.output.map(
+                  (line) =>
+                    html`<div class="output-line ${this.getOutputClass(line)}">
+                      ${line}
+                    </div>`,
+                )}
           </div>
         </div>
 

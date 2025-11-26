@@ -8,17 +8,24 @@ This is a secure JavaScript REPL (Read-Eval-Print-Loop) web component built with
 
 ## Development Commands
 
-- `pnpm run dev` - Start Vite development server
-- `pnpm run build` - Build for production (TypeScript compilation + Vite build)
-- `pnpm run preview` - Preview production build
+- `npm run dev` - Start Vite development server
+- `npm run build` - Build for production (TypeScript compilation + Vite build)
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint for code quality checks
+- `npm run lint:fix` - Run ESLint and auto-fix issues
+- `npm run format` - Format code with Prettier
+- `npm run format:check` - Check if code is formatted correctly
+- `npm run typecheck` - Run TypeScript type checking without compilation
 
 ## Technology Stack
 
 - **Vite** v5.2.0 - Build tool and dev server
 - **Lit** v3.1.2 - Web component framework  
 - **TypeScript** v5.2.2 - Type safety with strict configuration
-- **CodeMirror 6** - Code editor with JavaScript syntax highlighting
+- **CodeMirror 6** - Code editor with JavaScript syntax highlighting, vim mode support
 - **ESM modules** throughout
+- **Prettier** v3.6.2 - Code formatting
+- **ESLint** v9.39.1 - Code linting with TypeScript and Lit support
 
 ## Component Architecture
 
@@ -26,13 +33,17 @@ This is a secure JavaScript REPL (Read-Eval-Print-Loop) web component built with
 - **Split-pane layout**: Editor (left) + output (right)
 - **Secure sandbox execution**: iframe with `allow-scripts` only
 - **Tokyo Night theme**: Custom dark theme for editor
+- **Vim mode support**: Toggle between normal and vim editing modes
+- **Global state management**: Vim mode preference persists across browser sessions and syncs across all component instances
 - **Real-time output**: Captures console.log, errors, and return values
 - **Mobile responsive**: Stacks vertically on small screens
 
 ### Key Files
 - `src/repl-playground.ts` - Main component implementation
+- `src/repl-playground-state.ts` - Global state management utility
 - `index.html` - Demo page with sample code template
-- `vite.config.js` - Build configuration
+- `eslint.config.js` - ESLint configuration with TypeScript/Lit support
+- `.prettierrc` - Prettier formatting configuration
 
 ### Component Usage
 ```html

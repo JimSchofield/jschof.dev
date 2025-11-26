@@ -8,6 +8,18 @@ import { history } from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
 import { ReplPlaygroundState } from "./repl-playground-state.js";
 
+interface ExecutionResult {
+  type: "execution-result";
+  output: Array<{ type: string; message: string }>;
+  result?: string;
+}
+
+interface ExecutionError {
+  type: "execution-error";
+  error: string;
+  output: Array<{ type: string; message: string }>;
+}
+
 @customElement("repl-playground")
 export class ReplPlayground extends LitElement {
   @state() private output: string[] = [];
@@ -17,7 +29,9 @@ export class ReplPlayground extends LitElement {
 
   private editor?: EditorView;
   private sandboxFrame?: HTMLIFrameElement;
-  private stateChangeCallback?: (newState: any) => void;
+  private stateChangeCallback?: (newState: {
+    vimMode: "enabled" | "disabled";
+  }) => void;
   static styles = css`
     :host {
       display: block;
@@ -227,7 +241,7 @@ export class ReplPlayground extends LitElement {
     this.vimMode = ReplPlaygroundState.getVimMode();
 
     // Subscribe to global state changes
-    this.stateChangeCallback = (newState) => {
+    this.stateChangeCallback = newState => {
       const newVimMode = newState.vimMode === "enabled";
       if (this.vimMode !== newVimMode) {
         this.vimMode = newVimMode;
@@ -264,7 +278,7 @@ export class ReplPlayground extends LitElement {
         }
 
         // Find minimum indentation (excluding empty lines)
-        const nonEmptyLines = lines.filter((line) => line.trim() !== "");
+        const nonEmptyLines = lines.filter(line => line.trim() !== "");
         let minIndent = Infinity;
 
         for (const line of nonEmptyLines) {
@@ -387,8 +401,8 @@ export class ReplPlayground extends LitElement {
             fontSize: "14px",
           },
         },
-        { dark: true },
-      ),
+        { dark: true }
+      )
     );
 
     const startState = EditorState.create({
@@ -409,7 +423,7 @@ export class ReplPlayground extends LitElement {
 
   private initializeSandbox() {
     this.sandboxFrame = this.shadowRoot?.querySelector(
-      ".execution-sandbox",
+      ".execution-sandbox"
     ) as HTMLIFrameElement;
     if (!this.sandboxFrame) return;
 
@@ -563,24 +577,24 @@ export class ReplPlayground extends LitElement {
     this.sandboxFrame.srcdoc = sandboxHtml;
 
     // Listen for execution results
-    window.addEventListener("message", (event) => {
+    window.addEventListener("message", event => {
       if (event.source === this.sandboxFrame?.contentWindow) {
         this.handleExecutionResult(event.data);
       }
     });
   }
 
-  private handleExecutionResult(data: any) {
+  private handleExecutionResult(data: ExecutionResult | ExecutionError) {
     this.isExecuting = false;
 
     if (data.type === "execution-result") {
-      const newOutput = [...data.output.map((item: any) => item.message)];
+      const newOutput = [...data.output.map(item => item.message)];
       if (data.result !== undefined) {
         newOutput.push(`→ ${data.result}`);
       }
       this.output = newOutput;
     } else if (data.type === "execution-error") {
-      const errorOutput = [...data.output.map((item: any) => item.message)];
+      const errorOutput = [...data.output.map(item => item.message)];
       errorOutput.push(`Error: ${data.error}`);
       this.output = errorOutput;
     }
@@ -614,7 +628,7 @@ export class ReplPlayground extends LitElement {
       {
         code: code,
       },
-      "*",
+      "*"
     );
 
     // Set timeout to prevent infinite execution
@@ -681,21 +695,22 @@ export class ReplPlayground extends LitElement {
               Clear
             </button>
           </div>
-          <div class="terminal-output">
-            ${this.output.length === 0
-              ? 'Click "Run" to execute your code...'
-              : this.output.map(
-                  (line) =>
-                    html`<div class="output-line ${this.getOutputClass(line)}">
-                      ${line}
-                    </div>`,
-                )}
-          </div>
+          <div class="terminal-output">${this.outputTemplate}</div>
         </div>
 
         <iframe class="execution-sandbox"></iframe>
       </div>
     `;
+  }
+
+  get outputTemplate() {
+    return this.output.length === 0
+      ? 'Click "Run" to execute your code...'
+      : this.output.map(
+          line =>
+            // prettier-ignore This needs no white space to render correctly
+            html`<div class="output-line ${this.getOutputClass(line)}">${line}</div>`
+        );
   }
 }
 

@@ -12,7 +12,7 @@ layout: index
         <li class="posts-grid__item"{% if post.url == page.url %} aria-current="page"{% endif %}>
             <a class="card" href="{{post.url}}">
                 {%- if post.data.image -%}
-                <img  class="card__image" src="{% joinPaths post.url post.data.image %}" />
+                <img  class="card__image" src="{% joinPaths post.url post.data.image %}" loading="lazy" />
                 {%- else -%}
                 <div class="card__placeholder"></div>
                 {%- endif -%}

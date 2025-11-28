@@ -2,7 +2,7 @@
   font-family: "Atkinson Hyperlegible Next";
   font-style: normal;
   font-weight: 400;
-  font-display: block;
+  font-display: swap;
   src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
 }
 @font-face {
@@ -10,7 +10,7 @@
   font-style: normal;
   font-weight: 700;
   font-variation-settings: "wght" 700;
-  font-display: block;
+  font-display: swap;
   src: url("/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf");
 }
 

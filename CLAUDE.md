@@ -46,9 +46,27 @@ The site includes a custom 11ty plugin that automatically generates IDs and shar
 - `src/js/heading-links.js` - Global clipboard functionality
 - Imported in `src/index.js`
 
-**CSS Styling**: 
+**CSS Styling**:
 - `.heading-link` class styles the paperclip icons
 - Hidden by default, visible on heading hover
 - Styled at `0.6em` font size for subtlety
 
-[... rest of the existing file content remains unchanged ...]
+## Performance & Loading Optimizations
+
+The site implements several loading optimizations for better performance:
+
+**Resource Preloading** (`src/_includes/index.njk`):
+- Main CSS file preloaded with `<link rel="preload" href="/css/main.css" as="stylesheet">`
+- Atkinson Hyperlegible font preloaded: `<link rel="preload" href="/assets/fonts/AtkinsonHyperlegibleNextVF-Variable.ttf" as="font" type="font/ttf" crossorigin>`
+- Main JavaScript module preloaded: `<link rel="preload" href="/index.js" as="script">`
+
+**Font Display Strategy** (`src/css/main.css`):
+- Uses `font-display: swap` for custom fonts to prevent FOIT (Flash of Invisible Text)
+- Allows fallback font to display immediately while custom font loads
+
+**Image Loading**:
+- All post images use `loading="lazy"` for deferred loading
+- Profile picture on homepage uses `fetchpriority="high"` for immediate loading
+- Lazy loading applied to:
+  - Post listing thumbnails (`src/posts/index.md`)
+  - In-content images across all blog posts

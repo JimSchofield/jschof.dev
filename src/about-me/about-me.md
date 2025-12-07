@@ -3,20 +3,25 @@ layout: index
 ---
 
 <main class="constrain">
-    <h1>About me:</h1>
 
-<p>Some recent projects</p>
-<ul>
-    <li><a href="https://github.com/JimSchofield/minne"><strong>Minne</strong></a>: A light, signals-based web component framework</li>
-    <li><a href="https://github.com/JimSchofield/wc-services"><strong>wc-services</strong></a>: A framework agnostic service provider</li>
-    <li><a href="https://potterly.net"><strong>Potterly</strong></a>: a simple pottery journal web app to track your ceramics pieces</li>
-</ul>
+<h1>About me:</h1>
+
+<p>My name is Jim Schofield.</p>
 
 <strong>In a past life</strong> I was a math teacher, and my students used to affectionately call me "prof schof." I studied html, css, and javascript at night so I could eventually transition to being a front end engineer. That's my profession now. I currently work at Crowdstrike.
 
 <strong>Most recently</strong> I've been diving into web components as solution to programatic dashboards and UI's. I mostly work with framework-level concerns: reactivity, framework agnostic APIs, and microfrontend strategies.
 
 I live in Minnesota with my wife, 6 children, golden doodle, and 2 perfect kitties.
+
+Some recent projects
+
+<ul>
+  <li><a href="https://github.com/JimSchofield/minne"><strong>Minne</strong></a>: A light, signals-based web component framework</li>
+  <li><a href="https://github.com/JimSchofield/wc-services"><strong>wc-services</strong></a>: A framework agnostic service provider</li>
+  <li><a href="https://potterly.net"><strong>Potterly</strong></a>: a simple pottery journal web app to track your ceramics pieces</li>
+  <li><a href="https://oldcoyotepottery.com"><strong>Old Coyote Pottery</strong></a>: A shop for my pottery hobby</li>
+</ul>
 
 <h2>A note about how I use AI...</h2>
 

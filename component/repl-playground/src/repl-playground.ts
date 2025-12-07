@@ -4,9 +4,12 @@ import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { history } from "@codemirror/commands";
+import { history, indentWithTab } from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
 import { ReplPlaygroundState } from "./repl-playground-state.js";
+import prettier from "prettier/standalone";
+import prettierBabel from "prettier/plugins/babel";
+import prettierEstree from "prettier/plugins/estree";
 
 interface ExecutionResult {
   type: "execution-result";
@@ -125,6 +128,22 @@ export class ReplPlayground extends LitElement {
     }
 
     .reset-button:hover {
+      background: #777;
+    }
+
+    .format-button {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .format-button:hover {
       background: #777;
     }
 
@@ -341,6 +360,7 @@ export class ReplPlayground extends LitElement {
       javascript(),
       oneDark,
       keymap.of([
+        indentWithTab,
         {
           key: "Mod-Enter",
           run: () => {
@@ -659,6 +679,33 @@ export class ReplPlayground extends LitElement {
     this.clearOutput();
   }
 
+  private async formatCode() {
+    if (!this.editor) return;
+
+    try {
+      const code = this.editor.state.doc.toString();
+      const formatted = await prettier.format(code, {
+        parser: "babel",
+        plugins: [prettierBabel, prettierEstree],
+        semi: true,
+        singleQuote: false,
+        tabWidth: 2,
+        printWidth: 80,
+      });
+
+      this.editor.dispatch({
+        changes: {
+          from: 0,
+          to: this.editor.state.doc.length,
+          insert: formatted,
+        },
+      });
+    } catch (error) {
+      console.error("Failed to format code:", error);
+      // Optionally show an error message to the user
+    }
+  }
+
   private toggleVimMode() {
     // Update global state - this will automatically notify all other instances
     ReplPlaygroundState.setVimMode(!this.vimMode);
@@ -676,6 +723,9 @@ export class ReplPlayground extends LitElement {
               @click=${this.runCode}
             >
               ${this.isExecuting ? "Running..." : "Run"}
+            </button>
+            <button class="format-button" @click=${this.formatCode}>
+              Format
             </button>
             <button class="reset-button" @click=${this.resetCode}>Reset</button>
             <button

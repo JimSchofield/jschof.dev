@@ -3,8 +3,13 @@ import { customElement, state } from "lit/decorators.js";
 import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
+import { indentOnInput } from "@codemirror/language";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { history, indentWithTab } from "@codemirror/commands";
+import {
+  history,
+  indentWithTab,
+  insertNewlineAndIndent,
+} from "@codemirror/commands";
 import { vim } from "@replit/codemirror-vim";
 import { ReplPlaygroundState } from "./repl-playground-state.js";
 import prettier from "prettier/standalone";
@@ -355,12 +360,19 @@ export class ReplPlayground extends LitElement {
     // Add history for undo/redo functionality
     extensions.push(history());
 
+    // Add smart indentation
+    extensions.push(indentOnInput());
+
     // Add other extensions
     extensions.push(
       javascript(),
       oneDark,
       keymap.of([
         indentWithTab,
+        {
+          key: "Enter",
+          run: insertNewlineAndIndent,
+        },
         {
           key: "Mod-Enter",
           run: () => {

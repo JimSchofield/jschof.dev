@@ -7,7 +7,7 @@ import highlightPlugin from "./eleventy/highlight.js";
 import autoHeadingIds from "./plugins/auto-heading-ids.js";
 
 export default function (eleventyConfig) {
-  eleventyConfig.addPassthroughCopy("./src/**/*.css");
+  eleventyConfig.addPassthroughCopy("./src/**/*.css", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
   eleventyConfig.addPassthroughCopy("./src/**/*.gif");

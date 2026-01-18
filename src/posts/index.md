@@ -2,6 +2,7 @@
 eleventyImport:
   collections: ["posts"]
 layout: index
+title: "Posts"
 ---
 
 

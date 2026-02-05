@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Lit + TS</title>
+    <script type="module" src="src/repl-playground.ts"></script>
+  </head>
+  <body>
+    <repl-playground>
+      <template>
+        <script>
+          class Foo {
+            constructor() {
+              console.log("I'm here!");
+            }
+
+            saySomething() {
+              const arr = new Array(20).fill("foo");
+
+              return arr;
+            }
+          }
+
+          const a = new Foo();
+
+          a.saySomething();
+        </script>
+      </template>
+    </repl-playground>
+    <br />
+    <br />
+    <repl-playground>
+      <template>
+        <script>
+          const arr = [1, 2, 3, 4, 5];
+
+          function get(arr, index) {
+            return arr.at(index);
+          }
+
+          get(arr, -1);
+        </script>
+      </template>
+    </repl-playground>
+  </body>
+</html>

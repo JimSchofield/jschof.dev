@@ -1,0 +1,862 @@
+---
+title: "You Might Not Need an Abstraction"
+excerpt: "The beginner copies and pastes.  The mid-level engineer makes abstractions.  The experienced engineer gets stuff done."
+layout: post
+tags:
+  - posts
+  - using the platform
+  - vanilla JavaScript
+  - philosophy
+  - architecture
+date: 2026-02-05
+image:
+---
+
+<h1>You Might Not Need an Abstraction</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  One of my all-time favorite Youtubers
+  <a href="https://www.youtube.com/@funfunfunction">MPJ</a> used to often repeat
+  these words of wisdom:
+</p>
+
+<blockquote>
+  <p>
+    The new engineer copies and pastes. The mid-level engineer makes
+    abstractions. The experienced engineer gets s*** done.
+  </p>
+  <p>- MPJ (paraphrased)</p>
+</blockquote>
+
+<p>
+  The thrust of his saying was that there is often a common path in the course
+  of a software engineer's career. At first, they don't know what they are
+  doing, so they emulate. Then they move on to using abstractions to dry up
+  their code. Then they generally become pragmatic and don't worry about clever
+  abstractions.
+</p>
+
+<p>
+  I'd say in the past two years I've been visited with the same thought over and
+  over:
+  <strong>You might not need an abstraction.</strong> More precisely, you may
+  not need to make your own abstraction.
+</p>
+
+<p>
+  I've seen many engineers hampered in their efficacy because they become tied
+  to "beautiful" and "clean" code. But I've also seen many wonderful examples of
+  (in my estimation) great engineers and thinkers in our field that have
+  rejected abstractions or avoided rushing to create them, often producing
+  "wet" code. This "wet" code, though, is easier to work with and a pleasure to
+  maintain.
+</p>
+
+<h2>Raise your hand if you ever tried to abstract <code>fetch</code></h2>
+
+<p>
+  If you didn't raise your hand, I'll bet you don't remember the times you did,
+  or you didn't realize at the time what you were doing! I've bumped into this
+  knee-jerk reaction so many times in my coding career and seen so many devs do
+  this that I would find it hard to believe it's not a rite of passage.
+</p>
+
+<p>
+  I actually bumped into this again in some recent work- it went something like
+  this:
+</p>
+
+<ol>
+  <li>
+    <p>
+      "I know I'll be making these kinds of async requests often. Let me make
+      this a
+      <em>primitive</em>"
+    </p>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          function makeFetch(param) {
+            return () => fetch(`http://base.url.com/?param=${param}`);
+          }
+
+          // To use
+          const task = makeFetch("foo");
+
+          task(); // returns a promise
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+  <li>
+    <p>"Okay, this is nice, but now I need to configure the fetch headers"</p>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          function makeFetch(param, config = { ...defaultFetchConfig }) {
+            return () => fetch(`http://base.url.com/?param=${param}`, config);
+          }
+
+          // To use
+          const task = makeFetch("foo", {
+            method: "POST",
+            withCredentials: true,
+            headers: {
+              "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+              "Content-Type": "application/json",
+            },
+          });
+
+          task(); // returns a promise
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+  <li>
+    <p>"Cool. But I also want this thing to track its status with an enum."</p>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          const taskStatus = {
+            idle: "idle",
+            inProgress: "inProgress",
+            success: "success",
+            error: "error",
+          };
+
+          class Task {
+            status = "idle"; //
+
+            config = {};
+
+            task = undefined;
+
+            result = undefined;
+
+            constructor(config = { ...defaultFetchConfig }) {
+              this.config = config;
+
+              this.task = (param) =>
+                fetch(`http://base.url.com/?param=${param}`, this.config);
+            }
+
+            async start(param) {
+              this.status = "inProgress";
+
+              return this.task()
+                .then((result) => {
+                  this.result = result;
+                  this.status = "success";
+                })
+                .catch((error) => {
+                  this.error = error;
+                  this.status = "error";
+                });
+            }
+
+            reset() {
+              this.status = "idle";
+              this.result = undefined;
+            }
+          }
+
+          //To use:
+          const task = new Task({
+            method: "POST",
+            withCredentials: true,
+            headers: {
+              "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+              "Content-Type": "application/json",
+            },
+          })
+
+          await task.start("foo");
+
+          task.status // success/failure
+
+          task.reset();
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+  <li>
+    <p>
+      "How neat and clean and encapsulated! Now I want to be able to make
+      callbacks for if the task fails, succeeds, or just resolves in general"
+    </p>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          const taskStatus = {
+            idle: "idle",
+            inProgress: "inProgress",
+            success: "success",
+            error: "error",
+          };
+
+          class Task {
+            status = "idle"; //
+
+            config = {};
+
+            task = undefined;
+
+            result = undefined;
+
+            onSuccess = () => {};
+
+            onFail = () => {};
+
+            onResolve = () => {};
+
+            constructor({onSuccess, onFail, onResolve, config } = { config: defaultFetchConfig }) {
+              this.onSuccess = onSuccess;
+              this.onFail = onFail,
+              this.onResolve = onResolve;
+              this.config = config;
+
+              this.task = (param) =>
+                fetch(`http://base.url.com/?param=${param}`, this.config);
+            }
+
+            async start(param) {
+              this.status = "inProgress";
+
+              return this.task()
+                .then((result) => {
+                  this.result = result;
+                  this.status = "success";
+                  this.onSuccess();
+                })
+                .catch((error) => {
+                  this.error = error;
+                  this.status = "error";
+                  this.onError();
+                })
+                .finally(() => this.onResolve());
+            }
+
+            reset() {
+              this.status = "idle";
+              this.result = undefined;
+            }
+          }
+
+          //To use:
+          const task = new Task({
+            onSuccess: () => { /* handle success */ },
+            onFail: () => { /* handle failure */ },
+            onResolve: () => {/* handle finally */ },
+            config: {
+              method: "POST",
+              withCredentials: true,
+              headers: {
+                "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+                "Content-Type": "application/json",
+              },
+            }
+          })
+
+          task.status // "idle"
+
+          await task.start("foo"); // callbacks run here
+
+          task.status // "success or fail, and resolved"
+
+          task.reset();
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+
+  <li>
+    <p>
+      "But wait! I need to cover cases where I change the base url as well!"
+    </p>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          const taskStatus = {
+            idle: "idle",
+            inProgress: "inProgress",
+            success: "success",
+            error: "error",
+          };
+
+          class Task {
+            status = "idle"; //
+
+            config = {};
+
+            task = undefined;
+
+            result = undefined;
+
+            onSuccess = () => {};
+
+            onFail = () => {};
+
+            onResolve = () => {};
+
+            constructor(baseUrl, {onSuccess, onFail, onResolve, config } = { config: defaultFetchConfig }) {
+              this.onSuccess = onSuccess;
+              this.onFail = onFail,
+              this.onResolve = onResolve;
+              this.config = config;
+
+              this.task = (param) =>
+                fetch(`${baseUrl}?${params}`, this.config);
+            }
+
+            async start(param) {
+              this.status = "inProgress";
+
+              return this.task()
+                .then((result) => {
+                  this.result = result;
+                  this.status = "success";
+                  this.onSuccess();
+                })
+                .catch((error) => {
+                  this.error = error;
+                  this.status = "error";
+                  this.onError();
+                })
+                .finally(() => this.onResolve());
+            }
+
+            reset() {
+              this.status = "idle";
+              this.result = undefined;
+            }
+          }
+
+          //To use:
+          const task = new Task("baseUrl", {
+            config: {
+              method: "POST",
+              withCredentials: true,
+              headers: {
+                "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+                "Content-Type": "application/json",
+              },
+            },
+            onSuccess: () => { /* handle success */ },
+            onFail: () => { /* handle failure */ },
+            onResolve: () => {/* handle finally */ },
+          })
+
+          task.status // "idle"
+
+          await task.start("foo"); // callbacks run here
+
+          task.status // "success or fail, and resolved"
+
+          task.reset();
+        </script>
+      </template>
+    </code-highlight>
+  </li>
+</ol>
+
+<p>
+  "How <em>elegant</em>!" I think and pat myself on the back. I do this for a
+  while, only later realizing that I actually haven't made anything useful and
+  created a lot of redundant code. Here's why:
+</p>
+
+<p>I just re-implemented fetch. Compare using fetch v.s. my new "Task":</p>
+
+<div class="wide-2up">
+  <div>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          const task = new Task("baseUrl", {
+            config: {
+              method: "POST",
+              withCredentials: true,
+              headers: {
+                "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+                "Content-Type": "application/json",
+              },
+            },
+            onSuccess: () => { /* handle success */ },
+            onFail: () => { /* handle failure */ },
+            onResolve: () => {/* handle finally */ },
+          })
+
+          task.status // "idle"
+
+          await task.start("foo"); // callbacks run here
+
+          task.status // "success or fail, and resolved"
+
+          task.reset();
+        </script>
+      </template>
+    </code-highlight>
+  </div>
+  <div>
+    <code-highlight lang="javascript">
+      <template>
+        <script>
+          // Just plain fetch:
+          const fetch = (params) => fetch(`baseUrl?${params}`, {
+            config: {
+              method: "POST",
+              withCredentials: true,
+              headers: {
+                "X-Auth-Token": "ef72570ff371408f9668e414353b7b2e",
+                "Content-Type": "application/json",
+              },
+            },
+          })
+
+          let result;
+
+          try {
+            result = await fetch("foo"); // callbacks run here
+            // handle success
+          } catch(e) {
+            // handle error
+          } finally {
+            // handle finally
+          }
+        </script>
+      </template>
+    </code-highlight>
+  </div>
+</div>
+
+<ul>
+  <li>
+    Those status enums on my class? Unnecessary because the state is implicitly
+    known in handling promises. in other words, if I know if I'm in a
+    <code>then</code> or <code>catch</code> what the status is. With
+    <code>try/catch</code> I still have the same information.
+  </li>
+  <li>I still need to provide base url and configuration, just like fetch</li>
+  <li>
+    Callbacks are probably worse than just handling the the result in the
+    promise <code>.then/.catch</code> or the branches of the
+    <code>try/catch</code> when using <code>await</code>
+  </li>
+  <li>
+    In the end, I still have to run and handle a promise using
+    <code>Task.start()</code>. In my example, we still need to await it.
+  </li>
+  <li>
+    What is the benefit of creating this "task" instance, over just duplicating
+    the code as needed elsewhere? I think this is hard to defend.
+  </li>
+</ul>
+
+<h2>The fundamental value of abstractions</h2>
+
+<p>
+  Okay, I'm going to get mathy here (after all, at heart I'm a mathematician.)
+  There is an information-theory-like way to describe the value of abstractions.
+</p>
+
+<blockquote>
+  <p>The Law of Abstractions!</p>
+  <p>
+    For every piece of information or facet of an abstraction, there is a
+    corresponding explanatory facet in either the scope, the arguments/inputs,
+    or the context of the abstraction
+  </p>
+</blockquote>
+
+<p>
+  It's kind of an law of entropy for abstractions. It might feel super obvious.
+</p>
+
+<p>Here's a simple example:</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function sayHello() {
+        console.log("Hello");
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  The abstraction is a javascript function. It could be a class, a procedure, or
+  any other thing. But let's just stick to a function. There is no input (maybe
+  you could argue calling the function is a a facet), but there is a single
+  point of output, so that must come from somewhere. The answer is that it's
+  contained in the body of the abstraction. Here, it's just part of the
+  function.
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function sayHello(name) {
+        console.log("Hello, " + name);
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  With this small change, the abstraction now can change who the hello is
+  addressed to! There is basically two facets of the abstraction: the console
+  log string but also the name. The console log is part of the abstraction body.
+  The name is an explicit input to the abstraction. The "value" of this
+  abstraction is to not have to re-write the console log in your logic, but also
+  provide different names.
+</p>
+
+<p>
+  There are other things that can provide points of "input" that might seem like
+  it's breaking the theorem.
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function sayHello(name) {
+        console.log(new Date());
+        console.log(Math.random());
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  The purpose of this example is to show how abstraction entropy is different
+  from "functional" programming. I'm not claiming abstractions are functional
+  here. This function would generate new results all the time and is clearly not
+  functional. It does retain its entropy, though, in that the context provides
+  the informational inputs for the Date (through the javascript Date API that
+  the system uses- context) and the random number (through the pseudo-random
+  algorithm the JS Math library provides- again, the context.) So, for the two
+  console logs this function produces, we have clear inputs from context that
+  map to them.
+</p>
+
+<p>Going one layer deeper... what if we have a callback?</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function doSomething(cb) {
+        cb();
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  My argument is that the function provided is an abstraction itself. So, the
+  inputs for the callback here are either abstraction body points of information
+  or contextual points of information. Any outputs from the outer abstraction
+  are informed by the inner callback which still follows the law. This means
+  that the abstraction provided to the abstraction needs to be analyzed!
+</p>
+
+<h2>The corollary</h2>
+<p>And, if you can accept that, here's my corollary:</p>
+
+<blockquote>
+  <p>Corollary:</p>
+  <p>
+    Abstractions are "better" when facets are accounted for more in the context
+    or body of the abstraction. In other words, abstractions do more for the
+    consumer with less inputs.
+  </p>
+</blockquote>
+
+<p>
+  The more a consumer of your abstraction has to do manually, the less valuable
+  it is. The more a consumer needs to think about, the leakier your abstraction
+  is.
+</p>
+
+<p>
+  What does this have to do with our task abstraction above? I'd argue that
+  facets can be analyzed for the abstraction we made and compared to the facets
+  of just using fetch
+</p>
+
+<p>
+  Let's create a table with the facets of the Task abstraction, and see where
+  that information is accounted for in the abstraction body, arguments, or
+  context. If the corrolary is true, the abstraction should be better than just
+  using a fetch function if we find that the inputs are located in the context
+  or abstraction more. If we can basically minimize our inputs, this is a good
+  abstraction.
+</p>
+
+<p>
+  If we find we have the same inputs as <code>fetch()</code>, I would argue
+  we've made no improvement
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Facet</th>
+      <th>Task Abstraction</th>
+      <th>Fetch Abstraction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Domain to fetch from</td>
+      <td>Consumer argument</td>
+      <td>Consumer argument</td>
+    </tr>
+    <tr>
+      <td>Params</td>
+      <td>Consumer argument</td>
+      <td>Consumer argument</td>
+    </tr>
+    <tr>
+      <td>Fetch Configuration</td>
+      <td>Consumer argument</td>
+      <td>Consumer argument</td>
+    </tr>
+    <tr>
+      <td>Status</td>
+      <td>Abstraction body</td>
+      <td>
+        Context of <code>.then/.catch</code> or branch of <code>try/catch</code>
+      </td>
+    </tr>
+    <tr>
+      <td>Actions depending on status</td>
+      <td>Consumer argument</td>
+      <td>
+        Consumer places these in `` <code>.then/.catch</code> or branch of
+        <code>try/catch</code>
+      </td>
+    </tr>
+    <tr>
+      <td>Task reuse</td>
+      <td>Consumer calling a method again (<code>start()</code>)</td>
+      <td>Consumer running async function again</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The one thing you might argue is helpful is that you have runtime information
+  about the task status in memory on the class instance. However, I'd argue this
+  is not a distinct piece of information because you have the same information
+  from just using promises (and, in fact, there are workarounds to get the
+  status of a Promise, even though the status is not available
+  programatically.) We've just moved the point of information from the context
+  (Promises in Javascript) to the abstraction body (a property on the class.)
+</p>
+
+<p>
+  Similarly, the callbacks for certain actions on success, failure, and finally
+  are just shifted to a different part of the abstraction.
+</p>
+
+<p>
+  At the end of the day, we aren't getting any leverage here. At best, I wrote
+  an indirection with some mildly helpful information about its status. But
+  really, I argue, It's just a bad abstraction.
+</p>
+
+<h2>Are you saying don't abstract?</h2>
+
+<p>No.</p>
+
+<p>
+  There are a ton of very good abstractions and APIs that we use all the time.
+  I'm not one to say we should all go back to assembly- that's foolishness.
+</p>
+
+<p>
+  I am saying that abstractions are <strong>hard</strong> to do well. When we
+  think we should create a base class, or create a mixin, or a decorator, or if
+  we think about writing a logging library... think about the value you are
+  actually trying to encapsulate for consumers. If you've ever had to work with
+  the wrong abstractions, you know it's a headache because it's actually
+  <strong>making work harder</strong>.
+</p>
+
+<p>
+  When designing APIs you have to consider carefully what details you can
+  encapsulate for the consumer. Those details can be "hidden" in the function,
+  class, or whatever you're building. If the consumer gets an extra point of
+  information out of it without having to include that point of information in
+  it, you've gained some leverage
+</p>
+
+<p>
+  Abstractions and when they're worth it has been talked about ad nauseum in
+  different forms. Dan Abramov has amazing examples in
+  <a href="https://overreacted.io/goodbye-clean-code/">Goodbye, Clean Code</a>
+  and <a href="https://overreacted.io/the-wet-codebase/">The WET Codebase</a>.
+  Joel Spolsky has written the seminal work on abstraction boundaries in
+  <a
+    href="https://www.joelonsoftware.com/2002/11/11/the-law-of-leaky-abstractions/"
+    >The Law of Leaky Abstractions</a
+  >. There is also a well-known adage from Sandi Metz: "Duplication is better
+  than the wrong abstraction." Doing a google search on youtube or google will
+  give you more than enough videos and articles about this concept.
+</p>
+
+<h2>So what about fetch?</h2>
+
+<p>
+  The Fetch API in the browser (and recently node) is a good example of a good
+  abstraction.
+</p>
+
+<p>
+  Take a gander at what a browser request would look like before and after
+  <code>fetch()</code>:
+</p>
+
+<div class="wide-2up">
+  <div>
+    <repl-playground start-collapsed>
+      <template>
+        <script>
+          // before fetch 😭
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", "https://icanhazdadjoke.com/");
+          xhr.setRequestHeader("Accept", "application/json");
+
+          xhr.onload = function () {
+            console.log(xhr.response);
+          };
+
+          xhr.onerror = function () {
+            console.log("Booo");
+          };
+
+          xhr.send();
+        </script>
+      </template>
+    </repl-playground>
+  </div>
+  <div>
+    <repl-playground start-collapsed>
+      <template>
+        <script>
+          // With fetch
+          fetch("https://icanhazdadjoke.com/", {
+            headers: {
+              Accept: "application/json",
+            },
+          })
+            .then((response) => response.json())
+            .then(console.log)
+            .catch(() => console.log("Boo"));
+        </script>
+      </template>
+    </repl-playground>
+  </div>
+</div>
+
+<p>I would say that <code>fetch()</code> is better than an XHR request.</p>
+
+<p>
+  The one point of information that is assumed internally by fetch is the method
+  "GET", which can be overridden as an input if need be.
+</p>
+
+<p>
+  The other piece of information that is assumed is that execution is implied by
+  calling fetch. Fetch immediately returns a promise and executes the
+  asynchronous process. The XHR request needs an explicit method call, which I
+  would consider another facet that fetch provides.
+</p>
+
+<p>
+  Most importantly, fetch returns a
+  <code>Promise</code>. The Promise is a contextual point of information, like
+  Date, or the Math library. It also includes a lot of information on how to
+  assemble the promise result, information about the xhr request, and methods to
+  parse into JSON. To do the same with a Promise for an XHR request, you would
+  need to implement a lot of abstraction body work yourself:
+</p>
+
+<repl-playground start-collapsed>
+  <template>
+    <script>
+      function myFetch(url, options) {
+        return new Promise((resolve, reject) => {
+          var xhr = new XMLHttpRequest();
+          xhr.open("GET", url);
+
+          for (const [header, value] of Object.entries(options.headers)) {
+            xhr.setRequestHeader(header, value);
+          }
+
+          // on success
+          xhr.onload = function () {
+            const { status, responseText } = xhr;
+
+            const response = {
+              ok: status >= 200 && status < 300,
+              status: status,
+              json: () => Promise.resolve(JSON.parse(responseText)),
+            };
+
+            resolve(response);
+          };
+
+          // on error
+          xhr.onerror = function () {
+            reject(new Error("Error fetching!"));
+          };
+
+          xhr.send();
+        });
+      }
+
+      myFetch("https://icanhazdadjoke.com/", {
+        headers: {
+          Accept: "application/json",
+        },
+      })
+        .then((response) => response.json())
+        .then(console.log);
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  So fetch provides some common defaults and organizes the xhr response with
+  niceties like status, ok, and json methods. The result is a promise, which
+  provides a whole set of machinery to handle async requests. You can pass this
+  promise around.
+</p>
+
+<p>We get quite a bit out of this one function.</p>
+
+<h2>Summary</h2>
+
+<p>
+  At the end of the day, I think I'm suggesting that we avoid the tendency to
+  over engineer. Look at the class, or the base class, or the decorator and ask,
+  "What does this enable the consumer? What does this keep the consumer from
+  having to do?"
+</p>
+
+<p>
+  I've spent a lot of time since I learned about the
+  <a href="https://en.wikipedia.org/wiki/CAP_theorem">CAP Theorem</a> trying to
+  see if there's a corresponding theorem for abstractions and use by consumers.
+  Admittedly, at times it feels a bit "hand wavey," but I think this is a lens to
+  analyze abstractions and give more concrete explanations than just saying
+  "this abstraction feels heavy" or "this abstraction is bad."
+</p>
+
+<p>At any rate, I hope you enjoyed thinking about these things.</p>
+
+<p>{% socials %}</p>

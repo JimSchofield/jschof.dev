@@ -193,6 +193,28 @@ aside.no-decoration {
   }
 }
 
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+th,
+td {
+  padding: 0.5em 0.75em;
+  text-align: left;
+  border-bottom: 1px solid var(--paynes-gray);
+}
+
+th {
+  font-weight: bold;
+  border-bottom: 2px solid var(--gunmetal);
+}
+
+tr:hover {
+  background: color-mix(in srgb, var(--teal) 5%, transparent);
+}
+
 ul {
   padding-inline-start: 1.5rem;
 }
@@ -399,6 +421,7 @@ footer {
   justify-content: space-between;
 }
 
+.wide,
 embed,
 iframe {
   margin-left: calc(50% - 42.5vw);
@@ -701,4 +724,27 @@ h4:hover .heading-link,
 h5:hover .heading-link,
 h6:hover .heading-link {
   opacity: 0.7;
+}
+
+.wide-2up {
+  display: flex;
+  margin-left: calc(50% - 42.5vw);
+  width: 85vw;
+  gap: 8px;
+
+  & > * {
+    width: 50%;
+  }
+}
+
+@media (max-width: 900px) {
+  .wide-2up {
+    margin-left: initial;
+    width: 100%;
+    flex-direction: column;
+
+    & > * {
+      width: 100%;
+    }
+  }
 }

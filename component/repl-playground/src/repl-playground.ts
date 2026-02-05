@@ -1,5 +1,5 @@
 import { LitElement, html, css } from "lit";
-import { customElement, state } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
@@ -28,12 +28,22 @@ interface ExecutionError {
   output: Array<{ type: string; message: string }>;
 }
 
+interface ConsoleOutput {
+  type: "console-output";
+  method: string;
+  message: string;
+}
+
 @customElement("repl-playground")
 export class ReplPlayground extends LitElement {
+  @property({ type: Boolean, attribute: "start-collapsed" })
+  startCollapsed = false;
+
   @state() private output: string[] = [];
   @state() private isExecuting = false;
   @state() private initialCode = "";
   @state() private vimMode = false; // This will be synced with global state
+  @state() private consoleCollapsed = false;
 
   private editor?: EditorView;
   private sandboxFrame?: HTMLIFrameElement;
@@ -56,6 +66,11 @@ export class ReplPlayground extends LitElement {
       display: grid;
       grid-template-columns: 1fr 1fr;
       height: 100%;
+      transition: grid-template-columns 0.2s ease;
+    }
+
+    .container.console-collapsed {
+      grid-template-columns: 1fr 0fr;
     }
 
     .editor-pane {
@@ -152,8 +167,32 @@ export class ReplPlayground extends LitElement {
       background: #777;
     }
 
-    .keyboard-hint {
+    .console-toggle {
+      background: #666;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s;
       margin-left: auto;
+    }
+
+    .console-toggle:hover {
+      background: #777;
+    }
+
+    .console-toggle.active {
+      background: #007acc;
+    }
+
+    .console-toggle.active:hover {
+      background: #005a9e;
+    }
+
+    .keyboard-hint {
       font-size: 11px;
       color: #888;
       font-style: italic;
@@ -169,7 +208,7 @@ export class ReplPlayground extends LitElement {
       font-size: 12px;
       font-weight: 500;
       transition: background 0.2s;
-      margin-left: 8px;
+      white-space: nowrap;
     }
 
     .vim-toggle:hover {
@@ -190,6 +229,12 @@ export class ReplPlayground extends LitElement {
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      transition: opacity 0.2s ease;
+    }
+
+    .console-collapsed .output-pane {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .output-header {
@@ -202,6 +247,34 @@ export class ReplPlayground extends LitElement {
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .output-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .collapse-button {
+      background: none;
+      border: none;
+      color: #ccc;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .collapse-button:hover {
+      background: #444;
+    }
+
+    .collapse-button svg {
+      width: 16px;
+      height: 16px;
     }
 
     .terminal-output {
@@ -247,6 +320,11 @@ export class ReplPlayground extends LitElement {
         grid-template-rows: 1fr 1fr;
       }
 
+      .container.console-collapsed {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 0fr;
+      }
+
       .editor-pane {
         border-right: none;
         border-bottom: 1px solid #333;
@@ -256,6 +334,7 @@ export class ReplPlayground extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
+    this.consoleCollapsed = this.startCollapsed;
     this.extractInitialCode();
 
     // Initialize global state management
@@ -568,23 +647,38 @@ export class ReplPlayground extends LitElement {
               return String(value);
             }
 
+            let parentSource = null;
+            let parentOrigin = '*';
+
             ['log', 'info', 'warn', 'error'].forEach(method => {
               console[method] = (...args) => {
                 const message = args.map(formatValue).join(' ');
                 capturedOutput.push({ type: method, message });
                 originalConsole[method](...args);
+                // Stream async console output back to parent immediately
+                if (parentSource) {
+                  parentSource.postMessage({
+                    type: 'console-output',
+                    method: method,
+                    message: message
+                  }, parentOrigin);
+                }
               };
             });
 
             // Listen for code execution requests
             window.addEventListener('message', (event) => {
+              // Store parent reference for async console streaming
+              parentSource = event.source;
+              parentOrigin = event.origin;
+
               // Reset output for each execution
               capturedOutput.length = 0;
-              
+
               try {
                 // Execute the code and show the final result
                 const result = eval(event.data.code);
-                
+
                 // Send results back to parent
                 event.source.postMessage({
                   type: 'execution-result',
@@ -616,19 +710,33 @@ export class ReplPlayground extends LitElement {
     });
   }
 
-  private handleExecutionResult(data: ExecutionResult | ExecutionError) {
+  private handleExecutionResult(
+    data: ExecutionResult | ExecutionError | ConsoleOutput
+  ) {
+    if (data.type === "console-output") {
+      // Remove "Executing..." placeholder on first output
+      const filtered = this.output.filter(l => l !== "Executing...");
+      this.output = [...filtered, data.message];
+      this.requestUpdate();
+      return;
+    }
+
     this.isExecuting = false;
 
+    // Remove "Executing..." placeholder
+    const current = this.output.filter(l => l !== "Executing...");
+
     if (data.type === "execution-result") {
-      const newOutput = [...data.output.map(item => item.message)];
       if (data.result !== undefined) {
-        newOutput.push(`→ ${data.result}`);
+        this.output = [...current, `→ ${data.result}`];
+      } else if (current.length === 0) {
+        // No console output and no return value
+        this.output = [];
+      } else {
+        this.output = current;
       }
-      this.output = newOutput;
     } else if (data.type === "execution-error") {
-      const errorOutput = [...data.output.map(item => item.message)];
-      errorOutput.push(`Error: ${data.error}`);
-      this.output = errorOutput;
+      this.output = [...current, `Error: ${data.error}`];
     }
 
     this.requestUpdate();
@@ -652,6 +760,7 @@ export class ReplPlayground extends LitElement {
 
     const code = this.editor.state.doc.toString();
     this.isExecuting = true;
+    this.consoleCollapsed = false;
     this.output = ["Executing..."];
     this.requestUpdate();
 
@@ -723,9 +832,13 @@ export class ReplPlayground extends LitElement {
     ReplPlaygroundState.setVimMode(!this.vimMode);
   }
 
+  private toggleConsole() {
+    this.consoleCollapsed = !this.consoleCollapsed;
+  }
+
   render() {
     return html`
-      <div class="container">
+      <div class="container ${this.consoleCollapsed ? "console-collapsed" : ""}">
         <div class="editor-pane">
           <div class="editor-container"></div>
           <div class="controls">
@@ -746,6 +859,12 @@ export class ReplPlayground extends LitElement {
             >
               Vim mode
             </button>
+            <button
+              class="console-toggle ${this.consoleCollapsed ? "" : "active"}"
+              @click=${this.toggleConsole}
+            >
+              Console
+            </button>
             <span class="keyboard-hint">${this.getKeyboardHint()}</span>
           </div>
         </div>
@@ -753,9 +872,20 @@ export class ReplPlayground extends LitElement {
         <div class="output-pane">
           <div class="output-header">
             <span>Console Output</span>
-            <button class="clear-button" @click=${this.clearOutput}>
-              Clear
-            </button>
+            <div class="output-header-actions">
+              <button class="clear-button" @click=${this.clearOutput}>
+                Clear
+              </button>
+              <button
+                class="collapse-button"
+                @click=${this.toggleConsole}
+                title="Collapse console"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="terminal-output">${this.outputTemplate}</div>
         </div>

@@ -55,7 +55,7 @@ image:
 
 <p>
   But don't run from this blog post! It's helpful to understand these deep
-  pieces of javascript and the basics of asynchronicity, the event loop, and
+  pieces of JavaScript and the basics of asynchronicity, the event loop, and
   control flows. And I would even venture to say it's
   <strong>fun</strong> to learn something deeply and the history behind why it
   is the way that it is today!
@@ -77,7 +77,7 @@ image:
       >Promise</a
     ></code
   >. In this blog post I'm going to try to trace the beginnings of
-  asynchronicity in javascript, specifically before they became a primitive with
+  asynchronicity in JavaScript, specifically before they became a primitive with
   APIs that we could handle. Then, I want to talk about applications for async
   task queuing today.
 </p>
@@ -89,11 +89,11 @@ image:
 
 <aside class="blue">
   <p>
-    This post could be titled "Promises according to Jim Schofield" becauase I
-    am no computer scientist or technology historian. I just want to tell a
-    story that explains and motivates why promises and async patterns are the
-    way they are today. I've done quite a bit a reading and research, but if you
-    see anything funny, please let me know.
+    This post could be titled "Promises according to Jim Schofield" because I am
+    no computer scientist or technology historian. I just want to tell a story
+    that explains and motivates why promises and async patterns are the way they
+    are today. I've done quite a bit of reading and research, but if you see
+    anything funny, please let me know.
   </p>
 </aside>
 
@@ -107,15 +107,11 @@ image:
 
 <ul>
   <li>
-    Rust seems to use both
-    <a href="https://docs.rs/promises/latest/promises/struct.Promise.html"
-      >Promises</a
-    >
-    and
     <a href="https://doc.rust-lang.org/book/ch17-01-futures-and-syntax.html"
-      >Futures</a
+      >Rust</a
     >
-    and the difference is not quite clear to me
+    uses Futures from the standard library as its async primitive — this is what
+    the <code>async/await</code> syntax desugars to
   </li>
   <li>
     <a href="https://docs.scala-lang.org/overviews/core/futures.html">Scala</a>
@@ -124,14 +120,14 @@ image:
   </li>
   <li>
     <a href="https://www.baeldung.com/java-future">Java</a> has tasks, futures,
-    and something very much like a promise in javascript:
+    and something very much like a promise in JavaScript:
     <a href="https://www.baeldung.com/java-completablefuture">
       CompletableFuture</a
     >
   </li>
   <li>
     <a href="">Python</a> has Futures and Tasks which can be configured like
-    Promises in javascript
+    Promises in JavaScript
   </li>
   <li>
     <a
@@ -149,7 +145,7 @@ image:
     seems to use asynchronous tasks, promises, and futures
   </li>
 
-  <li>The E language calls them "deferreds"</li>
+  <li>The E language uses promises.</li>
 </ul>
 
 <p>
@@ -160,20 +156,20 @@ image:
 
 <p>
   But we can trace the beginnings of futures as an object in programming to one
-  paper (or, at least most of the things I read point this paper as the seminal
-  work putting forward the concept of a future as a primitive.) The paper is
-  called "The Incremenal Garbage Collection of Processes" by
+  paper (or, at least most of the things I read point to this paper as the
+  seminal work putting forward the concept of a future as a primitive.) The
+  paper is called "The Incremental Garbage Collection of Processes" by
   <a href="https://dl.acm.org/doi/epdf/10.1145/872734.806932"
     >Henry C. Baker and Carl Hewitt</a
   >.
 </p>
 
 <p>
-  It's super interesting to read this paper, but right at the start it seems
-  there were varied names for the objects ("futures," "promises," and
-  "eventuals!"), but also you see certain language that is common today being
-  used even then ("thunks!"). Futures were in the air, and many people were
-  toying with this in the functional programming world.
+  It's super interesting to read this paper today. Baker and Hewitt use the term
+  "future", and they acknowledge that Friedman and Wise called them "promises"
+  and Hibbard called them "eventuals." You also see certain language that is
+  common today being used even then ("thunks!"). Futures were in the air, and
+  many people were toying with this in the functional programming world.
 </p>
 
 <p>Just check out this explanation, written in 1977:</p>
@@ -203,30 +199,30 @@ image:
 <p>
   <strong>In the end</strong> this paper was important because future,
   unresolved, and asynchronous values could be first class citizens in
-  programming languages
+  programming languages.
 </p>
 
-<h2>Enter Javascript and the Event Loop</h2>
+<h2>Enter JavaScript and the Event Loop</h2>
 
 <p>
   If you want to get a summary of the event loop, there is
-  <a href="https://www.youtube.com/watch?v=cCOL7MC4Pl0">the talk</a> by
-  <a href="https://jakearchibald.com/">Jake Archibald</a>. presentation you can
-  watch on Youtube. This talk will give you a very good understanding of why
-  Javascript acts the way it does, why the main thread can get locked, and what
-  tasks and the event loop are, and more.
+  <a href="https://www.youtube.com/watch?v=cCOL7MC4Pl0">a talk</a> by
+  <a href="https://jakearchibald.com/">Jake Archibald</a> you can watch on
+  YouTube. This talk will give you a very good understanding of why JavaScript
+  acts the way it does, why the main thread can get locked, and what tasks and
+  the event loop are, and more.
 </p>
 
 <p>But for those who need a concise TLDW:</p>
 
 <ul>
   <li>
-    Javascript runtimes are "single threaded", which means there's a single call
-    stack called the main thread. Javascript can only handle one thing at a
+    JavaScript runtimes are "single threaded", which means there's a single call
+    stack called the main thread. JavaScript can only handle one thing at a
     time.
   </li>
   <li>
-    Javascript can line up tasks in what's called the task queue. If something
+    JavaScript can line up tasks in what's called the task queue. If something
     is scheduled to happen (say, like in a <code>setTimeout</code> as a callback
     function,) it is added to this task queue, the tasks on the queue are
     addressed first in first out. <strong>But,</strong> they are addressed after
@@ -240,8 +236,8 @@ image:
 </p>
 
 <p>
-  Historically, there was a time when javascript didn't have a formal idea of
-  microtasks, and the main thread was all you had to work with with. Think about
+  Historically, there was a time when JavaScript didn't have a formal idea of
+  microtasks, and the main thread was all you had to work with. Think about
   this: how do you have code act concurrently if the runtime can only work on
   one thing on the callstack at a time?
 </p>
@@ -282,7 +278,7 @@ image:
 <repl-playground class="wide">
   <template>
     <script>
-      // A "Set timout Promise" class
+      // A "Set timeout Promise" class
       function STPromise(callback) {
         this.callback = callback;
         this.value = undefined;
@@ -336,7 +332,7 @@ image:
 <repl-playground class="wide" fold="1-27" web-worker>
   <template>
     <script>
-      // A "Set timout Promise" class
+      // A "Set timeout Promise" class
       function STPromise(callback) {
         this.callback = callback;
         this.value = undefined;
@@ -389,12 +385,6 @@ image:
   seconds that the main thread is locked. This is not good!
 </p>
 
-<!-- <p>If you're paying attention, you might notice that <strong>nothing</strong> logs until the while loop is finished.  This was unexpected to me, but after thinking about it, makes for a perfect demonstration of thread locking.</p> -->
-<!---->
-<!-- <p>The playground above executes code in an iframe, but that iframe shares the main thread as the browser document.I added message posting so that if an asynchronous task were to <code>console.log</code> after the playground example was finished executing, the log would still display in the log area.</p> -->
-<!---->
-<!-- <p>But here's the thing... while that while loop is spinning for 3 seconds, nothing else happens.  That means if I were to implement  -->
-
 <h2>Added Asynchronicity: the Microtask Queue</h2>
 
 <p>
@@ -417,7 +407,7 @@ image:
   execute that callback as a microtask!
 </p>
 
-<p>Let's update our setTimout example to try this "hack":</p>
+<p>Let's update our setTimeout example to try this "hack":</p>
 
 <repl-playground class="wide" fold="1-27">
   <template>
@@ -543,7 +533,7 @@ image:
 <p>Basically, it's different enough where it's not suitable for futures.</p>
 
 <p>
-  So then, do what about
+  So then, what about
   <a
     href="https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick"
     >process.nextTick()</a
@@ -558,11 +548,11 @@ image:
 <p>
   You can try it out here in the playground below, but take a second first just
   to think about it. We know that the regular console logs will happen in their
-  current order. Also, we know that the <code>setTimout</code> will enqueue a
+  current order. Also, we know that the <code>setTimeout</code> will enqueue a
   new task, which will basically happen last. That leaves the
   <code>Promise</code> and the <code>queueMicrotask</code>, and both of those
   are microtasks and should happen at the end but before the
-  <code>setTimout</code> in the order they are called.
+  <code>setTimeout</code> in the order they are called.
 </p>
 
 <p>
@@ -571,7 +561,7 @@ image:
   small there is little to no chance that a refresh rate scheduling of this task
   would happen before microtasks or even a regular task. For example, if you're
   on a 60hz screen, the task would be scheduled in 16.7 milliseconds from the
-  time of calling it. Javascript is fast, and the whole script below clocks in
+  time of calling it. JavaScript is fast, and the whole script below clocks in
   at about 0.67 milliseconds to run the function. So we can count on this
   happening last.
 </p>
@@ -707,7 +697,7 @@ image:
           );
 
           // Queue so that all notifies will happen before clearing
-          queueMicrotask(() => Service.notificationSet.clear);
+          queueMicrotask(() => Service.notificationSet.clear());
         }
       }
     </script>
@@ -742,10 +732,12 @@ image:
 
 <p>
   Indeed. I hope it was fun, though! I learned a lot researching and diving deep
-  into the javascript history.
+  into the JavaScript history.
 </p>
 
 <p>
   Let me know if you have any questions or feedback, or just want to say hi! {%
   socials %}
 </p>
+
+<h2>P.S. - A deep issue with my repl playground I ran into</h2>

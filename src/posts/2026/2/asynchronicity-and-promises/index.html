@@ -28,13 +28,13 @@ image:
       function fn() {
         console.log("1");
 
-        Promise.resolve(() => console.log("2"));
+        setTimeout(() => console.log("2"));
 
-        queueMicrotask(() => console.log("3"));
+        Promise.resolve().then(() => console.log("3"));
 
-        requestAnimationFrame(() => console.log("4"));
+        queueMicrotask(() => console.log("4"));
 
-        setTimeout(() => console.log("5"));
+        requestAnimationFrame(() => console.log("5"));
 
         console.log("6");
       }
@@ -481,4 +481,271 @@ image:
   for this sort of thing. The code execution is forcing higher priority
   execution between normal macrotasks, but it truly isn't running concurrently
   as if the callback was running on a different thread.
+</p>
+
+<p>
+  It doesn't feel great co-opting this API to get a microtask queued, though,
+  right?
+</p>
+
+<p>
+  Things got better. With ES6 we got to use Promises which implicitly queued
+  microtasks in their API. Eventually, we got the nice
+  <code>queueMicrotask</code> API that let us set microtasks directly in 2019.
+  Compare the difference:
+</p>
+
+<div class="wide-2up">
+  <code-highlight lang="javascript">
+    <template>
+      <script>
+        queueMicrotask(() => this.doThen(value));
+      </script>
+    </template>
+  </code-highlight>
+  <code-highlight lang="javascript">
+    <template>
+      <script>
+        var div = document.createElement("div");
+        var observer = new MutationObserver(
+          function () {
+            observer.disconnect();
+            this.doThen(value);
+          }.bind(this),
+        );
+
+        observer.observe(div, { attributes: true });
+
+        div.setAttribute("class", "resolved");
+      </script>
+    </template>
+  </code-highlight>
+</div>
+
+<h2>
+  Okay, what about <code>process.nextTick()</code> and
+  <code>requestAnimationFrame()</code>?
+</h2>
+
+<p>
+  Right.
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame"
+    >requestAnimationFrame</a
+  >
+  is a different beast. You don't use this method to simulate asynchronous code.
+  Although the API looks nearly identical, the callback in this function
+  receives a timestamp argument automatically. The calling of this function also
+  is closely tied to the refresh rate of your computer, which will obviously
+  vary and requires care to provide consistent results on different computers.
+</p>
+
+<p>Basically, it's different enough where it's not suitable for futures.</p>
+
+<p>
+  So then, do what about
+  <a
+    href="https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick"
+    >process.nextTick()</a
+  >? Well, the biggest issue is that it is only available in Node. But aside
+  from that, it also feels like a different beast. It actually will execute
+  before microtasks, so it acts somewhat like a pre-microtask queue. I would
+  recommend just using <code>queueMicrotask</code> instead.
+</p>
+
+<h2>So what about that nightmare code interview question then?</h2>
+
+<p>
+  You can try it out here in the playground below, but take a second first just
+  to think about it. We know that the regular console logs will happen in their
+  current order. Also, we know that the <code>setTimout</code> will enqueue a
+  new task, which will basically happen last. That leaves the
+  <code>Promise</code> and the <code>queueMicrotask</code>, and both of those
+  are microtasks and should happen at the end but before the
+  <code>setTimout</code> in the order they are called.
+</p>
+
+<p>
+  The difficult one is the <code>requestAnimationFrame</code>. Depending on the
+  computer you're working on, this may be different. However, this code is so
+  small there is little to no chance that a refresh rate scheduling of this task
+  would happen before microtasks or even a regular task. For example, if you're
+  on a 60hz screen, the task would be scheduled in 16.7 milliseconds from the
+  time of calling it. Javascript is fast, and the whole script below clocks in
+  at about 0.67 milliseconds to run the function. So we can count on this
+  happening last.
+</p>
+
+<repl-playground web-worker>
+  <template>
+    <script>
+      function fn() {
+        console.log("1");
+
+        setTimeout(() => console.log("2"));
+
+        Promise.resolve().then(() => console.log("3"));
+
+        queueMicrotask(() => console.log("4"));
+
+        requestAnimationFrame(() => console.log("5"));
+
+        console.log("6");
+      }
+
+      fn();
+    </script>
+  </template>
+</repl-playground>
+
+<p>So 1, 6, 3, 4, 2, and then 5</p>
+
+<h2>Applications</h2>
+
+<p>
+  The reason I fell into investigating microtask queueing was because I authored
+  a dependency injection library that included reactive state. It was a service
+  system, much like Ember's, that allows consumers to subscribe to state updates
+  with services that lazily instantiate themselves. It makes sharing
+  functionality and state across the page easy.
+</p>
+
+<p>
+  If you've ever dealt with reactivity, you might know that it's a bit tricky to
+  be efficient and performant and avoid notification cycles or infinite render
+  state updates (I'm looking at you <code>useEffect()</code>.) So to avoid
+  duplicate notifications and infinite cycles when state changes, I use a
+  microtask queue.
+</p>
+
+<p>
+  I create a Set that lives in the module of the service base class. When we
+  notify a service or consumer that state has been changed, we add that service
+  or consumer to the set. In the future, we just check to see if we've notified
+  them before we do further notifying. It's a simple way to avoid cycles and
+  duplicate notifications.
+</p>
+
+<p>
+  But the real trick is <code>await 0</code>. Since <code>notify</code> is an
+  async function, we are using promises automatically, and leveraging the
+  microtask queue.
+</p>
+
+<p>
+  If you want to see the file in the wild,
+  <a
+    href="https://github.com/JimSchofield/wc-services/blob/main/lib/base-service.ts"
+    >check it out here</a
+  >. But here is the gist of the notification function for state changes:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      export class Service {
+        __subscribers = new Map();
+
+        static notificationSet = new Set();
+
+        async notify() {
+          [...this.__subscribers.entries()].forEach(
+            ([subscriber, notifyFn]) => {
+              // have we notified this consumer yet?
+              if (Service.notificationSet.has(subscriber)) {
+                return;
+              }
+
+              Service.notificationSet.add(subscriber);
+
+              notifyFn(this);
+            },
+          );
+
+          // Makes the remainder of the function act like
+          // it's been inserted into a microtask, so we can depend on
+          // `notify` to recursively call subscribers who will call
+          // subscribers, etc and all the calls to notify will
+          // share this `notificationSet`
+          await 0;
+
+          Service.notificationSet.clear();
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  A simple improvement I can make is by being more explicit with the clearing of
+  the notification set. Not only can I use <code>queueMicrotask</code> and
+  better show my intent for why I use <code> await 0</code>, but I also can make
+  this function no longer <code>async</code>!
+</p>
+
+<p>So this is better, in my opinion:</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      export class Service {
+        __subscribers = new Map();
+
+        static notificationSet = new Set();
+
+        notify() {
+          [...this.__subscribers.entries()].forEach(
+            ([subscriber, notifyFn]) => {
+              if (Service.notificationSet.has(subscriber)) {
+                return;
+              }
+
+              Service.notificationSet.add(subscriber);
+
+              notifyFn(this);
+            },
+          );
+
+          // Queue so that all notifies will happen before clearing
+          queueMicrotask(() => Service.notificationSet.clear);
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>I'll have to update that library sometime 😗</p>
+
+<p>
+  You can also see this trick happening in a lot of other places. For example,
+  in Lit they use this trick to batch property changes. You can see this trick
+  <a
+    href="https://github.com/lit/lit/blob/935697d47e62ed75e3157423400163a8371c62fc/packages/reactive-element/src/reactive-element.ts#L1297"
+    >employed here</a
+  >. It's a bit harder to suss out, but using
+  <code>await this.__updatePromise;</code> assures that the rest of the function
+  is enqueued as a microtask. This means all changes to properties have resolved
+  before lit continues and renders.
+</p>
+
+<p>
+  And in researching this post, I found out that Vue.js also does this with
+  their scheduler. See if you can understand how this
+  <a
+    href="https://github.com/vuejs/core/blob/main/packages/runtime-core/src/scheduler.ts#L66"
+    >flushing promise works</a
+  >. (I had to have this explained to me, and to be honest, I'm still going back
+  to it to try to solidify what's happening in my brain.)
+</p>
+
+<h2>Okay... that was a lot</h2>
+
+<p>
+  Indeed. I hope it was fun, though! I learned a lot researching and diving deep
+  into the javascript history.
+</p>
+
+<p>
+  Let me know if you have any questions or feedback, or just want to say hi! {%
+  socials %}
 </p>

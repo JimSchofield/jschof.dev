@@ -1,0 +1,276 @@
+---
+title: "A Peak Inside Asynchronicity and Promises"
+excerpt: "Promises weren't always a platform  primitive.  Neither were async tasks... kind of.  Let's talk about the internals of async tasks and promises and a little bit of their history!"
+layout: post
+tags:
+  - posts
+  - using the platform
+  - vanilla JavaScript
+  - deep dive
+  - async
+  - promises
+date: 2026-05-22
+image:
+---
+
+<h1>Asynchronicity and Promises</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  You're in a technical interview and there are two Staff Developers zooming
+  with you. They share their screen:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function fn() {
+        console.log("1");
+
+        Promise.resolve(() => console.log("2"));
+
+        queueMicrotask(() => console.log("3"));
+
+        requestAnimationFrame(() => console.log("4"));
+
+        setTimeout(() => console.log("5"));
+
+        console.log("6");
+      }
+
+      fn();
+    </script>
+  </template>
+</code-highlight>
+
+<p>They ask you with a smirk: "What is the expected output?"</p>
+
+<p>Could you reason out what would happen?</p>
+
+<p>
+  Okay, seriously, if you ever find yourself in this situation for a technical
+  interview, I would run, not walk, away from that company.
+</p>
+
+<p>
+  But don't run from this blog post! It's helpful to understand these deep
+  pieces of javascript and the basics of asynchronicity, the event loop, and
+  control flows. And I would even venture to say it's
+  <strong>fun</strong> to learn something deeply and the history behind why it
+  is the way that it is today!
+</p>
+
+<p>
+  In
+  <a href="/posts/2026/2/you-might-not-need-an-abstraction/">my last post</a> I
+  started to re-implement <code>fetch</code> using
+  <code
+    ><a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"
+      >XMLHttpRequest</a
+    ></code
+  >
+  and
+  <code
+    ><a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise"
+      >Promise</a
+    ></code
+  >. In this blog post I'm going to try to trace the beginnings of
+  asynchronicity in javascript, specifically before they became a primitive with
+  APIs that we could handle. Then, I want to talk about applications for async
+  task queuing today.
+</p>
+
+<p>
+  Take note of the make and model of your socks right now, because they're about
+  to be blown right off.
+</p>
+
+<aside class="blue">
+  <p>
+    This post could be titled "Promises according to Jim Schofield" becauase I
+    am no computer scientist or technology historian. I just want to tell a
+    story that explains and motivates why promises and async patterns are the
+    way they are today. I've done quite a bit a reading and research, but if you
+    see anything funny, please let me know.
+  </p>
+</aside>
+
+<h2>The Beginnings of Asynchronicity and Promises</h2>
+
+<p>
+  Promises have a few different names and each of the names in each language has
+  their own nuances that require you to really look at documentation to
+  understand the difference and when the two are the same:
+</p>
+
+<ul>
+  <li>
+    Rust seems to use both
+    <a href="https://docs.rs/promises/latest/promises/struct.Promise.html"
+      >Promises</a
+    >
+    and
+    <a href="https://doc.rust-lang.org/book/ch17-01-futures-and-syntax.html"
+      >Futures</a
+    >
+    and the difference is not quite clear to me
+  </li>
+  <li>
+    <a href="https://docs.scala-lang.org/overviews/core/futures.html">Scala</a>
+    uses Futures and Promises where futures represent a future value and
+    promises are an object that will contain a future value.
+  </li>
+  <li>
+    <a href="https://www.baeldung.com/java-future">Java</a> has tasks, futures,
+    and something very much like a promise in javascript:
+    <a href="https://www.baeldung.com/java-completablefuture">
+      CompletableFuture</a
+    >
+  </li>
+  <li>
+    <a href="">Python</a> has Futures and Tasks which can be configured like
+    Promises in javascript
+  </li>
+  <li>
+    <a
+      href="https://github.com/peter-can-write/cpp-notes/blob/master/future-and-promise.md"
+      >C++</a
+    >
+    has both futures and promises that are used specifically in the producing
+    and consuming sides of future values.
+  </li>
+  <li>
+    <a
+      href="https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md#asynchronous-task"
+      >Ruby</a
+    >
+    seems to use asynchronous tasks, promises, and futures
+  </li>
+
+  <li>The E language calls them "deferreds"</li>
+</ul>
+
+<p>
+  So the concept is pretty ubiquitous. The implementations vary widely, and the
+  value for programmers is that promises allow one to keep reference to work
+  <em>that will eventually be resolved</em> in hand.
+</p>
+
+<p>
+  But we can trace the beginnings of futures as an object in programming to one
+  paper (or, at least most of the things I read point this paper as the seminal
+  work putting forward the concept of a future as a primitive.) The paper is
+  called "The Incremenal Garbage Collection of Processes" by
+  <a href="https://dl.acm.org/doi/epdf/10.1145/872734.806932"
+    >Henry C. Baker and Carl Hewitt</a
+  >.
+</p>
+
+<p>
+  It's super interesting to read this paper, but right at the start it seems
+  there were varied names for the objects ("futures," "promises," and
+  "eventuals!"), but also you see certain language that is common today being
+  used even then ("thunks!"). Futures were in the air, and many people were
+  toying with this in the functional programming world.
+</p>
+
+<p>Just check out this explanation, written in 1977:</p>
+
+<blockquote>
+  <p>
+    When an expression is given to the evaluator by the user, a future for that
+    expression is returned which is a promise to deliver the value of that
+    expression at some later time, if the expression has a value. A process is
+    created for each new future which immediately starts to work evaluating the
+    given expression. When the value of a future is needed explicitly, e.g. by
+    the primitive function "+", the evaluation process may or may not have
+    finished. If it has finished, the value is immediately made available; if
+    not, the requesting process is forced to wait until it finishes.
+  </p>
+</blockquote>
+
+<p>
+  Pretty cool! Baker-Hewitt is talking about blocking synchronous execution of
+  future values if values haven't been resolved yet. And in their case, it was
+  about garbage collection. The basic gist of their article was that if you have
+  something in hand that branches to handle different futures- branches that may
+  be running concurrently- all the future paths need to be garbage collected and
+  a runtime needs to be aware of this.
+</p>
+
+<p>
+  <strong>In the end</strong> this paper was important because future,
+  unresolved, and asynchronous values could be first class citizens in
+  programming languages
+</p>
+
+<h2>Enter Javascript and the Event Loop</h2>
+
+<p>
+  If you want to get a summary of the event loop, there is
+  <a href="https://www.youtube.com/watch?v=cCOL7MC4Pl0">the talk</a> by
+  <a href="https://jakearchibald.com/">Jake Archibald</a>. presentation you can
+  watch on Youtube. This talk will give you a very good understanding of why
+  Javascript acts the way it does, why the main thread can get locked, and what
+  tasks and the event loop are, and more.
+</p>
+
+<p>But for those who need a concise TLDW:</p>
+
+<ul>
+  <li>
+    Javascript runtimes are "single threaded", which means there's a single call
+    stack called the main thread. Javascript can only handle one thing at a
+    time.
+  </li>
+  <li>
+    Javascript can line up tasks in what's called the task queue. If something
+    is scheduled to happen (say, like in a <code>setTimeout</code> as a callback
+    function,) it is added to this task queue, the tasks on the queue are
+    addressed first in first out. <strong>But,</strong> they are addressed after
+    the call stack is empty.
+  </li>
+</ul>
+
+<p>
+  There is another queue called the microtask, but before we get there, an
+  important note.
+</p>
+
+<p>
+  Historically, there was a time when javascript didn't have a formal idea of
+  microtasks, and the main thread was all you had to work with with. Think about
+  this: how do you have code act concurrently if the runtime can only work on
+  one thing on the callstack at a time?
+</p>
+
+<p>
+  If you enqueue a task, there are no good guarantees about when it will run,
+  because you must depend on the call stack being empty. This means, if you have
+  long running processes on the main thread, and enqueue a callback to console
+  log "Hello, World" after 0 seconds, you will not see the greeting when you
+  expect.
+</p>
+
+<p>
+  So developers tried to use <code>setTimeout</code> to enqueue some functions
+  so that they would act somewhat async, but you could always run into long
+  processes on the main thread that locked the whole application until the call
+  stack was empty.
+</p>
+
+<aside class="blue">
+  <p>
+    Interesting note here- events are synchronous, meaning that callbacks
+    executed by events also run on and lock the main thread just like normal
+    calls from the call stack. For a while, Internet Explorer had mutation
+    events where mutations in the DOM could trigger different callbacks. This
+    was not good, though, because if many mutation events happened, or if they
+    triggered even small processes that lock the thread for short periods, this
+    would cause severe performance issues.
+  </p>
+</aside>
+
+<p></p>

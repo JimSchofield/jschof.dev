@@ -1,5 +1,5 @@
 ---
-title: "A Peak Inside Asynchronicity and Promises"
+title: "Asynchronicity and Promises"
 excerpt: "Promises weren't always a platform  primitive.  Neither were async tasks... kind of.  Let's talk about the internals of async tasks and promises and a little bit of their history!"
 layout: post
 tags:
@@ -273,4 +273,120 @@ image:
   </p>
 </aside>
 
-<p></p>
+<p>
+  Take, for example, a "Promise" class and it's use below. (Note I'm writing
+  this with old, pre ES6 classes and so I'm using regular functions instead of
+  arrows and prototypes.)
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      // A "Set timout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        // sleep 2 seconds
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 2000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+    </script>
+  </template>
+</repl-playground>
+
+<p>Hey, that seemed to work exactly as we intended it! What's the issue?</p>
+
+<p>
+  Well, if we were to tie up the main thread with some sort of long running
+  loop, you'll see that the promise doesn't resolve after the 2 seconds we
+  expect:
+</p>
+
+<repl-playground class="wide" fold="1-27" web-worker>
+  <template>
+    <script>
+      // A "Set timout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 1000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+
+      var fiveSeconds = Date.now() + 3000;
+      while (Date.now() <= fiveSeconds) {}
+
+      console.log("Main loop is now not tied up");
+    </script>
+  </template>
+</repl-playground>
+
+<!-- <p>If you're paying attention, you might notice that <strong>nothing</strong> logs until the while loop is finished.  This was unexpected to me, but after thinking about it, makes for a perfect demonstration of thread locking.</p> -->
+<!---->
+<!-- <p>The playground above executes code in an iframe, but that iframe shares the main thread as the browser document.I added message posting so that if an asynchronous task were to <code>console.log</code> after the playground example was finished executing, the log would still display in the log area.</p> -->
+<!---->
+<!-- <p>But here's the thing... while that while loop is spinning for 3 seconds, nothing else happens.  That means if I were to implement  -->
+
+<h2>Added Asynchronicity: the Microtask Queue</h2>

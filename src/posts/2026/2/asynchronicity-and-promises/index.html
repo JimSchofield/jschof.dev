@@ -144,8 +144,6 @@ image:
     >
     seems to use asynchronous tasks, promises, and futures
   </li>
-
-  <li>The E language uses promises.</li>
 </ul>
 
 <p>
@@ -168,7 +166,7 @@ image:
   It's super interesting to read this paper today. Baker and Hewitt use the term
   "future", and they acknowledge that Friedman and Wise called them "promises"
   and Hibbard called them "eventuals." You also see certain language that is
-  common today being used even then ("thunks!"). Futures were in the air, and
+  common today being used even then ("thunks!") Futures were in the air, and
   many people were toying with this in the functional programming world.
 </p>
 
@@ -224,22 +222,18 @@ image:
   <li>
     JavaScript can line up tasks in what's called the task queue. If something
     is scheduled to happen (say, like in a <code>setTimeout</code> as a callback
-    function,) it is added to this task queue, the tasks on the queue are
+    function,) it is added to this task queue. The tasks on the queue are
     addressed first in first out. <strong>But,</strong> they are addressed after
     the call stack is empty.
   </li>
 </ul>
 
 <p>
-  There is another queue called the microtask, but before we get there, an
-  important note.
-</p>
-
-<p>
-  Historically, there was a time when JavaScript didn't have a formal idea of
-  microtasks, and the main thread was all you had to work with. Think about
-  this: how do you have code act concurrently if the runtime can only work on
-  one thing on the callstack at a time?
+  There is another queue called the microtask queue. Historically, there was a
+  time when JavaScript didn't have a formal idea of microtasks, and the main
+  thread was all you had to work with. Think about this: how do you have code
+  act concurrently if the runtime can only work on one thing on the callstack at
+  a time?
 </p>
 
 <p>
@@ -728,16 +722,121 @@ image:
   to it to try to solidify what's happening in my brain.)
 </p>
 
-<h2>Okay... that was a lot</h2>
+<h2>One more cool thing I ran into writing this post...</h2>
 
 <p>
-  Indeed. I hope it was fun, though! I learned a lot researching and diving deep
-  into the JavaScript history.
+  I'm trying out my new <code>ReplPlayground</code> web component in this post,
+  and I ran into an issue while demonstrating how the main thread locks. See if
+  you can find it here:
+</p>
+
+<repl-playground class="wide" fold="1-27">
+  <template>
+    <script>
+      // A "Set timeout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 2000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+
+      var fiveSeconds = Date.now() + 5000;
+      while (Date.now() <= fiveSeconds) {}
+
+      console.log("Main loop is now not tied up");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  Do you see it? Notice how it's "executing" for about 5 seconds, and then the
+  two console logs show? This is an example of how the task queue was blocking
+  the console feedback in my component!
 </p>
 
 <p>
-  Let me know if you have any questions or feedback, or just want to say hi! {%
+  The code in the repl-playground actually gets executed using
+  <code>eval()</code> in a sandboxed iframe. Console messages and return values
+  are posted out of the iframe so values and logs can be displayed in the
+  console area of the component. So why does it wait until the main thread is
+  unblocked to log anything?
+</p>
+
+<p>
+  I learned that although this script is being evaluated in an iframe, the
+  iframe and the main page share a main thread. So, the script being run inside
+  the iframe locked the thread until the eval was finished. The logs we expected
+  to see are posted and the event listeners that are supposed to handle the logs
+  are asynchronous, but they won't be executed until the call stack is empty.
+  This means that they wait for <code>eval()</code> to finish before the async
+  tasks can be triggered
+</p>
+
+<p>
+  It's pretty ironic that this very issue came up in the code to demo my blog
+  post concept!
+</p>
+
+<p>
+  The way you can resolve this is by using a web worker instead. I took a little
+  detour to allow an attribute `web-worker` on my repl playground element, and
+  if it's present it will execute the code in a web worker which is a separate
+  thread from the main thread.
+</p>
+
+<p>
+  Go ahead, inspect the web component and add `web-worker` as a boolean
+  attribute to it and try it. It will work!
+</p>
+
+<h2>Does that mean you can work concurrently in Javascript with workers?</h2>
+
+<p>Yes!</p>
+
+<p>
+  But there are many caveats and it's really hard to share memory between
+  threads and, most important, I would need to do a whole lot of research on
+  workers to say more! 😅
+</p>
+
+<p>Yes, that is probably what my next post will be about.</p>
+
+<h2>I hope you enjoy this stuff as much as I do!</h2>
+
+<p>
+  I learned a lot researching and diving deep into the JavaScript history. Let
+  me know if you have any questions or feedback, or just want to say hi! {%
   socials %}
 </p>
-
-<h2>P.S. - A deep issue with my repl playground I ran into</h2>

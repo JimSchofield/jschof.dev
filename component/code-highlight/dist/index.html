@@ -8,6 +8,29 @@
     <script type="module" crossorigin src="/assets/index.js"></script>
   </head>
   <body>
+    <code-highlight>
+      <template>
+        <my-component
+          .property=${thing}
+          attribute="string-thing"
+          ?boolean=${bool}
+        ></my-component>
+      </template>
+    </code-highlight>
+    <code-highlight lang="tsx">
+      <template>
+        <script>
+          function helloWorld(thing) {
+            return (
+              <p>
+                Testing
+                <span attr="thing">Hello!</span>
+              </p>
+            );
+          }
+        </script>
+      </template>
+    </code-highlight>
     <code-highlight lang="javascript">
       <template>
         <script>
@@ -38,20 +61,18 @@
         </style>
       </template>
     </code-highlight>
-    <br/>
+    <br />
     <code-highlight lang="html">
       <template>
         <input type="text" />
         <p>Some html to <strong>format!</strong></p>
       </template>
     </code-highlight>
-    <br/>
+    <br />
     <code-highlight lang="html">
       <template>
         <custom-element>
-          <template shadowrootmode="open.">
-            testing
-          </template>
+          <template shadowrootmode="open."> testing </template>
         </custom-element>
       </template>
     </code-highlight>

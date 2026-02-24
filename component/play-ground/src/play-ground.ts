@@ -110,23 +110,14 @@ export class PlayGround extends LitElement {
   private setupIframe() {
     this.iframe = this.shadowRoot?.querySelector('#view') as HTMLIFrameElement;
     if (this.iframe) {
-      // Set initial content using about:blank to avoid history issues
-      this.iframe.src = 'about:blank';
-      this.iframe.onload = () => {
-        this.updateIframeContent();
-      };
+      this.updateIframeContent();
     }
   }
 
   private updateIframeContent() {
-    if (this.iframe?.contentWindow) {
+    if (this.iframe) {
       const content = this.docContents || "<!DOCTYPE html><p>Loading...</p>";
-      
-      // Use document.write to avoid creating history entries
-      const doc = this.iframe.contentDocument || this.iframe.contentWindow.document;
-      doc.open();
-      doc.write(content);
-      doc.close();
+      this.iframe.srcdoc = content;
     }
   }
 

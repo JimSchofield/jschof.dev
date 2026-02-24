@@ -15,6 +15,13 @@
   "devDependencies": {
     "@11ty/eleventy": "^3.1.2"
   },
+  "pnpm": {
+    "overrides": {
+      "lodash@>=4.0.0 <=4.17.22": ">=4.17.23",
+      "markdown-it@>=13.0.0 <14.1.1": ">=14.1.1",
+      "minimatch@<10.2.1": ">=10.2.1"
+    }
+  },
   "dependencies": {
     "@11ty/eleventy-plugin-rss": "^2.0.4",
     "baseline-status": "^1.1.1",

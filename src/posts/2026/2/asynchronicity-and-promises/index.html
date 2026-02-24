@@ -1,0 +1,842 @@
+---
+title: "Asynchronicity and Promises"
+excerpt: "Promises weren't always a platform  primitive.  Neither were async tasks... kind of.  Let's talk about the internals of async tasks and promises and a little bit of their history!"
+layout: post
+tags:
+  - posts
+  - using the platform
+  - vanilla JavaScript
+  - deep dive
+  - async
+  - promises
+date: 2026-05-22
+image: clock.webp
+---
+
+<h1>Asynchronicity and Promises</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  You're in a technical interview and there are two Staff Developers zooming
+  with you. They share their screen:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      function fn() {
+        console.log("1");
+
+        setTimeout(() => console.log("2"));
+
+        Promise.resolve().then(() => console.log("3"));
+
+        queueMicrotask(() => console.log("4"));
+
+        requestAnimationFrame(() => console.log("5"));
+
+        console.log("6");
+      }
+
+      fn();
+    </script>
+  </template>
+</code-highlight>
+
+<p>They ask you with a smirk: "What is the expected output?"</p>
+
+<p>Could you reason out what would happen?</p>
+
+<p>
+  Okay, seriously, if you ever find yourself in this situation for a technical
+  interview, I would run, not walk, away from that company.
+</p>
+
+<p>
+  But don't run from this blog post! It's helpful to understand these deep
+  pieces of JavaScript and the basics of asynchronicity, the event loop, and
+  control flows. And I would even venture to say it's
+  <strong>fun</strong> to learn something deeply and the history behind why it
+  is the way that it is today!
+</p>
+
+<p>
+  In
+  <a href="/posts/2026/2/you-might-not-need-an-abstraction/">my last post</a> I
+  started to re-implement <code>fetch</code> using
+  <code
+    ><a href="https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest"
+      >XMLHttpRequest</a
+    ></code
+  >
+  and
+  <code
+    ><a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise"
+      >Promise</a
+    ></code
+  >. In this blog post I'm going to try to trace the beginnings of
+  asynchronicity in JavaScript, specifically before they became a primitive with
+  APIs that we could handle. Then, I want to talk about applications for async
+  task queuing today.
+</p>
+
+<p>
+  Take note of the make and model of your socks right now, because they're about
+  to be blown right off.
+</p>
+
+<aside class="blue">
+  <p>
+    This post could be titled "Promises according to Jim Schofield" because I am
+    no computer scientist or technology historian. I just want to tell a story
+    that explains and motivates why promises and async patterns are the way they
+    are today. I've done quite a bit of reading and research, but if you see
+    anything funny, please let me know.
+  </p>
+</aside>
+
+<h2>The Beginnings of Asynchronicity and Promises</h2>
+
+<p>
+  Promises have a few different names and each of the names in each language has
+  their own nuances that require you to really look at documentation to
+  understand the difference and when the two are the same:
+</p>
+
+<ul>
+  <li>
+    <a href="https://doc.rust-lang.org/book/ch17-01-futures-and-syntax.html"
+      >Rust</a
+    >
+    uses Futures from the standard library as its async primitive — this is what
+    the <code>async/await</code> syntax desugars to
+  </li>
+  <li>
+    <a href="https://docs.scala-lang.org/overviews/core/futures.html">Scala</a>
+    uses Futures and Promises where futures represent a future value and
+    promises are an object that will contain a future value.
+  </li>
+  <li>
+    <a href="https://www.baeldung.com/java-future">Java</a> has tasks, futures,
+    and something very much like a promise in JavaScript:
+    <a href="https://www.baeldung.com/java-completablefuture">
+      CompletableFuture</a
+    >
+  </li>
+  <li>
+    <a href="">Python</a> has Futures and Tasks which can be configured like
+    Promises in JavaScript
+  </li>
+  <li>
+    <a
+      href="https://github.com/peter-can-write/cpp-notes/blob/master/future-and-promise.md"
+      >C++</a
+    >
+    has both futures and promises that are used specifically in the producing
+    and consuming sides of future values.
+  </li>
+  <li>
+    <a
+      href="https://github.com/ruby-concurrency/concurrent-ruby/blob/master/docs-source/promises.in.md#asynchronous-task"
+      >Ruby</a
+    >
+    seems to use asynchronous tasks, promises, and futures
+  </li>
+</ul>
+
+<p>
+  So the concept is pretty ubiquitous. The implementations vary widely, and the
+  value for programmers is that promises allow one to keep reference to work
+  <em>that will eventually be resolved</em> in hand.
+</p>
+
+<p>
+  But we can trace the beginnings of futures as an object in programming to one
+  paper (or, at least most of the things I read point to this paper as the
+  seminal work putting forward the concept of a future as a primitive.) The
+  paper is called "The Incremental Garbage Collection of Processes" by
+  <a href="https://dl.acm.org/doi/epdf/10.1145/872734.806932"
+    >Henry C. Baker and Carl Hewitt</a
+  >.
+</p>
+
+<p>
+  It's super interesting to read this paper today. Baker and Hewitt use the term
+  "future", and they acknowledge that Friedman and Wise called them "promises"
+  and Hibbard called them "eventuals." You also see certain language that is
+  common today being used even then ("thunks!") Futures were in the air, and
+  many people were toying with this in the functional programming world.
+</p>
+
+<p>Just check out this explanation, written in 1977:</p>
+
+<blockquote>
+  <p>
+    When an expression is given to the evaluator by the user, a future for that
+    expression is returned which is a promise to deliver the value of that
+    expression at some later time, if the expression has a value. A process is
+    created for each new future which immediately starts to work evaluating the
+    given expression. When the value of a future is needed explicitly, e.g. by
+    the primitive function "+", the evaluation process may or may not have
+    finished. If it has finished, the value is immediately made available; if
+    not, the requesting process is forced to wait until it finishes.
+  </p>
+</blockquote>
+
+<p>
+  Pretty cool! Baker-Hewitt is talking about blocking synchronous execution of
+  future values if values haven't been resolved yet. And in their case, it was
+  about garbage collection. The basic gist of their article was that if you have
+  something in hand that branches to handle different futures- branches that may
+  be running concurrently- all the future paths need to be garbage collected and
+  a runtime needs to be aware of this.
+</p>
+
+<p>
+  <strong>In the end</strong> this paper was important because future,
+  unresolved, and asynchronous values could be first class citizens in
+  programming languages.
+</p>
+
+<h2>Enter JavaScript and the Event Loop</h2>
+
+<p>
+  If you want to get a summary of the event loop, there is
+  <a href="https://www.youtube.com/watch?v=cCOL7MC4Pl0">a talk</a> by
+  <a href="https://jakearchibald.com/">Jake Archibald</a> you can watch on
+  YouTube. This talk will give you a very good understanding of why JavaScript
+  acts the way it does, why the main thread can get locked, and what tasks and
+  the event loop are, and more.
+</p>
+
+<p>But for those who need a concise TLDW:</p>
+
+<ul>
+  <li>
+    JavaScript runtimes are "single threaded", which means there's a single call
+    stack called the main thread. JavaScript can only handle one thing at a
+    time.
+  </li>
+  <li>
+    JavaScript can line up tasks in what's called the task queue. If something
+    is scheduled to happen (say, like in a <code>setTimeout</code> as a callback
+    function,) it is added to this task queue. The tasks on the queue are
+    addressed first in first out. <strong>But,</strong> they are addressed after
+    the call stack is empty.
+  </li>
+</ul>
+
+<p>
+  There is another queue called the microtask queue. Historically, there was a
+  time when JavaScript didn't have a formal idea of microtasks, and the main
+  thread was all you had to work with. Think about this: how do you have code
+  act concurrently if the runtime can only work on one thing on the callstack at
+  a time?
+</p>
+
+<p>
+  If you enqueue a task, there are no good guarantees about when it will run,
+  because you must depend on the call stack being empty. This means, if you have
+  long running processes on the main thread, and enqueue a callback to console
+  log "Hello, World" after 0 seconds, you will not see the greeting when you
+  expect.
+</p>
+
+<p>
+  So developers tried to use <code>setTimeout</code> to enqueue some functions
+  so that they would act somewhat async, but you could always run into long
+  processes on the main thread that locked the whole application until the call
+  stack was empty.
+</p>
+
+<aside class="blue">
+  <p>
+    Interesting note here- events are synchronous, meaning that callbacks
+    executed by events also run on and lock the main thread just like normal
+    calls from the call stack. For a while, Internet Explorer had mutation
+    events where mutations in the DOM could trigger different callbacks. This
+    was not good, though, because if many mutation events happened, or if they
+    triggered even small processes that lock the thread for short periods, this
+    would cause severe performance issues.
+  </p>
+</aside>
+
+<p>
+  Take, for example, a "Promise" class and it's use below. (Note I'm writing
+  this with old, pre ES6 classes and so I'm using regular functions instead of
+  arrows and prototypes.)
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      // A "Set timeout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        // sleep 2 seconds
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 2000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+    </script>
+  </template>
+</repl-playground>
+
+<p>Hey, that seemed to work exactly as we intended it! What's the issue?</p>
+
+<p>
+  Well, if we were to tie up the main thread with some sort of long running
+  loop, you'll see that the promise doesn't resolve after the 2 seconds we
+  expect:
+</p>
+
+<repl-playground class="wide" fold="1-27" web-worker>
+  <template>
+    <script>
+      // A "Set timeout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 2000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+
+      var fiveSeconds = Date.now() + 5000;
+      while (Date.now() <= fiveSeconds) {}
+
+      console.log("Main loop is now not tied up");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  You'll notice the main loop freezes all activity, and the
+  <code>STPromise</code> "task" doesn't even get kicked off until after the 5
+  seconds that the main thread is locked. This is not good!
+</p>
+
+<h2>Added Asynchronicity: the Microtask Queue</h2>
+
+<p>
+  <code>MutationObserver</code> was introduced around 2012 to 2013. Browsers
+  started to allow queueing of tasks that would execute before the next normal
+  task would execute. What this meant, then, was that the callbacks could take
+  advantage of this and execute more quickly when a DOM mutation happened. This
+  new queue of special tasks that could happen earlier was eventually dubbed the
+  microtask queue.
+</p>
+
+<p>
+  Smart people started to take advantage of this higher priority queue. If you
+  look at the early source code of Promise libraries, such as
+  <a
+    href="https://github.com/petkaantonov/bluebird/blob/v1.0.0/src/schedule.js#L18"
+    >Bluebird</a
+  >, you would see that they take advantage of this mutation observer API by
+  assigning a callback to a mutation observer and then triggering a mutation to
+  execute that callback as a microtask!
+</p>
+
+<p>Let's update our setTimeout example to try this "hack":</p>
+
+<repl-playground class="wide" fold="1-27">
+  <template>
+    <script>
+      function MOPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        this.value = this.callback(this.resolve.bind(this));
+      }
+
+      MOPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      MOPromise.prototype.resolve = function (value) {
+        this.value = value;
+
+        var div = document.createElement("div");
+        var observer = new MutationObserver(
+          function () {
+            observer.disconnect();
+            this.doThen(value);
+          }.bind(this),
+        );
+
+        observer.observe(div, { attributes: true });
+
+        div.setAttribute("class", "resolved");
+      };
+
+      MOPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      setTimeout(function () {
+        console.log("This is pushed to the end");
+      }, 0);
+
+      const myPromise = new MOPromise(function (res) {
+        res("This is the value that resolves and logs in a microtask");
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  Bluebird and other promise libraries used many other options and fallbacks for
+  forcing microtasks, especially in different browsers or in Node, but this was
+  the main way it was done in the browser.
+</p>
+
+<p>
+  So maybe now you can see why "asynchronous" was used instead of "concurrent"
+  for this sort of thing. The code execution is forcing higher priority
+  execution between normal macrotasks, but it truly isn't running concurrently
+  as if the callback was running on a different thread.
+</p>
+
+<p>
+  It doesn't feel great co-opting this API to get a microtask queued, though,
+  right?
+</p>
+
+<p>
+  Things got better. With ES6 we got to use Promises which implicitly queued
+  microtasks in their API. Eventually, we got the nice
+  <code>queueMicrotask</code> API that let us set microtasks directly in 2019.
+  Compare the difference:
+</p>
+
+<div class="wide-2up">
+  <code-highlight lang="javascript">
+    <template>
+      <script>
+        queueMicrotask(() => this.doThen(value));
+      </script>
+    </template>
+  </code-highlight>
+  <code-highlight lang="javascript">
+    <template>
+      <script>
+        var div = document.createElement("div");
+        var observer = new MutationObserver(
+          function () {
+            observer.disconnect();
+            this.doThen(value);
+          }.bind(this),
+        );
+
+        observer.observe(div, { attributes: true });
+
+        div.setAttribute("class", "resolved");
+      </script>
+    </template>
+  </code-highlight>
+</div>
+
+<h2>
+  Okay, what about <code>process.nextTick()</code> and
+  <code>requestAnimationFrame()</code>?
+</h2>
+
+<p>
+  Right.
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame"
+    >requestAnimationFrame</a
+  >
+  is a different beast. You don't use this method to simulate asynchronous code.
+  Although the API looks nearly identical, the callback in this function
+  receives a timestamp argument automatically. The calling of this function also
+  is closely tied to the refresh rate of your computer, which will obviously
+  vary and requires care to provide consistent results on different computers.
+</p>
+
+<p>Basically, it's different enough where it's not suitable for futures.</p>
+
+<p>
+  So then, what about
+  <a
+    href="https://nodejs.org/en/learn/asynchronous-work/understanding-processnexttick"
+    >process.nextTick()</a
+  >? Well, the biggest issue is that it is only available in Node. But aside
+  from that, it also feels like a different beast. It actually will execute
+  before microtasks, so it acts somewhat like a pre-microtask queue. I would
+  recommend just using <code>queueMicrotask</code> instead.
+</p>
+
+<h2>So what about that nightmare code interview question then?</h2>
+
+<p>
+  You can try it out here in the playground below, but take a second first just
+  to think about it. We know that the regular console logs will happen in their
+  current order. Also, we know that the <code>setTimeout</code> will enqueue a
+  new task, which will basically happen last. That leaves the
+  <code>Promise</code> and the <code>queueMicrotask</code>, and both of those
+  are microtasks and should happen at the end but before the
+  <code>setTimeout</code> in the order they are called.
+</p>
+
+<p>
+  The difficult one is the <code>requestAnimationFrame</code>. Depending on the
+  computer you're working on, this may be different. However, this code is so
+  small there is little to no chance that a refresh rate scheduling of this task
+  would happen before microtasks or even a regular task. For example, if you're
+  on a 60hz screen, the task would be scheduled in 16.7 milliseconds from the
+  time of calling it. JavaScript is fast, and the whole script below clocks in
+  at about 0.67 milliseconds to run the function. So we can count on this
+  happening last.
+</p>
+
+<repl-playground web-worker>
+  <template>
+    <script>
+      function fn() {
+        console.log("1");
+
+        setTimeout(() => console.log("2"));
+
+        Promise.resolve().then(() => console.log("3"));
+
+        queueMicrotask(() => console.log("4"));
+
+        requestAnimationFrame(() => console.log("5"));
+
+        console.log("6");
+      }
+
+      fn();
+    </script>
+  </template>
+</repl-playground>
+
+<p>So 1, 6, 3, 4, 2, and then 5</p>
+
+<h2>Applications</h2>
+
+<p>
+  The reason I fell into investigating microtask queueing was because I authored
+  a dependency injection library that included reactive state. It was a service
+  system, much like Ember's, that allows consumers to subscribe to state updates
+  with services that lazily instantiate themselves. It makes sharing
+  functionality and state across the page easy.
+</p>
+
+<p>
+  If you've ever dealt with reactivity, you might know that it's a bit tricky to
+  be efficient and performant and avoid notification cycles or infinite render
+  state updates (I'm looking at you <code>useEffect()</code>.) So to avoid
+  duplicate notifications and infinite cycles when state changes, I use a
+  microtask queue.
+</p>
+
+<p>
+  I create a Set that lives in the module of the service base class. When we
+  notify a service or consumer that state has been changed, we add that service
+  or consumer to the set. In the future, we just check to see if we've notified
+  them before we do further notifying. It's a simple way to avoid cycles and
+  duplicate notifications.
+</p>
+
+<p>
+  But the real trick is <code>await 0</code>. Since <code>notify</code> is an
+  async function, we are using promises automatically, and leveraging the
+  microtask queue.
+</p>
+
+<p>
+  If you want to see the file in the wild,
+  <a
+    href="https://github.com/JimSchofield/wc-services/blob/main/lib/base-service.ts"
+    >check it out here</a
+  >. But here is the gist of the notification function for state changes:
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      export class Service {
+        __subscribers = new Map();
+
+        static notificationSet = new Set();
+
+        async notify() {
+          [...this.__subscribers.entries()].forEach(
+            ([subscriber, notifyFn]) => {
+              // have we notified this consumer yet?
+              if (Service.notificationSet.has(subscriber)) {
+                return;
+              }
+
+              Service.notificationSet.add(subscriber);
+
+              notifyFn(this);
+            },
+          );
+
+          // Makes the remainder of the function act like
+          // it's been inserted into a microtask, so we can depend on
+          // `notify` to recursively call subscribers who will call
+          // subscribers, etc and all the calls to notify will
+          // share this `notificationSet`
+          await 0;
+
+          Service.notificationSet.clear();
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>
+  A simple improvement I can make is by being more explicit with the clearing of
+  the notification set. Not only can I use <code>queueMicrotask</code> and
+  better show my intent for why I use <code> await 0</code>, but I also can make
+  this function no longer <code>async</code>!
+</p>
+
+<p>So this is better, in my opinion:</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      export class Service {
+        __subscribers = new Map();
+
+        static notificationSet = new Set();
+
+        notify() {
+          [...this.__subscribers.entries()].forEach(
+            ([subscriber, notifyFn]) => {
+              if (Service.notificationSet.has(subscriber)) {
+                return;
+              }
+
+              Service.notificationSet.add(subscriber);
+
+              notifyFn(this);
+            },
+          );
+
+          // Queue so that all notifies will happen before clearing
+          queueMicrotask(() => Service.notificationSet.clear());
+        }
+      }
+    </script>
+  </template>
+</code-highlight>
+
+<p>I'll have to update that library sometime 😗</p>
+
+<p>
+  You can also see this trick happening in a lot of other places. For example,
+  in Lit they use this trick to batch property changes. You can see this trick
+  <a
+    href="https://github.com/lit/lit/blob/935697d47e62ed75e3157423400163a8371c62fc/packages/reactive-element/src/reactive-element.ts#L1297"
+    >employed here</a
+  >. It's a bit harder to suss out, but using
+  <code>await this.__updatePromise;</code> assures that the rest of the function
+  is enqueued as a microtask. This means all changes to properties have resolved
+  before lit continues and renders.
+</p>
+
+<p>
+  And in researching this post, I found out that Vue.js also does this with
+  their scheduler. See if you can understand how this
+  <a
+    href="https://github.com/vuejs/core/blob/main/packages/runtime-core/src/scheduler.ts#L66"
+    >flushing promise works</a
+  >. (I had to have this explained to me, and to be honest, I'm still going back
+  to it to try to solidify what's happening in my brain.)
+</p>
+
+<h2>One more cool thing I ran into writing this post...</h2>
+
+<p>
+  I'm trying out my new <code>ReplPlayground</code> web component in this post,
+  and I ran into an issue while demonstrating how the main thread locks. See if
+  you can find it here:
+</p>
+
+<repl-playground class="wide" fold="1-27">
+  <template>
+    <script>
+      // A "Set timeout Promise" class
+      function STPromise(callback) {
+        this.callback = callback;
+        this.value = undefined;
+
+        setTimeout(
+          function () {
+            this.value = this.callback(this.resolve.bind(this));
+          }.bind(this),
+          0,
+        );
+      }
+
+      STPromise.prototype.then = function (cb) {
+        this.then = cb;
+
+        return this;
+      };
+
+      STPromise.prototype.resolve = function (value) {
+        this.value = value;
+        this.doThen(value);
+      };
+
+      STPromise.prototype.doThen = function (value) {
+        this.then(value);
+      };
+
+      // And its use
+      const myPromise = new STPromise(function (res) {
+        setTimeout(function () {
+          res("This is the value that resolves");
+        }, 2000);
+      }).then(function (value) {
+        console.log(value);
+      });
+
+      console.log("This should happen before the STPromise resolves");
+
+      var fiveSeconds = Date.now() + 5000;
+      while (Date.now() <= fiveSeconds) {}
+
+      console.log("Main loop is now not tied up");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  Do you see it? Notice how it's "executing" for about 5 seconds, and then the
+  two console logs show? This is an example of how the task queue was blocking
+  the console feedback in my component!
+</p>
+
+<p>
+  The code in the repl-playground actually gets executed using
+  <code>eval()</code> in a sandboxed iframe. Console messages and return values
+  are posted out of the iframe so values and logs can be displayed in the
+  console area of the component. So why does it wait until the main thread is
+  unblocked to log anything?
+</p>
+
+<p>
+  I learned that although this script is being evaluated in an iframe, the
+  iframe and the main page share a main thread. So, the script being run inside
+  the iframe locked the thread until the eval was finished. The logs we expected
+  to see are posted and the event listeners that are supposed to handle the logs
+  are asynchronous, but they won't be executed until the call stack is empty.
+  This means that they wait for <code>eval()</code> to finish before the async
+  tasks can be triggered
+</p>
+
+<p>
+  It's pretty ironic that this very issue came up in the code to demo my blog
+  post concept!
+</p>
+
+<p>
+  The way you can resolve this is by using a web worker instead. I took a little
+  detour to allow an attribute <code>web-worker</code> on my repl playground
+  element, and if it's present it will execute the code in a web worker which is
+  a separate thread from the main thread.
+</p>
+
+<p>
+  Go ahead, inspect the web component and add `web-worker` as a boolean
+  attribute to it and try it. It will work!
+</p>
+
+<h2>Does that mean you can work concurrently in Javascript with workers?</h2>
+
+<p>Yes!</p>
+
+<p>
+  But there are many caveats and it's really hard to share memory between
+  threads and, most important, I would need to do a whole lot of research on
+  workers to say more! 😅
+</p>
+
+<p>Yes, that is probably what my next post will be about.</p>
+
+<h2>I hope you enjoy this stuff as much as I do!</h2>
+
+<p>
+  I learned a lot researching and diving deep into the JavaScript history. Let
+  me know if you have any questions or feedback, or just want to say hi! {%
+  socials %}
+</p>

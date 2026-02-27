@@ -54,6 +54,7 @@ export class PlayGround extends LitElement {
     }
 
     const doc = await this.getTemplate();
+    this.docContents = doc;
 
     this.editorView = new EditorView({
       doc,
@@ -80,10 +81,7 @@ export class PlayGround extends LitElement {
       const fromLine = this.editorView.state.doc.line(line);
 
       this.editorView.dispatch({
-        selection: {
-          anchor: fromLine.to,
-          head: fromLine.from,
-        },
+        selection: { anchor: fromLine.from },
       });
 
       foldCode(this.editorView);
@@ -103,7 +101,7 @@ export class PlayGround extends LitElement {
   }
 
   async firstUpdated() {
-    this.initEditorView();
+    await this.initEditorView();
     this.setupIframe();
   }
 

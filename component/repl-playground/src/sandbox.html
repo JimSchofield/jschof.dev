@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <script>
+      // Override console methods to capture output
+      const originalConsole = { ...console };
+      const capturedOutput = [];
+
+      // Enhanced object formatting similar to Node.js REPL
+      function formatValue(
+        value,
+        isReturnValue = false,
+        depth = 0,
+        maxDepth = 10
+      ) {
+        const indent = "  ".repeat(depth);
+        const nextIndent = "  ".repeat(depth + 1);
+
+        if (value === null) return "null";
+        if (value === undefined) return "undefined";
+        if (typeof value === "string")
+          return isReturnValue ? '"' + value + '"' : value;
+        if (typeof value === "number" || typeof value === "boolean")
+          return String(value);
+        if (typeof value === "function") {
+          return "[Function: " + (value.name || "anonymous") + "]";
+        }
+
+        // Prevent infinite recursion
+        if (depth > maxDepth) {
+          return "[Object: too deep]";
+        }
+
+        if (typeof value === "object") {
+          // Handle circular references with a simple check
+          try {
+            JSON.stringify(value);
+          } catch (e) {
+            return "[Circular Object]";
+          }
+
+          // Handle arrays
+          if (Array.isArray(value)) {
+            if (value.length === 0) return "[]";
+
+            if (isReturnValue) {
+              const formatted = value.map(
+                item =>
+                  nextIndent + formatValue(item, true, depth + 1, maxDepth)
+              );
+              return "[\n" + formatted.join(",\n") + "\n" + indent + "]";
+            } else {
+              return (
+                "[" +
+                value
+                  .map(item => formatValue(item, false, depth + 1, maxDepth))
+                  .join(", ") +
+                "]"
+              );
+            }
+          }
+
+          // Handle class instances - show constructor name
+          if (
+            value.constructor &&
+            value.constructor.name &&
+            value.constructor.name !== "Object"
+          ) {
+            const className = value.constructor.name;
+            const props = Object.getOwnPropertyNames(value);
+
+            if (props.length === 0) {
+              return className + " {}";
+            }
+
+            const propStrings = props.map(prop => {
+              try {
+                const val = value[prop];
+                const formattedVal = formatValue(
+                  val,
+                  isReturnValue,
+                  depth + 1,
+                  maxDepth
+                );
+                return (
+                  (isReturnValue ? nextIndent : "") + prop + ": " + formattedVal
+                );
+              } catch {
+                return (isReturnValue ? nextIndent : "") + prop + ": [Getter]";
+              }
+            });
+
+            if (isReturnValue) {
+              return (
+                className +
+                " {\n" +
+                propStrings.join(",\n") +
+                "\n" +
+                indent +
+                "}"
+              );
+            } else {
+              return className + " { " + propStrings.join(", ") + " }";
+            }
+          }
+
+          // Handle plain objects
+          const keys = Object.keys(value);
+          if (keys.length === 0) return "{}";
+
+          if (isReturnValue) {
+            const propStrings = keys.map(key => {
+              try {
+                const val = value[key];
+                const formattedVal = formatValue(
+                  val,
+                  true,
+                  depth + 1,
+                  maxDepth
+                );
+                return nextIndent + '"' + key + '": ' + formattedVal;
+              } catch {
+                return nextIndent + '"' + key + '": [Getter]';
+              }
+            });
+            return "{\n" + propStrings.join(",\n") + "\n" + indent + "}";
+          } else {
+            const propStrings = keys.map(key => {
+              try {
+                const val = value[key];
+                return (
+                  key + ": " + formatValue(val, false, depth + 1, maxDepth)
+                );
+              } catch {
+                return key + ": [Getter]";
+              }
+            });
+            return "{ " + propStrings.join(", ") + " }";
+          }
+        }
+        return String(value);
+      }
+
+      let parentSource = null;
+      let parentOrigin = "*";
+
+      ["log", "info", "warn", "error"].forEach(method => {
+        console[method] = (...args) => {
+          const message = args.map(formatValue).join(" ");
+          capturedOutput.push({ type: method, message });
+          originalConsole[method](...args);
+          // Stream async console output back to parent immediately
+          if (parentSource) {
+            parentSource.postMessage(
+              {
+                type: "console-output",
+                method: method,
+                message: message,
+              },
+              parentOrigin
+            );
+          }
+        };
+      });
+
+      // Listen for code execution requests
+      window.addEventListener("message", event => {
+        // Store parent reference for async console streaming
+        parentSource = event.source;
+        parentOrigin = event.origin || "*";
+
+        // Reset output for each execution
+        capturedOutput.length = 0;
+
+        try {
+          // Execute the code and capture the final result
+          const result = eval(event.data.code);
+
+          // Send results back to parent
+          event.source.postMessage(
+            {
+              type: "execution-result",
+              output: capturedOutput,
+              result:
+                result !== undefined ? formatValue(result, true) : undefined,
+            },
+            event.origin || "*"
+          );
+        } catch (error) {
+          event.source.postMessage(
+            {
+              type: "execution-error",
+              error: error.message,
+              output: capturedOutput,
+            },
+            event.origin || "*"
+          );
+        }
+      });
+    </script>
+  </body>
+</html>

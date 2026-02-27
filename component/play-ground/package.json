@@ -15,8 +15,7 @@
     "@codemirror/language": "^6.10.1",
     "@codemirror/state": "^6.4.1",
     "@codemirror/view": "^6.24.1",
-    "babel-prettier-parser": "^0.10.8",
-    "codemirror": "^6.0.1",
+"codemirror": "^6.0.1",
     "lit": "^3.1.2",
     "prettier": "^3.2.5"
   },

@@ -213,7 +213,7 @@ If '${t}' is a directive input, make sure the directive is imported by the curre
           </button>
         </div>
         <iframe
-          sandbox="allow-scripts allow-forms allow-same-origin"
+          sandbox="allow-scripts allow-forms"
           id="view"
         ></iframe>
       </div>

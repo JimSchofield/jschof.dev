@@ -187,7 +187,7 @@ export class PlayGround extends LitElement {
           </button>
         </div>
         <iframe
-          sandbox="allow-scripts allow-forms allow-same-origin"
+          sandbox="allow-scripts allow-forms"
           id="view"
         ></iframe>
       </div>

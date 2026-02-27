@@ -107,6 +107,11 @@ export class PlayGround extends LitElement {
     this.setupIframe();
   }
 
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    this.editorView?.destroy();
+  }
+
   private setupIframe() {
     this.iframe = this.shadowRoot?.querySelector('#view') as HTMLIFrameElement;
     if (this.iframe) {

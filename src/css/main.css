@@ -466,7 +466,8 @@ play-ground::part(editor-format-button) {
 }
 play-ground::part(editor-format-button):active,
 play-ground::part(editor-format-button):hover {
-  color: var(--sunset);
+  background: var(--gradient);
+  color: var(--seasalt);
 }
 play-ground::part(editor-format-button):focus-visible {
   color: var(--seasalt);

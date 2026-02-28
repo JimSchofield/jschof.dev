@@ -204,6 +204,8 @@ export class PlayGround extends LitElement {
   }
 
   handleDocUpdate = (view: any) => {
+    if (!view.docChanged) return;
+
     const newDoc = view.state.doc.toString().trim();
 
     // Allows us to stop eager parsing of declarative shadow dom

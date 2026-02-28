@@ -95,7 +95,7 @@ export class PlayGround extends LitElement {
       htmlLang(),
       lineNumbers(),
       gutters(),
-      EditorView.updateListener.of(this.debouncedHandleDocUpdate),
+      EditorView.updateListener.of(this.onEditorUpdate),
     );
 
     const startState = EditorState.create({
@@ -161,7 +161,8 @@ export class PlayGround extends LitElement {
 
   private updateIframeContent() {
     if (this.iframe) {
-      const content = this.docContents || "<!DOCTYPE html><p>Loading...</p>";
+      const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
+        .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
       this.iframe.srcdoc = content;
     }
   }
@@ -203,23 +204,17 @@ export class PlayGround extends LitElement {
     this.editorView.update([transaction]);
   }
 
-  handleDocUpdate = (view: any) => {
-    if (!view.docChanged) return;
-
-    const newDoc = view.state.doc.toString().trim();
-
-    // Allows us to stop eager parsing of declarative shadow dom
-    // so we can use declarative shadow doms in our examples :)
-    const res = newDoc.replace(
-      `shadowrootmode="open."`,
-      `shadowrootmode="open"`,
-    );
-
-    this.docContents = res;
+  handleDocUpdate = () => {
+    this.docContents = this.editorView.state.doc.toString().trim();
     this.updateIframeContent();
   };
 
   debouncedHandleDocUpdate = debounce(this.handleDocUpdate, 200);
+
+  onEditorUpdate = (view: any) => {
+    if (!view.docChanged) return;
+    this.debouncedHandleDocUpdate();
+  };
 
   render() {
     return html`<div part="container" class="query-container">

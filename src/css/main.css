@@ -317,6 +317,8 @@ footer {
   margin-top: 3em;
   width: 100%;
   max-width: 100ch;
+  /* pad bottom so back to top buttom doesn't cover footer */
+  padding-bottom: 65px;
 }
 
 .footer-content {
@@ -464,7 +466,8 @@ play-ground::part(editor-format-button) {
 }
 play-ground::part(editor-format-button):active,
 play-ground::part(editor-format-button):hover {
-  color: var(--sunset);
+  background: var(--gradient);
+  color: var(--seasalt);
 }
 play-ground::part(editor-format-button):focus-visible {
   color: var(--seasalt);
@@ -474,20 +477,6 @@ play-ground::part(editor-format-button):focus-visible {
 
 code-highlight {
   margin: 1rem 0;
-  max-width: 100%;
-  overflow: auto;
-
-  & pre {
-    margin: 0;
-    width: 100%;
-
-    & code.hljs {
-      width: 100%;
-      line-height: 1.4;
-      padding: 0.5rem 0.75rem;
-      border: none;
-    }
-  }
 }
 
 baseline-status {

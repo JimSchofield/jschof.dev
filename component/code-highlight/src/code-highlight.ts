@@ -1,5 +1,6 @@
-import { LitElement, html } from "lit";
+import { LitElement, css, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
+import { unsafeCSS } from "lit";
 
 import tokyoNight from "highlight.js/styles/tokyo-night-dark.css?inline";
 
@@ -31,8 +32,13 @@ hljs.registerLanguage("css", cssHighlight);
 
 @customElement("code-highlight")
 export class CodeHighlight extends LitElement {
-  createRenderRoot() {
-    return this;
+  constructor() {
+    super();
+    if (!this.id) {
+      // This is so live-reload diffing won't mix up instances
+      // of this component
+      this.id = `ch-${crypto.randomUUID().slice(0, 8)}`;
+    }
   }
 
   connectedCallback() {
@@ -45,11 +51,6 @@ export class CodeHighlight extends LitElement {
     } else if (this.lang === "html") {
       this.handleTemplate();
     }
-
-    // Not sure this is needed
-    // The slot has no change handlers
-    // Not sure someone could mess with it...
-    // Array.from(this.children).forEach((child) => child.remove());
   }
 
   @property({ attribute: "dont-pretty", type: Boolean })
@@ -122,12 +123,15 @@ export class CodeHighlight extends LitElement {
   }
 
   prettifyAndSet(content: string, parser = this.lang) {
-    if (this.dontPretty) {
-      this.content = content;
-    } else {
+    this.content = content;
+
+    if (!this.dontPretty) {
       prettier
         .format(content, { parser, plugins })
-        .then((result) => (this.content = result));
+        .then((result) => (this.content = result))
+        .catch(() => {
+          // Keep raw content if prettier fails
+        });
     }
   }
 
@@ -141,26 +145,44 @@ export class CodeHighlight extends LitElement {
     return hljs.highlight(this.content, { language: this.lang }).value;
   }
 
-  render() {
-    return html` <style>
-        code-highlight {
-          display: flex;
-
-          & pre {
-            display: flex;
-          }
-        }
-        ${tokyoNight}
-      </style>
-      <pre>
-<code
-  .innerHTML=${this.#rendered.trim()}
-  class="theme-tokyo-night-dark hljs
-        "
->
-</code>
-    </pre>`;
+  updated() {
+    const codeEl = this.shadowRoot?.querySelector("code");
+    if (codeEl) {
+      codeEl.innerHTML = this.#rendered.trim();
+    }
   }
+
+  render() {
+    return html`<pre><code class="theme-tokyo-night-dark hljs"></code></pre>`;
+  }
+
+  static styles = [
+    unsafeCSS(tokyoNight),
+    css`
+      :host {
+        display: flex;
+        max-width: 100%;
+        overflow: auto;
+      }
+
+      pre {
+        display: flex;
+        margin: 0;
+        width: 100%;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      code.hljs {
+        width: 100%;
+        font-size: 0.85em;
+        font-family: "Fira Code", monospace;
+        line-height: 1.4;
+        padding: 0.5rem 0.75rem;
+        border: none;
+      }
+    `,
+  ];
 }
 
 declare global {

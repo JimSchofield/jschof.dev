@@ -32,6 +32,15 @@ hljs.registerLanguage("css", cssHighlight);
 
 @customElement("code-highlight")
 export class CodeHighlight extends LitElement {
+  constructor() {
+    super();
+    if (!this.id) {
+      // This is so live-reload diffing won't mix up instances
+      // of this component
+      this.id = `ch-${crypto.randomUUID().slice(0, 8)}`;
+    }
+  }
+
   connectedCallback() {
     super.connectedCallback();
 

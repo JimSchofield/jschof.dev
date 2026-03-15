@@ -1,0 +1,629 @@
+---
+title: "Concurrency with Workers"
+excerpt: "Javascript is single threaded... mostly!  Let's look at how you can spin up workers and use them to run things concurrently!"
+layout: post
+tags:
+  - posts
+  - using the platform
+  - vanilla JavaScript
+  - deep dive
+  - async
+  - promises
+  - concurrency
+  - workers
+date: 2026-03-08
+image: clock.webp
+---
+
+<h1>Concurrency With Workers</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<p>
+  Javascript is single threaded... mostly! In my
+  <a href="/posts/2026/2/asynchronicity-and-promises/">last post</a> I traced
+  the beginnings of how the microtask queue evolved in javascript, and how this
+  can lead to asynchronous code. We found that asynchronous code is not truly
+  concurrent, because the single thread in javascript can only handle one task
+  or microtask at a time. Asynchronicity is all about arranging the tasks or
+  microtasks in a way to handle promises and future values that resembles
+  concurrency.
+</p>
+
+<p>If you want true concurrency, you need to work with workers!</p>
+
+<p>
+  Workers are threads that can get spun up in separate processor cores, which
+  means you can actually run code concurrently!
+</p>
+
+<aside>
+  <p>
+    Quick aside here: if javascript is running in an environment that actually
+    doesn't contain multiple cores to run parallel code in, the computer will
+    still make a worker but it will run the code asynchronously and
+    unfortunately just mimic concurrency using something called "time-slicing."
+  </p>
+  <p>
+    That's why we have
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/API/Navigator/hardwareConcurrency"
+      ><code>Navigator.hardwareConcurrency</code></a
+    >. This is an API that lets you see how many "logical cores" are available.
+    If the value is 1, this means you won't be seeing quite the same performance
+    boosts from trying to run concurrent workers. This gives you an approximate
+    idea of how many workers you can get benefit from making.
+  </p>
+</aside>
+
+<p>
+  Let's talk about how you run code in a worker, and how you communicate between
+  threads, and how you might kick off a thread of work.
+</p>
+
+<h2>Kicking off a worker</h2>
+
+<p>
+  It's actually quite easy to kick off a worker with a simple round trip of
+  messaging.
+</p>
+
+<repl-playground class="wide" web-worker>
+  <template>
+    <script>
+      // 1. Write your worker code as a string
+      const workerCode = `
+        self.onmessage = (event) => {
+          console.log("[worker]: Received event");
+
+          self.postMessage("Talking back to main thread");
+        };
+      `;
+
+      // 2. Make worker
+      const blob = new Blob([workerCode], { type: "application/javascript" });
+      const blobURL = URL.createObjectURL(blob);
+      const worker = new Worker(blobURL);
+
+      // 3. Set up what happens if you receive a message
+      worker.onmessage = (event) => {
+        console.log("[main]: Response received");
+        console.log("-->", event.data);
+      };
+
+      // 4. Do your thing
+      console.log("[main]: Sending message 'Hello!'");
+      worker.postMessage("[main]: hello!");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  This particular worker is called a
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/Worker"
+    >dedicated worker</a
+  >. They're <em>dedicated</em> to this script which spun it up and only this
+  context can communicate with the script. Other contexts (windows, tabs,
+  iframes) can't access this worker- we can't share it.
+</p>
+
+<p>
+  There is another kind of worker called a
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/SharedWorker"
+    >SharedWorker</a
+  >. These workers can be communicated with by other contexts, but they
+  communicate a little differently. Sharing this worker means that any script or
+  context that wants to use this worker must be from the same origin. A little
+  more red tape, and a little different to work with.
+</p>
+
+<p>
+  Let's talk about the <code>URL.createObjectURL</code>, though. This is a
+  method that allows us to create a blob url so we can actually take in-memory
+  scripts and store them as a proper <code>URL</code>. That's how we can get
+  away with writing a script as a string and the worker can take that string,
+  transformed into a url blob.
+</p>
+
+<p>
+  This is fine for us, because we're just working within this one document and
+  we're not worried with sharing workers amongst other workers, iframes, or
+  other contexts.
+</p>
+
+<h2>Breaking up the work</h2>
+
+<p>
+  Using workers is really nice when we have a task that can be broken up into
+  pieces that can be run in separate threads with no knowledge of each other or
+  communication. It's nice because the concurrent work doesn't have to
+  coordinate or communicate between the different threads of calculations. They
+  can work completely in isolation in their threads.
+</p>
+
+<aside class="blue">
+  <p>
+    These tasks that can run completely in parallel are called
+    <a href="https://en.wikipedia.org/wiki/Embarrassingly_parallel"
+      >"embarrassingly parallel"</a
+    >. Which is delightful to me. Which is actually also another way to call
+    these sorts of algorithms: "delightfully parallel!" No joke!
+  </p>
+  <p>
+    An algorithm still can be parallelizable and communicate and depend on other
+    threads communicating, but that sort of communicating/coordinating gets
+    super, duper difficult and involves going into things like
+    <code>SharedArrayBuffer</code> and <code>Atomics</code> and locking... We're
+    not going there today.
+  </p>
+</aside>
+
+<p>
+  I'm going to demonstrate a delightfully parallel algorithm that is near and
+  dear to my former-math-teacher heart: determining if a number is a prime.
+  We'll call it <code>isPrime</code>.
+</p>
+
+<p>
+  This algorithm is not going to be efficient on purpose. It's going to take a
+  number and start dividing by 2 and then every odd number up to half of the
+  number to check if it's divisible by any number. If it's not, it will return
+  <code>true</code>. If a number does divide evenly into our candidate, it will
+  return
+  <code>false</code>
+</p>
+
+<p>
+  We're doing this in a very brute force way to demonstrate an algorithm that
+  can be divided up into nice parallel threads. If, say, we were checking to see
+  if 10,007 is prime (it is!) then we would have a list of numbers to try to
+  divide into 10,007 that is <code> sqrt(10,007)</code> rounded down, which is
+  100.
+</p>
+
+<p>
+  There's a little snag here. We're using
+  <a
+    href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt"
+    >BigInt</a
+  >. Turns out, this allows us to work with numbers that are
+  <strong>huge</strong> but the standard <code>Math</code> library in javascript
+  doesn't work with BigInt. 😩 So to make it a little easier, we're checking
+  numbers all the way up to half of the candidate. That's okay, the point is
+  that we see how threads reduce our work.
+</p>
+
+<p>
+  So in this case, we would divide those 2500 or so odd numbers into groups.
+  Each worker thread could then work on a group of those numbers. If a thread
+  ever returns back saying "I found a factor," we can cancel all work- it's not
+  prime. But if all threads come back saying there were no divisors, you know
+  you have a prime!
+</p>
+
+<p>
+  Let's try this out. I'll also use
+  <a href="https://developer.mozilla.org/en-US/docs/Web/API/console/time_static"
+    ><code>console.time</code></a
+  >
+  so we can see how long this takes
+</p>
+
+<repl-playground web-worker class="wide">
+  <template>
+    <script>
+      const workerCode = `
+        function test(candidate) {
+          for (let i = 3n; i < candidate / 2n; i += 2n) {
+            if (candidate % i === 0n) {
+              self.postMessage({ prime: false, divisor: i });
+              return;
+            }
+          }
+          return self.postMessage({ prime: true });
+        }
+        self.onmessage = (event) => {
+          const { candidate } = event.data;
+          const result = test(candidate);
+        };
+      `;
+
+      const blob = new Blob([workerCode], { type: "application/javascript" });
+      const blobURL = URL.createObjectURL(blob);
+      const worker = new Worker(blobURL);
+
+      worker.onmessage = (event) => {
+        const { data } = event;
+
+        console.log(data);
+        console.timeEnd("1 Thread");
+      };
+
+      const candidate = 10007n;
+
+      console.time("1 Thread");
+      worker.postMessage({ candidate });
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  That was quick- about 9 milliseconds on my computer, because even though this
+  is prime and we have to check every number up to basically 5000, the checking
+  goes relatively fast.
+</p>
+
+<p>
+  And most numbers aren't prime, so if you randomly check a big number (like
+  1234567890987654321) it might finish in much less time because you might run
+  into a divisor and the algorithm would exit early. For 1234567890987654321n,
+  it takes my computer 9 milliseconds because that huge number is divisible by
+  3.
+</p>
+
+<p>
+  This gets into
+  <a
+    href="https://en.wikipedia.org/wiki/Computational_complexity_theory#Best,_worst_and_average_case_complexity"
+    >worst case complexity.</a
+  >
+  In our case, we just want to test the time on prime numbers mostly, because
+  prime numbers are the "worst case," i.e. for prime numbers we have to check
+  every odd number up to half of the number.
+</p>
+
+<p>
+  So try this: in the example above, test <code>10_000_000_019n</code>. On my
+  computer it took 12 seconds to finish the calculation. This is because it's
+  prime, and it shows that even relatively small numbers take some time to
+  calculate, especially in the worst case.
+</p>
+
+<p>
+  Okay, let's do this. We'll test <code>10_000_000_019n</code>, but we'll make a
+  "spawn" function that spawns a worker that works on a range of numbers, so
+  we're breaking up the work. The spawn function will take a candidate, a range
+  of numbers to check divisibility into the candidate, and then a callback that
+  will pass back the result for that range.
+</p>
+
+<repl-playground web-worker class="wide">
+  <template>
+    <script>
+      function spawnRangeWorker(candidate, range, callback) {
+        const workerCode = `
+          function test(candidate, [start, end]) {
+            for (let i = start; i < end; i += 2n) {
+              if (candidate % i === 0n) {
+                self.postMessage({ prime: false, divisor: i });
+                return;
+              }
+            }
+            return self.postMessage({ prime: true });
+          }
+          self.onmessage = (event) => {
+            const { candidate, range } = event.data;
+            const result = test(candidate, range);
+          }
+        `;
+
+        const blob = new Blob([workerCode], { type: "application/javascript" });
+        const blobURL = URL.createObjectURL(blob);
+        const worker = new Worker(blobURL);
+
+        worker.onmessage = (event) => {
+          const { data } = event;
+
+          callback(data);
+        };
+
+        worker.postMessage({ candidate, range });
+      }
+
+      const candidate = 10_000_000_019n;
+
+      console.log("Running...");
+      spawnRangeWorker(candidate, [3n, candidate / 2n], (result) => {
+        console.log(result);
+      });
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  Hopefully you can see where I'm going with this. We want to now split up the
+  work into "bands" and run a worker for each band. This is where
+  <code>Navigator.hardwareConcurrency</code> comes in. We will divide the range
+  into however many logical threads the browser API tells us we can use, and
+  spawn a worker for each range.
+</p>
+
+<repl-playground web-worker class="wide">
+  <template>
+    <script>
+      function spawnRangeWorker(candidate, range, callback) {
+        const workerCode = `
+          function test(candidate, [start, end]) {
+            for (let i = start; i < end; i += 2n) {
+              if (candidate % i === 0n) {
+                self.postMessage({ prime: false, divisor: i });
+                return;
+              }
+            }
+            return self.postMessage({ prime: true });
+          }
+          self.onmessage = (event) => {
+            const { candidate, range } = event.data;
+            const result = test(candidate, range);
+          }
+        `;
+
+        const blob = new Blob([workerCode], {
+          type: "application/javascript",
+        });
+        const blobURL = URL.createObjectURL(blob);
+        const worker = new Worker(blobURL);
+
+        worker.onmessage = (event) => {
+          const { data } = event;
+
+          callback(data);
+        };
+
+        worker.postMessage({ candidate, range });
+      }
+
+      const candidate = 10_000_000_019n;
+      const threads = BigInt(navigator.hardwareConcurrency);
+
+      // Get ranges
+      const size = candidate / 2n - 3n;
+      const intervalWidth = size / threads;
+      const ranges = [];
+      let current = 3n;
+
+      for (let i = 0n; i < threads; i++) {
+        let next = current + intervalWidth;
+        if (next > candidate / 2n) {
+          next = candidate / 2n;
+        }
+        ranges.push([current, next]);
+        current = next;
+      }
+
+      console.log("Running...");
+
+      ranges.forEach(([start, end], index) => {
+        spawnRangeWorker(candidate, [start, end], (result) => {
+          console.log(
+            `Range worker ${index} over range [${start},${end}] finishing`,
+          );
+          console.log(result);
+        });
+      });
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  That is much faster! But there's an issue that you're probably noticing here.
+  We have different threads reporting back truly independently of each other.
+  What if a thread finds that there is a factor that divides our candidate?
+  Well, that thread finishes quickly and the other threads continue. The other
+  threads report back their individual results, but there's no final answer. The
+  user needs to see the different results and identify what the real result is.
+</p>
+
+<p>
+  Try the above example with <code>10_000_000_020n</code> and you'll see that
+  there are a few ranges that will return relatively quickly with divisors, but
+  there are a few ranges yet that will come back "prime."
+</p>
+
+<p>It's not too hard to aggregate the answer, it's just not that pleasing!</p>
+
+<repl-playground web-worker class="wide">
+  <template>
+    <script>
+      function spawnRangeWorker(candidate, range, callback) {
+        const workerCode = `
+          function test(candidate, [start, end]) {
+            for (let i = start; i < end; i += 2n) {
+              if (candidate % i === 0n) {
+                self.postMessage({ prime: false, divisor: i });
+                return;
+              }
+            }
+            return self.postMessage({ prime: true });
+          }
+          self.onmessage = (event) => {
+            const { candidate, range } = event.data;
+            const result = test(candidate, range);
+          }
+        `;
+
+        const blob = new Blob([workerCode], {
+          type: "application/javascript",
+        });
+        const blobURL = URL.createObjectURL(blob);
+        const worker = new Worker(blobURL);
+
+        worker.onmessage = (event) => {
+          const { data } = event;
+
+          callback(data);
+        };
+
+        worker.postMessage({ candidate, range });
+      }
+
+      const candidate = 10_000_000_019n;
+      const threads = BigInt(navigator.hardwareConcurrency);
+
+      // Get ranges
+      const size = candidate / 2n - 3n;
+      const intervalWidth = size / threads;
+      const ranges = [];
+      let current = 3n;
+
+      for (let i = 0n; i < threads; i++) {
+        let next = current + intervalWidth;
+        if (next > candidate / 2n) {
+          next = candidate / 2n;
+        }
+        ranges.push([current, next]);
+        current = next;
+      }
+
+      console.log("Running...");
+
+      let threadsFinished = 0;
+      let isPrime = true;
+
+      ranges.forEach(([start, end], index) => {
+        spawnRangeWorker(candidate, [start, end], (result) => {
+          if (!result.prime) {
+            isPrime = false;
+          }
+
+          threadsFinished++;
+
+          if (threadsFinished === ranges.length) {
+            console.log("Final result:", isPrime ? "prime" : "not prime");
+          }
+        });
+      });
+    </script>
+  </template>
+</repl-playground>
+
+<h2>The proper way to return results and coordinate threads</h2>
+
+<p>
+  We can do better. We can leverage promises and use that abstraction and its
+  APIs to cleanly aggregate results from each of our bands.
+</p>
+
+<p>
+  Instead of using a callback, let's have the spawning function return a
+  <code>promise</code>.
+</p>
+
+<repl-playground web-worker class="wide">
+  <template>
+    <script>
+      function spawnRangeWorker(candidate, range) {
+        const workerCode = `
+          function test(candidate, [start, end]) {
+            for (let i = start; i < end; i += 2n) {
+              if (candidate % i === 0n) {
+                self.postMessage({ prime: false, divisor: i });
+                return;
+              }
+            }
+            return self.postMessage({ prime: true });
+          }
+          self.onmessage = (event) => {
+            const { candidate, range } = event.data;
+            const result = test(candidate, range);
+          }
+        `;
+
+        return new Promise((resolve) => {
+          const blob = new Blob([workerCode], {
+            type: "application/javascript",
+          });
+          const blobURL = URL.createObjectURL(blob);
+          const worker = new Worker(blobURL);
+
+          worker.onmessage = (event) => {
+            const { data } = event;
+
+            resolve(data);
+          };
+
+          worker.postMessage({ candidate, range });
+        });
+      }
+
+      const candidate = 10_000_000_019n;
+      const threads = BigInt(navigator.hardwareConcurrency);
+
+      // Get ranges
+      const size = candidate / 2n - 3n;
+      const intervalWidth = size / threads;
+      const ranges = [];
+      let current = 3n;
+
+      for (let i = 0n; i < threads; i++) {
+        let next = current + intervalWidth;
+        if (next > candidate / 2n) {
+          next = candidate / 2n;
+        }
+        ranges.push([current, next]);
+        current = next;
+      }
+
+      console.log("Running...");
+
+      const results = await Promise.all(
+        ranges.map(([start, end], index) =>
+          spawnRangeWorker(candidate, [start, end])
+        )
+      );
+
+      const result = results.every(result => result.prime);
+
+      results.forEach(result => console.log(result));
+      console.log(`Final result: ${result ? "prime" : "not prime"}`)
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  <strong>Much</strong> cleaner! We can await all of the threads with
+  <code>Promise.all</code>, and then we just check to see if every result for
+  each band is prime. Check out the results of the above example if you use
+  <code>10_000_000_020n</code>.
+</p>
+
+<h2>That's all for now!</h2>
+
+<p>Workers are fun. They just have the unfortunate ceremony to handle them.</p>
+
+<p>
+  If you want to see another application of this, you can check out
+  <a
+    href="https://github.com/JimSchofield/Ray-tracing-in-one-weekend--typescript/tree/concurrency-attempt?tab=readme-ov-file"
+    >my Typescript implementation of Ray tracing in a weekend</a
+  >. I ported the entirety of the project over from C code in the
+  <a
+    href="https://raytracing.github.io/books/RayTracingInOneWeekend.html#overview"
+    >excellent tutorial</a
+  >. I then asked Claude to move the embarrassingly parallel functionality of
+  rendering a single pixel into a web worker. The web worker has the
+  responsibility of working through bands of rows of the picture. It cut down
+  rendering time tremendously! You can see it in
+  <a
+    href="https://jimschofield.github.io/Ray-tracing-in-one-weekend--typescript/"
+    >action here</a
+  >. (And there's a
+  <a
+    href="https://github.com/JimSchofield/Ray-tracing-in-one-weekend--typescript/tree/gpu-attempt?tab=readme-ov-file"
+    >GPU implementation branch</a
+  >
+  if you're further interested. This also was mostly accomplished through Claude
+  porting my project.)
+</p>
+
+<p>
+  For further exploration of how to make workers fun, there's a very interesting
+  library that lets you create and interact with workers as if they are on the
+  main thread called
+  <a href="https://github.com/GoogleChromeLabs/comlink">Comlink</a>. It's a very
+  interesting use of proxies to "fake" calling methods on just another class
+  instance. Under the hood, messages and arguments are being posted to the class
+  inside of a web worker.
+</p>
+
+<p>Until next time! {% socials %}</p>

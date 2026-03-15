@@ -10,6 +10,7 @@ function formatValue(value, isReturnValue = false, depth = 0, maxDepth = 10) {
     return isReturnValue ? '"' + value + '"' : value;
   if (typeof value === "number" || typeof value === "boolean")
     return String(value);
+  if (typeof value === "bigint") return value.toString() + "n";
   if (typeof value === "function") {
     return "[Function: " + (value.name || "anonymous") + "]";
   }
@@ -20,7 +21,7 @@ function formatValue(value, isReturnValue = false, depth = 0, maxDepth = 10) {
 
   if (typeof value === "object") {
     try {
-      JSON.stringify(value);
+      JSON.stringify(value, (_, v) => (typeof v === "bigint" ? v.toString() : v));
     } catch {
       return "[Circular Object]";
     }
@@ -114,16 +115,61 @@ function formatValue(value, isReturnValue = false, depth = 0, maxDepth = 10) {
   };
 });
 
+const timers = new Map();
+
+console.time = (label = "default") => {
+  timers.set(label, performance.now());
+};
+
+console.timeLog = (label = "default", ...args) => {
+  const start = timers.get(label);
+  if (start === undefined) {
+    console.warn(`Timer '${label}' does not exist`);
+    return;
+  }
+  const elapsed = (performance.now() - start).toFixed(3);
+  const extra = args.length ? " " + args.map((v) => formatValue(v)).join(" ") : "";
+  const message = `${label}: ${elapsed}ms${extra}`;
+  capturedOutput.push({ type: "log", message });
+  self.postMessage({ type: "console-output", method: "log", message });
+};
+
+console.timeEnd = (label = "default") => {
+  const start = timers.get(label);
+  if (start === undefined) {
+    console.warn(`Timer '${label}' does not exist`);
+    return;
+  }
+  const elapsed = (performance.now() - start).toFixed(3);
+  timers.delete(label);
+  const message = `${label}: ${elapsed}ms`;
+  capturedOutput.push({ type: "log", message });
+  self.postMessage({ type: "console-output", method: "log", message });
+};
+
 self.addEventListener("message", (event) => {
   capturedOutput.length = 0;
   try {
-    const result = eval(event.data.code); // eslint-disable-line no-eval
-    self.postMessage({
-      type: "execution-result",
-      output: capturedOutput,
-      result: result !== undefined ? formatValue(result, true) : undefined,
-    });
+    const wrapped = `(async () => {\n${event.data.code}\n})()`;
+    const result = eval(wrapped); // eslint-disable-line no-eval
+    // result is a Promise from the async IIFE
+    result
+      .then((r) => {
+        self.postMessage({
+          type: "execution-result",
+          output: capturedOutput,
+          result: r !== undefined ? formatValue(r, true) : undefined,
+        });
+      })
+      .catch((error) => {
+        self.postMessage({
+          type: "execution-error",
+          error: error.message,
+          output: capturedOutput,
+        });
+      });
   } catch (error) {
+    // Catches synchronous parse errors (e.g. syntax errors)
     self.postMessage({
       type: "execution-error",
       error: error.message,

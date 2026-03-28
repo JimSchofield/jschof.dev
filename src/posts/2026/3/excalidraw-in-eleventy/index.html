@@ -14,9 +14,19 @@ date: 2026-03-28
 
 <p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
 
-<p>I love <a href="https://excalidraw.com">Excalidraw</a> for quick diagrams.  The hand-drawn aesthetic is charming and the tool is dead simple.  But embedding those diagrams in a static site usually means shipping a hefty client-side bundle — or exporting PNGs by hand like some kind of animal.</p>
+<p>This example is AI generated</p>
 
-<p>What if we could just drop an <code>.excalidraw</code> file next to our post and have 11ty render it to inline SVG at build time?  Turns out we can.</p>
+<p>
+  I love <a href="https://excalidraw.com">Excalidraw</a> for quick diagrams. The
+  hand-drawn aesthetic is charming and the tool is dead simple. But embedding
+  those diagrams in a static site usually means shipping a hefty client-side
+  bundle — or exporting PNGs by hand like some kind of animal.
+</p>
+
+<p>
+  What if we could just drop an <code>.excalidraw</code> file next to our post
+  and have 11ty render it to inline SVG at build time? Turns out we can.
+</p>
 
 <h2>The shortcode</h2>
 
@@ -24,19 +34,37 @@ date: 2026-03-28
 
 <pre><code>{%- raw %}{% excalidraw "./diagram.excalidraw" %}{% endraw %}</code></pre>
 
-<p>That's it.  Point it at a <code>.excalidraw</code> file relative to your post, and the plugin reads the JSON, converts it to SVG, and inlines it directly into your HTML.  No JavaScript ships to the browser.</p>
+<p>
+  That's it. Point it at a <code>.excalidraw</code> file relative to your post,
+  and the plugin reads the JSON, converts it to SVG, and inlines it directly
+  into your HTML. No JavaScript ships to the browser.
+</p>
 
 <h2>How it looks</h2>
 
 <p>Here's an excalidraw diagram rendered at build time:</p>
 
-{% excalidraw "./diagram.excalidraw" %}
+{% excalidraw "./diagram.excalidraw" "wide" %}
 
-<p>That SVG was generated during <code>pnpm build</code>.  View source — there's no <code>&lt;script&gt;</code> tag, no web component, no client-side rendering.  Just an inline SVG.</p>
+<p>
+  That SVG was generated during <code>pnpm build</code>. View source — there's
+  no <code>&lt;script&gt;</code> tag, no web component, no client-side
+  rendering. Just an inline SVG.
+</p>
+
+{% excalidraw "./test.excalidraw" %}
 
 <h2>How it works</h2>
 
-<p>The plugin uses <a href="https://github.com/moona3k/excalidraw-export"><code>@moona3k/excalidraw-export</code></a> which reimplements excalidraw's rendering using pure math from roughjs — no DOM, no canvas, no browser required.  The whole conversion takes under 100ms per diagram.</p>
+<p>
+  The plugin uses
+  <a href="https://github.com/moona3k/excalidraw-export"
+    ><code>@moona3k/excalidraw-export</code></a
+  >
+  which reimplements excalidraw's rendering using pure math from roughjs — no
+  DOM, no canvas, no browser required. The whole conversion takes under 100ms
+  per diagram.
+</p>
 
 <p>The 11ty plugin itself is about 25 lines:</p>
 
@@ -44,12 +72,23 @@ date: 2026-03-28
   <li>Resolve the file path relative to the current post</li>
   <li>Read and parse the <code>.excalidraw</code> JSON</li>
   <li>Call <code>renderToSvg()</code> to get an SVG string</li>
-  <li>Strip the fixed <code>width</code>/<code>height</code> and add responsive styles</li>
+  <li>
+    Strip the fixed <code>width</code>/<code>height</code> and add responsive
+    styles
+  </li>
   <li>Return the inline SVG</li>
 </ol>
 
 <h2>Why not a web component?</h2>
 
-<p>I built a <code>&lt;wc-excalidraw&gt;</code> web component first.  It works fine, but it ships <code>@excalidraw/utils</code> to every visitor (~1.4 MB) just to render a static diagram.  Pre-rendering at build time means the diagram is already in the HTML — the browser just paints it.</p>
+<p>
+  I built a <code>&lt;wc-excalidraw&gt;</code> web component first. It works
+  fine, but it ships <code>@excalidraw/utils</code> to every visitor (~1.4 MB)
+  just to render a static diagram. Pre-rendering at build time means the diagram
+  is already in the HTML — the browser just paints it.
+</p>
 
-<p>For a blog, that tradeoff is obvious.  Save the web components for things that actually need interactivity.</p>
+<p>
+  For a blog, that tradeoff is obvious. Save the web components for things that
+  actually need interactivity.
+</p>

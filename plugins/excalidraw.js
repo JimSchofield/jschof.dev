@@ -3,7 +3,8 @@ import { dirname, resolve } from "node:path";
 import { renderToSvg } from "@moona3k/excalidraw-export";
 
 export default function (eleventyConfig) {
-  eleventyConfig.addAsyncShortcode("excalidraw", async function (filePath) {
+  eleventyConfig.addAsyncShortcode("excalidraw", async function (filePath, extraClasses) {
+    const classes = ["excalidraw", extraClasses].filter(Boolean).join(" ");
     const inputDir = dirname(this.page.inputPath);
     const absPath = resolve(inputDir, filePath);
 
@@ -36,6 +37,7 @@ export default function (eleventyConfig) {
     return oneLine
       .replace(/width="[^"]*"/, "")
       .replace(/height="[^"]*"/, "")
-      .replace("<svg", '<svg style="width:100%;height:auto"');
+      .replace(/<rect width="100%" height="100%" fill="[^"]*"\/>/, "")
+      .replace("<svg", `<svg class="${classes}"`);
   });
 }

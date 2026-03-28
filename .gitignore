@@ -38,3 +38,6 @@ pnpm-debug.log*
 
 # Local Netlify folder
 .netlify
+
+# Claude Code
+.claude/worktrees

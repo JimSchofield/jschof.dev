@@ -13,7 +13,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@11ty/eleventy": "^3.1.2"
+    "@11ty/eleventy": "^3.1.2",
+    "@moona3k/excalidraw-export": "^0.2.1"
   },
   "pnpm": {
     "overrides": {

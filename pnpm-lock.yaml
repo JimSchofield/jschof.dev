@@ -85,6 +85,19 @@ importers:
         specifier: ^5.1.0
         version: 5.4.21(@types/node@20.19.30)
 
+  component/scroll-explain:
+    dependencies:
+      lit:
+        specifier: ^3.1.2
+        version: 3.3.2
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.9.3
+      vite:
+        specifier: ^5.2.0
+        version: 5.4.21(@types/node@20.19.30)
+
 packages:
 
   '@11ty/dependency-tree-esm@2.0.4':

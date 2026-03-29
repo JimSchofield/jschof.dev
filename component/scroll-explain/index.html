@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>scroll-explain</title>
+    <script type="module" src="/src/index.ts"></script>
+    <!-- code-highlight loaded from source for dev; on production site it's a separate bundle -->
+    <script type="module">
+      import "../code-highlight/src/code-highlight.ts";
+    </script>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        color: #1e1e1e;
+        max-width: 1200px;
+        margin-inline: auto;
+      }
+      h1 {
+        text-align: center;
+        margin-bottom: 0;
+      }
+      p.subtitle {
+        text-align: center;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>scroll-explain demo</h1>
+    <p class="subtitle">Scroll down to walk through the code</p>
+
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+      est laborum.
+    </p>
+    <p>
+      Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam
+      varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus
+      magna felis sollicitudin mauris. Integer in mauris eu nibh euismod
+      gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus
+      a elit. Etiam tempor. Ut ullamcorper, ligula ut dictum pharetra, nisi nunc
+      fringilla magna, in commodo elit erat nec turpis. Ut pharetra augue nec
+      augue.
+    </p>
+    <p>
+      Nam dui ligula, fringilla a, euismod sodales, sollicitudin vel, wisi.
+      Morbi auctor lorem non justo. Nam lacus libero, pretium at, lobortis
+      vitae, ultricies et, tellus. Donec aliquet, tortor sed accumsan bibendum,
+      erat ligula aliquet magna, vitae ornare odio metus a mi. Morbi ac orci et
+      nisl hendrerit mollis. Suspendisse ut massa. Cras nec ante. Pellentesque a
+      nulla. Cum sociis natoque penatibus et magnis dis parturient montes,
+      nascetur ridiculus mus. Aliquam tincidunt urna.
+    </p>
+    <p>
+      Pellentesque cursus luctus mauris. Nulla malesuada porttitor diam. Donec
+      felis erat, congue non, volutpat at, tincidunt tristique, libero. Vivamus
+      viverra fermentum felis. Donec nonummy pellentesque ante. Phasellus
+      adipiscing semper elit. Proin fermentum massa ac quam. Sed diam turpis,
+      molestie vitae, placerat a, molestie nec, leo. Maecenas lacinia. Nam ipsum
+      ligula, eleifend at, accumsan nec, suscipit a, ipsum. Morbi blandit ligula
+      feugiat magna.
+    </p>
+
+    <scroll-explain>
+      <explain-section slot="prose" lines="1-2">
+        <h3>The subscriber list</h3>
+        <p>
+          We start with the simplest possible reactive primitive: an array of
+          callback functions and a private variable to hold our data. This is
+          the entire foundation of pub/sub reactivity.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="4-7">
+        <h3>A reactive getter</h3>
+        <p>
+          The store object exposes a <code>value</code> getter that returns the
+          current data. Nothing fancy here — just a clean read interface that
+          hides the private <code>_data</code> variable.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="8-11">
+        <h3>The magic: a reactive setter</h3>
+        <p>
+          This is where it gets interesting. When you <em>set</em> the value, it
+          updates the internal state and then
+          <strong>notifies every subscriber</strong>. This is the core of
+          reactivity — changes propagate automatically.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="12-14">
+        <h3>Subscribing to changes</h3>
+        <p>
+          The <code>effect</code> method lets anyone register a callback. Push a
+          function onto the subscriber list, and it'll be called every time the
+          value changes. Simple, composable, powerful.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="17-19">
+        <h3>The component</h3>
+        <p>
+          Now we build a web component that uses the store. When the component
+          connects to the DOM, it renders itself and wires up an input listener.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="43-43">
+        <h3>Register the custom element</h3>
+        <p>
+          Finally, register the component with the browser so it can be used as
+          <code>&lt;my-component&gt;</code> in HTML.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="24">
+        <h3>Hooking into reactivity</h3>
+        <p>
+          This one line is the key:
+          <code>myStore.effect(() => this.update())</code>. The component
+          subscribes to the store — whenever the value changes (from
+          <em>any</em> source), this component re-renders. Multiple instances of
+          this component will all stay in sync.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="27-32">
+        <h3>Rendering</h3>
+        <p>
+          The render method writes the current value into a
+          <code>&lt;div&gt;</code> and an <code>&lt;input&gt;</code>. This is
+          the initial render — it sets up the full innerHTML.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="34-36">
+        <h3>Handling input</h3>
+        <p>
+          When the user types, the input handler sets
+          <code>myStore.value</code> — which triggers the setter, which notifies
+          all subscribers, which updates all components. The reactive loop is
+          complete. No framework required.
+        </p>
+      </explain-section>
+
+      <explain-section slot="prose" lines="38-41">
+        <h3>Surgical updates</h3>
+        <p>
+          The <code>update</code> method surgically patches just the parts that
+          changed — the <code>&lt;div&gt;</code> text and the
+          <code>&lt;input&gt;</code> value — avoiding a full innerHTML replace.
+        </p>
+      </explain-section>
+
+      <code-highlight slot="code" lang="javascript" dont-pretty line-numbers>
+        <template>
+          <script>
+            const subscribers = [];
+            let _data = "initial data";
+
+            const myStore = {
+              get value() {
+                return _data;
+              },
+              set value(newValue) {
+                _data = newValue;
+                subscribers.forEach((cb) => cb());
+              },
+              effect(cb) {
+                subscribers.push(cb);
+              },
+            };
+
+            class MyComponent extends HTMLElement {
+              connectedCallback() {
+                this.render();
+                this.querySelector("input").addEventListener(
+                  "input",
+                  this.handleInput,
+                );
+                myStore.effect(() => this.update());
+              }
+
+              render() {
+                this.innerHTML = `
+      <div>${myStore.value}</div>
+      <input type="text" value="${myStore.value}" />
+    `;
+              }
+
+              handleInput = (event) => {
+                myStore.value = event.target.value;
+              };
+
+              update() {
+                this.querySelector("div").textContent = myStore.value;
+                this.querySelector("input").value = myStore.value;
+              }
+            }
+            customElements.define("my-component", MyComponent);
+          </script>
+        </template>
+      </code-highlight>
+    </scroll-explain>
+
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod
+      tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim
+      veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+      commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
+      velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
+      cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id
+      est laborum.
+    </p>
+    <p>
+      Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam
+      varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus
+      magna felis sollicitudin mauris. Integer in mauris eu nibh euismod
+      gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus
+      a elit. Etiam tempor. Ut ullamcorper, ligula ut dictum pharetra, nisi nunc
+      fringilla magna, in commodo elit erat nec turpis. Ut pharetra augue nec
+      augue.
+    </p>
+    <p>
+      Nam dui ligula, fringilla a, euismod sodales, sollicitudin vel, wisi.
+      Morbi auctor lorem non justo. Nam lacus libero, pretium at, lobortis
+      vitae, ultricies et, tellus. Donec aliquet, tortor sed accumsan bibendum,
+      erat ligula aliquet magna, vitae ornare odio metus a mi. Morbi ac orci et
+      nisl hendrerit mollis. Suspendisse ut massa. Cras nec ante. Pellentesque a
+      nulla. Cum sociis natoque penatibus et magnis dis parturient montes,
+      nascetur ridiculus mus. Aliquam tincidunt urna.
+    </p>
+    <p>
+      Pellentesque cursus luctus mauris. Nulla malesuada porttitor diam. Donec
+      felis erat, congue non, volutpat at, tincidunt tristique, libero. Vivamus
+      viverra fermentum felis. Donec nonummy pellentesque ante. Phasellus
+      adipiscing semper elit. Proin fermentum massa ac quam. Sed diam turpis,
+      molestie vitae, placerat a, molestie nec, leo. Maecenas lacinia. Nam ipsum
+      ligula, eleifend at, accumsan nec, suscipit a, ipsum. Morbi blandit ligula
+      feugiat magna.
+    </p>
+  </body>
+</html>

@@ -56,6 +56,9 @@ export class CodeHighlight extends LitElement {
   @property({ attribute: "dont-pretty", type: Boolean })
   dontPretty = false;
 
+  @property({ attribute: "line-numbers", type: Boolean, reflect: true })
+  lineNumbers = false;
+
   private handleTemplate() {
     // We expect a single script tag in a template to hold content in DOM
     const fragment = this.querySelector("template")?.content;
@@ -122,8 +125,18 @@ export class CodeHighlight extends LitElement {
     this.prettifyAndSet(content);
   }
 
+  #dedent(text: string): string {
+    const lines = text.replace(/^\n+/, "").replace(/\s+$/, "").split("\n");
+    // Use the first non-empty line's indent as the base — template literals
+    // or other embedded content may have less indentation than the code itself
+    const firstNonEmpty = lines.find((l) => l.trim().length > 0);
+    const baseIndent = firstNonEmpty?.match(/^(\s*)/)?.[1].length ?? 0;
+    if (baseIndent === 0) return lines.join("\n");
+    return lines.map((l) => l.startsWith(" ".repeat(baseIndent)) ? l.slice(baseIndent) : l).join("\n");
+  }
+
   prettifyAndSet(content: string, parser = this.lang) {
-    this.content = content;
+    this.content = this.#dedent(content);
 
     if (!this.dontPretty) {
       prettier
@@ -138,6 +151,9 @@ export class CodeHighlight extends LitElement {
   @property()
   lang = "html";
 
+  @property({ attribute: "active-lines" })
+  activeLines = "";
+
   @state()
   content = "";
 
@@ -145,11 +161,117 @@ export class CodeHighlight extends LitElement {
     return hljs.highlight(this.content, { language: this.lang }).value;
   }
 
-  updated() {
-    const codeEl = this.shadowRoot?.querySelector("code");
-    if (codeEl) {
-      codeEl.innerHTML = this.#rendered.trim();
+  #splitIntoLines(highlightedHtml: string): string[] {
+    const lines: string[] = [];
+    let current = "";
+    const openTags: string[] = [];
+
+    let i = 0;
+    while (i < highlightedHtml.length) {
+      if (highlightedHtml[i] === "\n") {
+        lines.push(current + openTags.map(() => "</span>").reverse().join(""));
+        current = openTags.join("");
+        i++;
+      } else if (highlightedHtml[i] === "<") {
+        const closeMatch = highlightedHtml.slice(i).match(/^<\/span>/);
+        if (closeMatch) {
+          current += closeMatch[0];
+          openTags.pop();
+          i += closeMatch[0].length;
+        } else {
+          const openMatch = highlightedHtml.slice(i).match(/^<span[^>]*>/);
+          if (openMatch) {
+            current += openMatch[0];
+            openTags.push(openMatch[0]);
+            i += openMatch[0].length;
+          } else {
+            current += highlightedHtml[i];
+            i++;
+          }
+        }
+      } else {
+        current += highlightedHtml[i];
+        i++;
+      }
     }
+    if (current) {
+      lines.push(current + openTags.map(() => "</span>").reverse().join(""));
+    }
+    return lines;
+  }
+
+  #parseActiveLines(): Set<number> {
+    const active = new Set<number>();
+    if (!this.activeLines) return active;
+
+    for (const part of this.activeLines.split(",")) {
+      const trimmed = part.trim();
+      if (trimmed.includes("-")) {
+        const [a, b] = trimmed.split("-").map(Number);
+        for (let i = a; i <= b; i++) active.add(i);
+      } else {
+        active.add(Number(trimmed));
+      }
+    }
+    return active;
+  }
+
+  setActiveLines(lineSpec: string) {
+    this.activeLines = lineSpec;
+  }
+
+  clearActiveLines() {
+    this.activeLines = "";
+  }
+
+  getFirstActiveLine(): HTMLElement | null {
+    return (
+      this.shadowRoot?.querySelector<HTMLElement>(".line.active") ?? null
+    );
+  }
+
+  getScrollContainer(): HTMLElement {
+    return this;
+  }
+
+  private _lastRendered = "";
+
+  updated(changed: Map<string, unknown>) {
+    const codeEl = this.shadowRoot?.querySelector("code");
+    if (!codeEl) return;
+
+    const rendered = this.#rendered.trim();
+
+    // Only rebuild DOM when the code content changes
+    if (rendered !== this._lastRendered) {
+      this._lastRendered = rendered;
+      const lines = this.#splitIntoLines(rendered);
+      codeEl.innerHTML = lines
+        .map(
+          (line, i) =>
+            `<span class="line" data-line="${i + 1}">${line || "&nbsp;"}</span>`,
+        )
+        .join("");
+    }
+
+    // Update active/dimmed classes (preserves DOM so transitions work)
+    if (changed.has("activeLines") || rendered !== this._lastRendered) {
+      this.#applyActiveClasses(codeEl);
+    }
+  }
+
+  #applyActiveClasses(codeEl: HTMLElement) {
+    const active = this.#parseActiveLines();
+    const hasActive = active.size > 0;
+    const lineEls = codeEl.querySelectorAll<HTMLElement>(".line");
+
+    for (const el of lineEls) {
+      const lineNum = Number(el.dataset.line);
+      const isActive = active.has(lineNum);
+      el.classList.toggle("active", hasActive && isActive);
+      el.classList.toggle("dimmed", hasActive && !isActive);
+    }
+
   }
 
   render() {
@@ -159,27 +281,71 @@ export class CodeHighlight extends LitElement {
   static styles = [
     unsafeCSS(tokyoNight),
     css`
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
       :host {
-        display: flex;
+        display: block;
         max-width: 100%;
+        max-height: var(--code-max-height, none);
+        border-radius: var(--code-border-radius, 8px);
         overflow: auto;
+        scrollbar-width: none;
+      }
+
+      :host::-webkit-scrollbar {
+        display: none;
       }
 
       pre {
-        display: flex;
         margin: 0;
         width: 100%;
-        border-radius: 8px;
-        overflow: hidden;
+        border-radius: var(--code-border-radius, 8px);
       }
 
       code.hljs {
         width: 100%;
+        min-width: fit-content;
         font-size: 0.85em;
         font-family: "Fira Code", monospace;
         line-height: 1.4;
         padding: 0.5rem 0.75rem;
+        padding-bottom: var(--code-padding-bottom, 0.5rem);
         border: none;
+      }
+
+      :host([line-numbers]) code.hljs {
+        padding-left: 0;
+      }
+
+      :host([line-numbers]) .line::before {
+        content: attr(data-line);
+        display: inline-block;
+        width: 3ch;
+        margin-right: 0.75em;
+        text-align: right;
+        color: rgba(255, 255, 255, 0.25);
+        user-select: none;
+      }
+
+      .line {
+        display: block;
+        padding: 0 0.75rem;
+        margin: 0 -0.75rem;
+        background: transparent;
+        transition: opacity 0.4s ease, background 0.4s ease;
+      }
+
+      .line.dimmed {
+        opacity: 0.4;
+      }
+
+      .line.active {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.05);
       }
     `,
   ];

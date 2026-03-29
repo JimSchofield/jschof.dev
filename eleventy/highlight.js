@@ -7,7 +7,7 @@ export default function (eleventyConfig, _options) {
 
   eleventyConfig.on("eleventy.before", async () => {
     const shiki = await import("shiki");
-    const highlighter = await shiki.getHighlighter({
+    const highlighter = await shiki.createHighlighter({
       themes: ["tokyo-night"],
       langs: ["css", "javascript", "typescript", "html"],
     });

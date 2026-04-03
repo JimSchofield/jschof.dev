@@ -159,11 +159,26 @@ export class PlayGround extends LitElement {
     }
   }
 
+  private iframeInitialized = false;
+
   private updateIframeContent() {
-    if (this.iframe) {
-      const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
-        .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+    if (!this.iframe) return;
+
+    const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
+      .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+
+    if (!this.iframeInitialized) {
+      // First load: use srcdoc so the iframe gets its initial content
       this.iframe.srcdoc = content;
+      this.iframeInitialized = true;
+    } else {
+      // Subsequent updates: write directly to avoid pushing history entries
+      const doc = this.iframe.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(content);
+        doc.close();
+      }
     }
   }
 
@@ -245,7 +260,7 @@ export class PlayGround extends LitElement {
           </div>
         </div>
         <iframe
-          sandbox="allow-scripts allow-forms"
+          sandbox="allow-scripts allow-forms allow-same-origin"
           id="view"
         ></iframe>
       </div>

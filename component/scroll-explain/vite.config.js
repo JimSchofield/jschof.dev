@@ -9,6 +9,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: 'src/index.ts',
+      external: (id) =>
+        /^(lit|@lit\/)/.test(id),
       output: {
         entryFileNames: `assets/[name].js`,
         chunkFileNames: `assets/[name].js`,

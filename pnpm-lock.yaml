@@ -9,9 +9,6 @@ catalogs:
     '@lit/task':
       specifier: ^1.0.1
       version: 1.0.3
-    lit:
-      specifier: ^3.2.0
-      version: 3.3.2
     prettier:
       specifier: ^3.6.2
       version: 3.8.1
@@ -34,6 +31,27 @@ importers:
       '@11ty/eleventy-plugin-rss':
         specifier: ^3.0.0
         version: 3.0.0
+      '@codemirror/commands':
+        specifier: ^6.10.0
+        version: 6.10.3
+      '@codemirror/lang-html':
+        specifier: ^6.4.8
+        version: 6.4.11
+      '@codemirror/lang-javascript':
+        specifier: ^6.2.4
+        version: 6.2.5
+      '@codemirror/language':
+        specifier: ^6.10.1
+        version: 6.12.3
+      '@codemirror/state':
+        specifier: ^6.5.2
+        version: 6.6.0
+      '@codemirror/theme-one-dark':
+        specifier: ^6.1.3
+        version: 6.1.3
+      '@codemirror/view':
+        specifier: ^6.38.8
+        version: 6.41.0
       '@jschofield/code-highlight':
         specifier: workspace:*
         version: link:component/code-highlight
@@ -52,9 +70,15 @@ importers:
       '@jschofield/scroll-explain':
         specifier: workspace:*
         version: link:component/scroll-explain
+      '@replit/codemirror-vim':
+        specifier: ^6.3.0
+        version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)
       baseline-status:
         specifier: ^1.1.1
         version: 1.1.1
+      codemirror:
+        specifier: ^6.0.1
+        version: 6.0.2
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -73,6 +97,12 @@ importers:
       happy-dom:
         specifier: ^20.8.9
         version: 20.8.9
+      lit:
+        specifier: ^3.2.0
+        version: 3.3.2
+      prettier:
+        specifier: ^3.6.2
+        version: 3.8.1
       shiki:
         specifier: ^4.0.2
         version: 4.0.2
@@ -93,10 +123,10 @@ importers:
         specifier: ^11.9.0
         version: 11.11.1
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
       prettier:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.8.1
     devDependencies:
       typescript:
@@ -133,10 +163,10 @@ importers:
         specifier: ^6.0.1
         version: 6.0.2
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
       prettier:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.8.1
     devDependencies:
       typescript:
@@ -155,7 +185,7 @@ importers:
         specifier: ^7.0.0
         version: 7.2.0
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
     devDependencies:
       typescript:
@@ -171,7 +201,7 @@ importers:
         specifier: ^1.1.1
         version: 1.1.3
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
     devDependencies:
       typescript:
@@ -205,7 +235,7 @@ importers:
         specifier: ^6.3.0
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
     devDependencies:
       '@typescript-eslint/eslint-plugin':
@@ -236,7 +266,7 @@ importers:
   component/scroll-explain:
     dependencies:
       lit:
-        specifier: 'catalog:'
+        specifier: ^3.0.0
         version: 3.3.2
     devDependencies:
       typescript:

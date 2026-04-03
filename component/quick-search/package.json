@@ -24,8 +24,10 @@
   },
   "dependencies": {
     "@lit/task": "catalog:",
-    "fuse.js": "^7.0.0",
-    "lit": "catalog:"
+    "fuse.js": "^7.0.0"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "catalog:",

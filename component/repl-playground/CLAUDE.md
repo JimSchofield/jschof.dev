@@ -19,13 +19,23 @@ This is a secure JavaScript REPL (Read-Eval-Print-Loop) web component built with
 
 ## Technology Stack
 
-- **Vite** v5.2.0 - Build tool and dev server
-- **Lit** v3.1.2 - Web component framework  
-- **TypeScript** v5.2.2 - Type safety with strict configuration
-- **CodeMirror 6** - Code editor with JavaScript syntax highlighting, vim mode support
+- **Vite** - Build tool and dev server (version managed via pnpm catalog)
+- **Lit** - Web component framework (peer dependency, `^3.0.0`)
+- **TypeScript** - Type safety with strict configuration (version managed via pnpm catalog)
+- **CodeMirror 6** - Code editor with JavaScript syntax highlighting, vim mode support (peer dependencies)
 - **ESM modules** throughout
-- **Prettier** v3.6.2 - Code formatting
-- **ESLint** v9.39.1 - Code linting with TypeScript and Lit support
+- **Prettier** - Code formatting (peer dependency, `^3.0.0`)
+
+### Peer Dependencies
+
+This component externalizes shared libraries as peer dependencies. The consuming app must provide them. See `peerDependencies` in `package.json` for the full list:
+
+- `lit` ^3.0.0
+- `prettier` ^3.0.0
+- `@codemirror/commands`, `@codemirror/lang-javascript`, `@codemirror/language`, `@codemirror/state`, `@codemirror/theme-one-dark`, `@codemirror/view`
+- `@replit/codemirror-vim` ^6.3.0
+
+The Vite build config (`vite.config.js`) uses `rollupOptions.external` to exclude these from the bundle.
 
 ## Component Architecture
 

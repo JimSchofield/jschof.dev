@@ -21,6 +21,7 @@ export default function (eleventyConfig) {
   });
 
   eleventyConfig.addWatchTarget("site-entry.js");
+  eleventyConfig.addWatchTarget("component/*/dist/");
 
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });

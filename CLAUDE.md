@@ -82,6 +82,17 @@ Custom web components live in `component/` as **pnpm workspace packages** (Vite 
 | `@jschofield/repl-playground` | `component/repl-playground/` | REPL-based playground |
 | `@jschofield/scroll-explain` | `component/scroll-explain/` | Scroll-driven explanations |
 
+**Peer dependencies**: Components externalize shared libraries as peer dependencies to avoid bundle duplication. The root `package.json` provides all peer deps (lit, prettier, codemirror, @codemirror/*, @replit/codemirror-vim) as regular dependencies, so esbuild deduplicates them into a single copy in the final bundle. Each component's `vite.config.js` uses `rollupOptions.external` with a regex to exclude peer deps from its own build.
+
+| Component | Peer deps |
+|---|---|
+| `code-highlight` | lit, prettier |
+| `play-ground` | lit, prettier, codemirror, @codemirror/*, @replit/codemirror-vim |
+| `quick-search` | lit |
+| `reading-list` | lit |
+| `repl-playground` | lit, prettier, @codemirror/*, @replit/codemirror-vim |
+| `scroll-explain` | lit |
+
 **Build pattern**: Each component builds with `tsc && vite build` into its own `dist/` directory. The root project imports them as workspace dependencies via `site-entry.js`, which esbuild bundles into the final `_site/index.js`.
 
 To rebuild a single component:

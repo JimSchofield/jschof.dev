@@ -8,6 +8,18 @@ A Cmd+K search modal web component built with [Lit](https://lit.dev/) and [Fuse.
 npm install @jschofield/quick-search
 ```
 
+### Peer dependencies
+
+This component requires the following peer dependency:
+
+```bash
+npm install lit
+```
+
+| Peer | Version |
+|---|---|
+| `lit` | `^3.0.0` |
+
 ## Usage
 
 ```html
@@ -16,6 +28,22 @@ npm install @jschofield/quick-search
 </script>
 
 <quick-search></quick-search>
+```
+
+### Without a bundler
+
+If you're not using a bundler, provide peer dependencies via an import map:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "lit": "https://esm.run/lit",
+    "lit/": "https://esm.run/lit/"
+  }
+}
+</script>
+<script type="module" src="https://esm.run/@jschofield/quick-search"></script>
 ```
 
 No attributes needed — drop it in and it works.

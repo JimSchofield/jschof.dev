@@ -8,6 +8,19 @@ Syntax highlighting web component built with [Lit](https://lit.dev/) and [highli
 npm install @jschofield/code-highlight
 ```
 
+### Peer dependencies
+
+This component requires the following peer dependencies:
+
+```bash
+npm install lit prettier
+```
+
+| Peer | Version |
+|---|---|
+| `lit` | `^3.0.0` |
+| `prettier` | `^3.0.0` |
+
 ## Usage
 
 ```html
@@ -48,6 +61,24 @@ npm install @jschofield/code-highlight
     </style>
   </template>
 </code-highlight>
+```
+
+### Without a bundler
+
+If you're not using a bundler, provide peer dependencies via an import map:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "lit": "https://esm.run/lit",
+    "lit/": "https://esm.run/lit/",
+    "prettier/standalone": "https://esm.run/prettier/standalone",
+    "prettier/plugins/": "https://esm.run/prettier/plugins/"
+  }
+}
+</script>
+<script type="module" src="https://esm.run/@jschofield/code-highlight"></script>
 ```
 
 ## Attributes

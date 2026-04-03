@@ -8,6 +8,18 @@ A scroll-driven code walkthrough web component built with [Lit](https://lit.dev/
 npm install @jschofield/scroll-explain @jschofield/code-highlight
 ```
 
+### Peer dependencies
+
+This component requires the following peer dependency:
+
+```bash
+npm install lit
+```
+
+| Peer | Version |
+|---|---|
+| `lit` | `^3.0.0` |
+
 ## Usage
 
 ```html
@@ -52,6 +64,23 @@ npm install @jschofield/scroll-explain @jschofield/code-highlight
     </template>
   </code-highlight>
 </scroll-explain>
+```
+
+### Without a bundler
+
+If you're not using a bundler, provide peer dependencies via an import map:
+
+```html
+<script type="importmap">
+{
+  "imports": {
+    "lit": "https://esm.run/lit",
+    "lit/": "https://esm.run/lit/"
+  }
+}
+</script>
+<script type="module" src="https://esm.run/@jschofield/scroll-explain"></script>
+<script type="module" src="https://esm.run/@jschofield/code-highlight"></script>
 ```
 
 ## Slots

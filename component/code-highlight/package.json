@@ -23,9 +23,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "highlight.js": "^11.9.0",
-    "lit": "catalog:",
-    "prettier": "catalog:"
+    "highlight.js": "^11.9.0"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0",
+    "prettier": "^3.0.0"
   },
   "devDependencies": {
     "typescript": "catalog:",

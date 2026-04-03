@@ -6,7 +6,9 @@
   "exports": {
     ".": "./dist/assets/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "description": "Interactive code editor/playground web component built with Lit and CodeMirror",
   "author": "Jim Schofield",
   "license": "MIT",

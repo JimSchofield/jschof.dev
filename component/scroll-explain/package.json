@@ -6,8 +6,10 @@
   "exports": {
     ".": "./dist/assets/index.js"
   },
-  "files": ["dist"],
-  "description": "Scroll-driven explanation web component built with Lit",
+  "files": [
+    "dist"
+  ],
+  "description": "Scroll-driven explanation web component built with Lit, uses code-highlight",
   "author": "Jim Schofield",
   "license": "MIT",
   "repository": {

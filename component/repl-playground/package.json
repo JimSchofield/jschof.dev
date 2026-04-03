@@ -6,7 +6,9 @@
   "exports": {
     ".": "./dist/assets/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "description": "Interactive JavaScript REPL web component built with Lit and CodeMirror",
   "author": "Jim Schofield",
   "license": "MIT",

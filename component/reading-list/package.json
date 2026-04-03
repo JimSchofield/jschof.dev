@@ -6,7 +6,9 @@
   "exports": {
     ".": "./dist/assets/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "description": "Reading list web component built with Lit",
   "author": "Jim Schofield",
   "license": "MIT",

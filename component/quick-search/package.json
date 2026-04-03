@@ -6,7 +6,9 @@
   "exports": {
     ".": "./dist/assets/index.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "description": "Site-wide search web component built with Lit and Fuse.js",
   "author": "Jim Schofield",
   "license": "MIT",

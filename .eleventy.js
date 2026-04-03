@@ -3,10 +3,25 @@ import pluginSEO from "eleventy-plugin-seo";
 import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
+import * as esbuild from "esbuild";
 import highlightPlugin from "./eleventy/highlight.js";
 import autoHeadingIds from "./plugins/auto-heading-ids.js";
 
 export default function (eleventyConfig) {
+  // Bundle src/index.js with esbuild (resolves bare workspace imports)
+  eleventyConfig.on("eleventy.before", async () => {
+    await esbuild.build({
+      entryPoints: ["site-entry.js"],
+      bundle: true,
+      outfile: "_site/index.js",
+      format: "esm",
+      minify: process.env.NODE_ENV === "production",
+      sourcemap: process.env.NODE_ENV !== "production",
+    });
+  });
+
+  eleventyConfig.addWatchTarget("site-entry.js");
+
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
@@ -18,10 +33,6 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.webmanifest");
   eleventyConfig.addPassthroughCopy("./.well-known/atproto-did");
   eleventyConfig.addPassthroughCopy("./_redirects");
-  eleventyConfig.addPassthroughCopy({
-    "./node_modules/baseline-status/baseline-status.min.js":
-      "js/baseline-status.min.js",
-  });
 
   const title = "Jschof.dev";
   const description =

@@ -1,1 +1,0 @@
-../../component/reading-list/dist/assets/index.js

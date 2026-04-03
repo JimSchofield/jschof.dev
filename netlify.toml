@@ -1,12 +1,12 @@
 [build]
   publish = "_site"
-  command = "pnpm dlx @11ty/eleventy"
+  command = "pnpm build"
 
 [functions]
   directory = "netlify/functions"
 
 [dev]
-  command = "pnpm dlx @11ty/eleventy --serve"
+  command = "pnpm start"
   publish = "_site"
   framework = "#auto"
   targetPort = 8080

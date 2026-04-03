@@ -1,8 +1,20 @@
 {
-  "name": "reading-list",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@jschofield/reading-list",
+  "version": "0.1.0",
   "type": "module",
+  "main": "./dist/assets/index.js",
+  "exports": {
+    ".": "./dist/assets/index.js"
+  },
+  "files": ["dist"],
+  "description": "Reading list web component built with Lit",
+  "author": "Jim Schofield",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JimSchofield/jschof.dev",
+    "directory": "component/reading-list"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -10,10 +22,10 @@
   },
   "dependencies": {
     "google-logging-utils": "^1.1.1",
-    "lit": "^3.1.2"
+    "lit": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

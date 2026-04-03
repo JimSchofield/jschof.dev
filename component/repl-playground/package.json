@@ -1,8 +1,20 @@
 {
-  "name": "repl-playground",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@jschofield/repl-playground",
+  "version": "0.1.0",
   "type": "module",
+  "main": "./dist/assets/index.js",
+  "exports": {
+    ".": "./dist/assets/index.js"
+  },
+  "files": ["dist"],
+  "description": "Interactive JavaScript REPL web component built with Lit and CodeMirror",
+  "author": "Jim Schofield",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JimSchofield/jschof.dev",
+    "directory": "component/repl-playground"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -16,11 +28,12 @@
   "dependencies": {
     "@codemirror/commands": "^6.10.0",
     "@codemirror/lang-javascript": "^6.2.4",
+    "@codemirror/language": "^6.10.1",
     "@codemirror/state": "^6.5.2",
     "@codemirror/theme-one-dark": "^6.1.3",
     "@codemirror/view": "^6.38.8",
     "@replit/codemirror-vim": "^6.3.0",
-    "lit": "^3.1.2"
+    "lit": "catalog:"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^8.48.0",
@@ -28,8 +41,8 @@
     "eslint": "^9.39.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-lit": "^2.1.1",
-    "prettier": "^3.6.2",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

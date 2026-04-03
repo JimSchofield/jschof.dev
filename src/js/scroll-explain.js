@@ -1,1 +1,0 @@
-../../component/scroll-explain/dist/assets/index.js

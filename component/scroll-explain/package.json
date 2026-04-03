@@ -1,18 +1,33 @@
 {
-  "name": "scroll-explain",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@jschofield/scroll-explain",
+  "version": "0.2.0",
   "type": "module",
+  "main": "./dist/assets/index.js",
+  "exports": {
+    ".": "./dist/assets/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "description": "Scroll-driven explanation web component built with Lit, uses code-highlight",
+  "author": "Jim Schofield",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JimSchofield/jschof.dev",
+    "directory": "component/scroll-explain"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "lit": "^3.1.2"
+  "dependencies": {},
+  "peerDependencies": {
+    "lit": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Check if any component source files are staged
+COMPONENT_CHANGES=$(git diff --cached --name-only -- 'component/*/src/**')
+
+if [ -z "$COMPONENT_CHANGES" ]; then
+  exit 0
+fi
+
+# Check if a changeset file is also staged
+CHANGESET_ADDED=$(git diff --cached --name-only -- '.changeset/*.md' | grep -v README.md)
+
+if [ -z "$CHANGESET_ADDED" ]; then
+  echo ""
+  echo "⚠️  Component source files changed but no changeset found:"
+  echo "$COMPONENT_CHANGES" | sed 's/^/   /'
+  echo ""
+  echo "  Run 'pnpm changeset' to add one, then 'git add .changeset'"
+  echo "  Or skip with --no-verify if this change doesn't affect consumers."
+  echo ""
+  exit 1
+fi

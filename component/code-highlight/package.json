@@ -1,20 +1,36 @@
 {
-  "name": "code-highlight",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@jschofield/code-highlight",
+  "version": "0.2.0",
   "type": "module",
+  "main": "./dist/assets/index.js",
+  "exports": {
+    ".": "./dist/assets/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "description": "Syntax highlighting web component built with Lit and highlight.js",
+  "author": "Jim Schofield",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JimSchofield/jschof.dev",
+    "directory": "component/code-highlight"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "highlight.js": "^11.9.0",
-    "lit": "^3.1.2",
-    "prettier": "^3.2.5"
+    "highlight.js": "^11.9.0"
+  },
+  "peerDependencies": {
+    "lit": "^3.0.0",
+    "prettier": "^3.0.0"
   },
   "devDependencies": {
-    "typescript": "^6.0.2",
-    "vite": "^8.0.3"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

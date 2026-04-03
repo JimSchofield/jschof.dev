@@ -152,19 +152,30 @@ export class PlayGround extends LitElement {
     this.editorView?.destroy();
   }
 
+  private iframeContainer?: HTMLElement;
+
   private setupIframe() {
-    this.iframe = this.shadowRoot?.querySelector('#view') as HTMLIFrameElement;
-    if (this.iframe) {
+    this.iframeContainer = this.shadowRoot?.querySelector('#view-container') as HTMLElement;
+    if (this.iframeContainer) {
       this.updateIframeContent();
     }
   }
 
   private updateIframeContent() {
+    if (!this.iframeContainer) return;
+
+    const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
+      .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+
+    // Replace the iframe entirely to avoid history entries and get a fresh
+    // CustomElementRegistry (prevents "name already used" errors on re-render)
     if (this.iframe) {
-      const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
-        .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
-      this.iframe.srcdoc = content;
+      this.iframe.remove();
     }
+    this.iframe = document.createElement('iframe');
+    this.iframe.sandbox.add('allow-scripts', 'allow-forms', 'allow-same-origin');
+    this.iframe.srcdoc = content;
+    this.iframeContainer.appendChild(this.iframe);
   }
 
   async format(template: string = "") {
@@ -244,23 +255,25 @@ export class PlayGround extends LitElement {
             </label>
           </div>
         </div>
-        <iframe
-          sandbox="allow-scripts allow-forms"
-          id="view"
-        ></iframe>
+        <div id="view-container"></div>
       </div>
     </div>`;
   }
 
   static styles = css`
+    :host {
+      display: block;
+    }
+
     #editor {
       font-size: 14px;
-      border: 1px solid black;
-      border-bottom: none;
     }
 
     .query-container {
       container-type: inline-size;
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
     }
 
     .editor-container {
@@ -272,6 +285,16 @@ export class PlayGround extends LitElement {
       }
     }
 
+    #view-container {
+      display: flex;
+      border-left: 1px solid #333;
+    }
+
+    #view-container iframe {
+      width: 100%;
+      border: none;
+    }
+
     .editor-wrapper {
       display: flex;
       flex-direction: column;
@@ -281,8 +304,7 @@ export class PlayGround extends LitElement {
       display: flex;
       gap: 8px;
       padding: 6px 8px;
-      border: 1px solid black;
-      border-top: none;
+      border-top: 1px solid #333;
       background: var(--seasalt, #fafafa);
     }
 

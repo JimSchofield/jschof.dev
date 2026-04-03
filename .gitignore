@@ -4,6 +4,7 @@ component/*/node_modules
 
 # Build outputs
 _site
+component/*/dist
 
 # Lock files for components (keep root lock file)
 component/*/pnpm-lock.yaml

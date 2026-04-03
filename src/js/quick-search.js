@@ -1,1 +1,0 @@
-../../component/quick-search/dist/assets/index.js

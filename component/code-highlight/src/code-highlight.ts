@@ -292,6 +292,7 @@ export class CodeHighlight extends LitElement {
         max-width: 100%;
         max-height: var(--code-max-height, none);
         border-radius: var(--code-border-radius, 8px);
+        border: var(--code-outline, none);
         overflow: auto;
         scrollbar-width: none;
       }

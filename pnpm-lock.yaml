@@ -70,6 +70,9 @@ importers:
       '@jschofield/scroll-explain':
         specifier: workspace:*
         version: link:component/scroll-explain
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@replit/codemirror-vim':
         specifier: ^6.3.0
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)
@@ -156,6 +159,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.24.1
         version: 6.41.0
+      '@lezer/highlight':
+        specifier: ^1.2.0
+        version: 1.2.3
       '@replit/codemirror-vim':
         specifier: ^6.3.0
         version: 6.3.0(@codemirror/commands@6.10.3)(@codemirror/language@6.12.3)(@codemirror/search@6.6.0)(@codemirror/state@6.6.0)(@codemirror/view@6.41.0)

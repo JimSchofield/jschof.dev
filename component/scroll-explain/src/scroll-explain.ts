@@ -70,6 +70,10 @@ export class ScrollExplain extends LitElement {
         if (this._activeSections.size === 0) {
           this._lastActiveLines = "";
           this._codeBlock!.clearActiveLines();
+          if (this._activeSection) {
+            this._activeSection.removeAttribute("active");
+            this._activeSection = null;
+          }
         }
       },
       {
@@ -83,10 +87,19 @@ export class ScrollExplain extends LitElement {
     }
   }
 
+  private _activeSection: ExplainSection | null = null;
+
   private _setActive(section: ExplainSection) {
     const lines = section.lines;
     if (!lines || lines === this._lastActiveLines) return;
     this._lastActiveLines = lines;
+
+    if (this._activeSection && this._activeSection !== section) {
+      this._activeSection.removeAttribute("active");
+    }
+    section.setAttribute("active", "");
+    this._activeSection = section;
+
     this._codeBlock!.setActiveLines(lines);
     this._scrollToActiveLine();
   }

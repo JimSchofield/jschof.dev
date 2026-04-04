@@ -1,5 +1,11 @@
 # @jschofield/quick-search
 
+## 0.3.0
+
+### Minor Changes
+
+- Added dark mode themes and styles
+
 ## 0.2.0
 
 ### Minor Changes

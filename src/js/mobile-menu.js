@@ -2,7 +2,7 @@ export default class MobileMenu {
   constructor(selector) {
     this.el = document.querySelector(selector);
     this.popoverEl = this.el.querySelector("#mobile-menu-popover");
-    this.popoverButtonEl = this.el.querySelector("#mobile-menu .button");
+    this.popoverButtonEl = this.el.querySelector(".hamburger-button");
 
     if (!this.el) {
       throw new Error(
@@ -12,7 +12,7 @@ export default class MobileMenu {
 
     this.isOpen = false;
 
-    this.el.addEventListener("click", this.toggle);
+    this.popoverButtonEl.addEventListener("click", this.toggle);
   }
 
   attachEscapeListener = () => {

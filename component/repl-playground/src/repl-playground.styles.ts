@@ -144,8 +144,14 @@ export const styles = css`
 
   .keyboard-hint {
     font-size: 11px;
-    color: #888;
+    color: #aaa;
     font-style: italic;
+  }
+
+  @media (max-width: 768px) {
+    .keyboard-hint {
+      display: none;
+    }
   }
 
   .vim-toggle {

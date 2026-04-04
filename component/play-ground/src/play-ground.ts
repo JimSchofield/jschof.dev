@@ -13,6 +13,7 @@ import { customElement, property, state } from "lit/decorators.js";
 import { defaultKeymap } from "@codemirror/commands";
 import { html as htmlLang } from "@codemirror/lang-html";
 import { indentWithTab } from "@codemirror/commands";
+import { tokyoNight } from "./codemirror-tokyo-night";
 import { vim } from "@replit/codemirror-vim";
 
 import { foldCode } from "@codemirror/language";
@@ -46,9 +47,19 @@ export class PlayGround extends LitElement {
 
   private iframe?: HTMLIFrameElement;
   private stateChangeCallback?: (newState: { vimMode: "enabled" | "disabled" }) => void;
+  private darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  private darkModeListener = () => this.buildEditor();
+  private themeObserver?: MutationObserver;
 
   get template() {
     return this.querySelector("template");
+  }
+
+  private get isDark() {
+    const theme = document.documentElement.getAttribute("data-theme");
+    if (theme === "dark") return true;
+    if (theme === "light") return false;
+    return this.darkModeQuery.matches;
   }
 
   connectedCallback() {
@@ -65,6 +76,13 @@ export class PlayGround extends LitElement {
       }
     };
     ReplPlaygroundState.subscribe(this.stateChangeCallback);
+
+    this.darkModeQuery.addEventListener("change", this.darkModeListener);
+    this.themeObserver = new MutationObserver(() => this.buildEditor());
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
   }
 
   async initEditorView() {
@@ -88,6 +106,10 @@ export class PlayGround extends LitElement {
     }
 
     extensions.push(drawSelection());
+
+    if (this.isDark) {
+      extensions.push(tokyoNight);
+    }
 
     extensions.push(
       basicSetup,
@@ -149,6 +171,8 @@ export class PlayGround extends LitElement {
     if (this.stateChangeCallback) {
       ReplPlaygroundState.unsubscribe(this.stateChangeCallback);
     }
+    this.darkModeQuery.removeEventListener("change", this.darkModeListener);
+    this.themeObserver?.disconnect();
     this.editorView?.destroy();
   }
 
@@ -164,8 +188,11 @@ export class PlayGround extends LitElement {
   private updateIframeContent() {
     if (!this.iframeContainer) return;
 
-    const content = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
+    const raw = (this.docContents || "<!DOCTYPE html><p>Loading...</p>")
       .replace(`shadowrootmode="open."`, `shadowrootmode="open"`);
+    const content = raw.includes("<head>")
+      ? raw.replace("<head>", `<head><style>html{background:#fff;color:#000;color-scheme:light}</style>`)
+      : `<style>html{background:#fff;color:#000;color-scheme:light}</style>${raw}`;
 
     // Replace the iframe entirely to avoid history entries and get a fresh
     // CustomElementRegistry (prevents "name already used" errors on re-render)
@@ -271,7 +298,7 @@ export class PlayGround extends LitElement {
 
     .query-container {
       container-type: inline-size;
-      border: 1px solid #333;
+      border: 1px solid var(--border, #333);
       border-radius: 8px;
       overflow: hidden;
     }
@@ -287,12 +314,13 @@ export class PlayGround extends LitElement {
 
     #view-container {
       display: flex;
-      border-left: 1px solid #333;
+      border-left: 1px solid var(--border, #333);
     }
 
     #view-container iframe {
       width: 100%;
       border: none;
+      color-scheme: light;
     }
 
     .editor-wrapper {
@@ -304,8 +332,8 @@ export class PlayGround extends LitElement {
       display: flex;
       gap: 8px;
       padding: 6px 8px;
-      border-top: 1px solid #333;
-      background: var(--seasalt, #fafafa);
+      border-top: 1px solid var(--border, #333);
+      background: var(--bg, #fafafa);
     }
 
     .controls button {
@@ -314,23 +342,23 @@ export class PlayGround extends LitElement {
       cursor: pointer;
       border: none;
       border-radius: 8px;
-      background: var(--gunmetal, #1b2f36);
-      color: var(--seasalt, #fafafa);
+      background: var(--button-bg, #1b2f36);
+      color: var(--button-text, #fafafa);
       box-shadow: var(--shadow, 0 4px 8px rgba(0, 0, 0, 0.2));
       transition: color 0.2s;
     }
 
     .controls button:hover,
     .controls button:active {
-      background: var(--gradient, var(--gunmetal, #1b2f36));
-      color: var(--seasalt, #fafafa);
+      background: var(--gradient, var(--button-bg, #1b2f36));
+      color: var(--button-text, #fafafa);
     }
 
     .controls button:focus-visible {
-      outline: 2px solid var(--raw-umber, #906b56);
+      outline: 2px solid var(--link, #906b56);
       outline-offset: 1px;
-      background: var(--gradient, var(--gunmetal, #1b2f36));
-      color: var(--seasalt, #fafafa);
+      background: var(--gradient, var(--button-bg, #1b2f36));
+      color: var(--button-text, #fafafa);
     }
 
     .sr-only {
@@ -352,12 +380,12 @@ export class PlayGround extends LitElement {
       margin-left: auto;
       cursor: pointer;
       font-size: 0.833rem;
-      color: var(--gunmetal, #1b2f36);
+      color: var(--text, #1b2f36);
       user-select: none;
     }
 
     .sr-only:focus-visible + .toggle-track {
-      outline: 2px solid var(--raw-umber, #906b56);
+      outline: 2px solid var(--link, #906b56);
       outline-offset: 2px;
     }
 
@@ -367,14 +395,14 @@ export class PlayGround extends LitElement {
       width: 32px;
       height: 18px;
       border-radius: 9px;
-      background: #d5d5d5;
-      border: 1.5px solid var(--gunmetal, #1b2f36);
+      background: var(--border-subtle, #d5d5d5);
+      border: 1.5px solid var(--border, #1b2f36);
       box-sizing: border-box;
       transition: background 0.2s;
     }
 
     .toggle-track.active {
-      background: var(--gunmetal, #1b2f36);
+      background: var(--accent-secondary, #1b2f36);
     }
 
     .toggle-thumb {
@@ -384,7 +412,7 @@ export class PlayGround extends LitElement {
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      background: var(--seasalt, #fafafa);
+      background: var(--bg, #fafafa);
       transition: transform 0.2s;
     }
 

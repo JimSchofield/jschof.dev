@@ -604,22 +604,19 @@ export class ReadingList extends LitElement {
 
   static styles = css`
     :host {
-      --primary-color: #2563eb;
-      --text-color: #1f2937;
-      --text-secondary: #6b7280;
-      --border-color: #e5e7eb;
-      --bg-color: #ffffff;
-      --bg-hover: #f9fafb;
-      --success-color: #10b981;
-      --warning-color: #f59e0b;
-      --danger-color: #ef4444;
+      --rl-text: var(--text, #1f2937);
+      --rl-text-secondary: var(--text-secondary, #6b7280);
+      --rl-border: var(--border-subtle, #e5e7eb);
+      --rl-bg: var(--bg-surface, #ffffff);
+      --rl-bg-hover: color-mix(in srgb, var(--accent-secondary, #376170) 8%, var(--bg, #f9fafb));
+      --rl-accent: var(--accent-secondary, #2563eb);
 
       display: block;
       font-family:
         -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
         Arial, sans-serif;
       line-height: 1.6;
-      color: var(--text-color);
+      color: var(--rl-text);
     }
 
     * {
@@ -644,7 +641,7 @@ export class ReadingList extends LitElement {
     }
 
     .subtitle {
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       font-size: 1.1rem;
       margin: 0;
     }
@@ -653,21 +650,21 @@ export class ReadingList extends LitElement {
     .error {
       text-align: center;
       padding: 2rem;
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
     }
 
     .error {
-      color: var(--danger-color);
-      background: #fee2e2;
-      border: 1px solid #fecaca;
+      color: #dc2626;
+      background: color-mix(in srgb, #dc2626 10%, var(--rl-bg));
+      border: 1px solid color-mix(in srgb, #dc2626 25%, var(--rl-bg));
       border-radius: 12px;
     }
 
     .filters {
-      background: var(--bg-color);
+      background: var(--rl-bg);
       padding: 1.5rem;
       border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
       margin-bottom: 2rem;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -683,7 +680,7 @@ export class ReadingList extends LitElement {
     .filter-group label {
       font-size: 0.875rem;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.025em;
     }
@@ -691,16 +688,22 @@ export class ReadingList extends LitElement {
     .filter-group input,
     .filter-group select {
       padding: 0.75rem 1rem;
-      border: 2px solid var(--border-color);
+      border: 2px solid var(--rl-border);
       border-radius: 8px;
       font-size: 1rem;
       transition: border-color 0.2s;
     }
 
+    .filter-group input,
+    .filter-group select {
+      background: var(--rl-bg);
+      color: var(--rl-text);
+    }
+
     .filter-group input:focus,
     .filter-group select:focus {
       outline: none;
-      border-color: var(--primary-color);
+      border-color: var(--rl-accent);
     }
 
     .filter-group:has(.clear-filters-btn) {
@@ -711,10 +714,10 @@ export class ReadingList extends LitElement {
     .clear-filters-btn {
       display: inline-block;
       padding: 0.25em 1em;
-      background: #1b2f36; /* --gunmetal from main.css */
-      color: #fafafa; /* --seasalt from main.css */
+      background: var(--button-bg, #1b2f36);
+      color: var(--button-text, #fafafa);
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* --shadow from main.css */
+      box-shadow: var(--shadow, 0 4px 8px rgba(0, 0, 0, 0.2));
       text-decoration: none;
       font: inherit;
       border: none;
@@ -724,35 +727,21 @@ export class ReadingList extends LitElement {
 
     .clear-filters-btn:active,
     .clear-filters-btn:hover {
-      color: #fafafa; /* --seasalt */
-      background: linear-gradient(
-        135deg,
-        #4d5963 0% 20%,
-        #f79103 20% 40%,
-        #376170 40% 60%,
-        #906b56 60% 80%,
-        #1b2f36 80% 100%
-      ); /* --gradient */
+      color: var(--button-text, #fafafa);
+      background: var(--gradient);
     }
 
     .clear-filters-btn:focus-visible {
-      color: #fafafa; /* --seasalt */
-      outline: 2px solid #906b56; /* --raw-umber */
+      color: var(--button-text, #fafafa);
+      outline: 2px solid var(--link, #906b56);
       outline-offset: 1px;
-      background: linear-gradient(
-        135deg,
-        #4d5963 0% 20%,
-        #f79103 20% 40%,
-        #376170 40% 60%,
-        #906b56 60% 80%,
-        #1b2f36 80% 100%
-      ); /* --gradient */
+      background: var(--gradient);
     }
 
     .table-container {
-      background: var(--bg-color);
+      background: var(--rl-bg);
       border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--shadow, 0 1px 3px rgba(0, 0, 0, 0.1));
       overflow: hidden;
     }
 
@@ -762,15 +751,15 @@ export class ReadingList extends LitElement {
     }
 
     th {
-      background: var(--bg-hover);
+      background: var(--rl-bg-hover);
       padding: 1rem;
       text-align: left;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       text-transform: uppercase;
       font-size: 0.875rem;
       letter-spacing: 0.025em;
-      border-bottom: 2px solid var(--border-color);
+      border-bottom: 2px solid var(--rl-border);
     }
 
     th:has(.sort-header) {
@@ -784,7 +773,7 @@ export class ReadingList extends LitElement {
       border: none;
       text-align: left;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       text-transform: uppercase;
       font-size: 0.875rem;
       letter-spacing: 0.025em;
@@ -796,24 +785,24 @@ export class ReadingList extends LitElement {
     }
 
     .sort-header:hover {
-      background-color: var(--border-color);
-      color: var(--text-color);
+      background-color: var(--rl-border);
+      color: var(--rl-text);
     }
 
     .sort-header:focus {
       outline: none;
-      background-color: var(--primary-color);
-      color: white;
+      background-color: var(--rl-accent);
+      color: var(--button-text, white);
     }
 
     td {
       padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--rl-border);
       vertical-align: top;
     }
 
     tbody tr:hover {
-      background-color: var(--bg-hover);
+      background-color: var(--rl-bg-hover);
     }
 
     tbody tr:last-child td {
@@ -830,55 +819,55 @@ export class ReadingList extends LitElement {
     }
 
     .status-reading {
-      background-color: #dbeafe;
-      color: #1d4ed8;
+      background-color: color-mix(in srgb, #3b82f6 15%, var(--rl-bg));
+      color: color-mix(in srgb, #3b82f6 80%, var(--rl-text));
     }
 
     .status-finished {
-      background-color: #d1fae5;
-      color: #065f46;
+      background-color: color-mix(in srgb, #10b981 15%, var(--rl-bg));
+      color: color-mix(in srgb, #10b981 80%, var(--rl-text));
     }
 
     .status-ah.naw,
     .status-ah-naw {
-      background-color: #fee2e2;
-      color: #991b1b;
+      background-color: color-mix(in srgb, #ef4444 15%, var(--rl-bg));
+      color: color-mix(in srgb, #ef4444 80%, var(--rl-text));
     }
 
     .status-not.started,
     .status-not-started {
-      background-color: #f3f4f6;
-      color: #374151;
+      background-color: color-mix(in srgb, #6b7280 15%, var(--rl-bg));
+      color: var(--rl-text-secondary);
     }
 
     .status-maybe.later,
     .status-maybe-later {
-      background-color: #fef3c7;
-      color: #92400e;
+      background-color: color-mix(in srgb, #f59e0b 15%, var(--rl-bg));
+      color: color-mix(in srgb, #f59e0b 80%, var(--rl-text));
     }
 
     .status-on.deck,
     .status-on-deck {
-      background-color: #f3e8ff;
-      color: #7c3aed;
+      background-color: color-mix(in srgb, #8b5cf6 15%, var(--rl-bg));
+      color: color-mix(in srgb, #8b5cf6 80%, var(--rl-text));
     }
 
     .book-title {
       font-weight: 600;
-      color: var(--text-color);
+      color: var(--rl-text);
       margin-bottom: 0.25rem;
       text-transform: capitalize;
     }
 
     .book-author {
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       font-size: 0.9rem;
       text-transform: capitalize;
     }
 
     .series-badge {
-      background-color: var(--bg-hover);
-      color: var(--text-secondary);
+      background-color: var(--rl-bg-hover);
+      color: var(--rl-text-secondary);
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       font-size: 0.875rem;
@@ -886,8 +875,8 @@ export class ReadingList extends LitElement {
     }
 
     .year-badge {
-      background-color: var(--primary-color);
-      color: white;
+      background-color: var(--rl-accent);
+      color: var(--button-text, white);
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       font-size: 0.875rem;
@@ -906,37 +895,37 @@ export class ReadingList extends LitElement {
     }
 
     .grade-a {
-      background-color: #d1fae5;
-      color: #065f46;
+      background-color: color-mix(in srgb, #10b981 15%, var(--rl-bg));
+      color: color-mix(in srgb, #10b981 80%, var(--rl-text));
     }
 
     .grade-b {
-      background-color: #dbeafe;
-      color: #1e40af;
+      background-color: color-mix(in srgb, #3b82f6 15%, var(--rl-bg));
+      color: color-mix(in srgb, #3b82f6 80%, var(--rl-text));
     }
 
     .grade-c {
-      background-color: #fef3c7;
-      color: #92400e;
+      background-color: color-mix(in srgb, #f59e0b 15%, var(--rl-bg));
+      color: color-mix(in srgb, #f59e0b 80%, var(--rl-text));
     }
 
     .grade-d {
-      background-color: #fed7aa;
-      color: #c2410c;
+      background-color: color-mix(in srgb, #f97316 15%, var(--rl-bg));
+      color: color-mix(in srgb, #f97316 80%, var(--rl-text));
     }
 
     .grade-f {
-      background-color: #fee2e2;
-      color: #991b1b;
+      background-color: color-mix(in srgb, #ef4444 15%, var(--rl-bg));
+      color: color-mix(in srgb, #ef4444 80%, var(--rl-text));
     }
 
     .completion-date {
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
       font-size: 0.9rem;
     }
 
     .not-applicable {
-      color: #9ca3af;
+      color: var(--rl-text-secondary);
       font-style: italic;
       font-size: 0.875rem;
     }
@@ -948,7 +937,7 @@ export class ReadingList extends LitElement {
     .no-results {
       text-align: center;
       padding: 3rem;
-      color: var(--text-secondary);
+      color: var(--rl-text-secondary);
     }
 
     @media (max-width: 768px) {

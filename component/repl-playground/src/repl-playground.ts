@@ -4,7 +4,7 @@ import { EditorView, keymap, drawSelection } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { indentOnInput } from "@codemirror/language";
-import { oneDark } from "@codemirror/theme-one-dark";
+import { tokyoNight } from "./codemirror-tokyo-night";
 import {
   history,
   indentWithTab,
@@ -184,7 +184,7 @@ export class ReplPlayground extends LitElement {
     // Add other extensions
     extensions.push(
       javascript(),
-      oneDark,
+      tokyoNight,
       keymap.of([
         indentWithTab,
         {

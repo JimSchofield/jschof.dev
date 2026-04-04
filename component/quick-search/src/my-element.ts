@@ -148,21 +148,6 @@ export class QuickSearch extends LitElement {
 
   static styles = css`
     :host {
-      --gunmetal: #1b2f36;
-      --seasalt: #fafafa;
-      --carrot: #f79103;
-      --teal: #376170;
-      --raw-umber: #906b56;
-      --paynes-gray: #4d5963;
-      --shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      --gradient: linear-gradient(
-        135deg,
-        var(--paynes-gray) 0% 20%,
-        var(--carrot) 20% 40%,
-        var(--teal) 40% 60%,
-        var(--raw-umber) 60% 80%,
-        var(--gunmetal) 80% 100%
-      );
     }
 
     * {
@@ -170,7 +155,7 @@ export class QuickSearch extends LitElement {
     }
 
     *:focus-visible {
-      outline: 2px solid var(--raw-umber);
+      outline: 2px solid var(--link, #906b56);
       outline-offset: 1px;
     }
 
@@ -181,18 +166,18 @@ export class QuickSearch extends LitElement {
       max-width: 600px;
       max-height: 80vh;
       padding: 0;
-      border: 2px solid var(--gunmetal);
+      border: 2px solid var(--border, #1b2f36);
       border-radius: 8px;
-      background: var(--seasalt);
-      color: var(--gunmetal);
-      box-shadow: var(--shadow);
+      background: var(--bg, #fafafa);
+      color: var(--text, #1b2f36);
+      box-shadow: var(--shadow, 0 4px 8px rgba(0, 0, 0, 0.2));
       overflow: hidden;
       font-family: "Atkinson Hyperlegible Next", system-ui, sans-serif;
     }
 
     dialog::backdrop {
       backdrop-filter: blur(4px);
-      background: rgba(27, 47, 54, 0.1);
+      background: rgba(0, 0, 0, 0.3);
     }
 
     .inner {
@@ -212,29 +197,29 @@ export class QuickSearch extends LitElement {
       padding: 0.75rem;
       font: inherit;
       font-size: 1rem;
-      border: 2px solid var(--teal);
+      border: 2px solid var(--accent-secondary, #376170);
       border-radius: 8px;
-      background: var(--seasalt);
-      color: var(--gunmetal);
+      background: var(--bg-surface, #ffffff);
+      color: var(--text, #1b2f36);
 
       &:focus {
         outline: none;
-        border-color: var(--carrot);
-        box-shadow: 0 0 0 2px rgba(247, 145, 3, 0.2);
+        border-color: var(--accent, #f79103);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #f79103) 20%, transparent);
       }
 
       &::placeholder {
-        color: var(--paynes-gray);
+        color: var(--text-secondary, #4d5963);
       }
     }
 
     .close {
       display: inline-block;
       padding: 0.75rem 1rem;
-      background: var(--gunmetal);
-      color: var(--seasalt);
+      background: var(--button-bg, #1b2f36);
+      color: var(--button-text, #fafafa);
       border-radius: 8px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow, 0 4px 8px rgba(0, 0, 0, 0.2));
       border: none;
       font: inherit;
       cursor: pointer;
@@ -244,7 +229,7 @@ export class QuickSearch extends LitElement {
       }
 
       &:focus-visible {
-        outline: 2px solid var(--raw-umber);
+        outline: 2px solid var(--link, #906b56);
         outline-offset: 1px;
         background: var(--gradient);
       }
@@ -267,12 +252,12 @@ export class QuickSearch extends LitElement {
     .message {
       padding: 2rem 1rem;
       text-align: center;
-      color: var(--paynes-gray);
+      color: var(--text-secondary, #4d5963);
       font-style: italic;
     }
 
     .message.error {
-      color: var(--raw-umber);
+      color: var(--link, #906b56);
       font-weight: bold;
     }
 
@@ -288,22 +273,22 @@ export class QuickSearch extends LitElement {
     .result {
       display: block;
       padding: 1rem;
-      color: var(--gunmetal);
+      color: var(--text, #1b2f36);
       text-decoration: none;
       border: 2px solid transparent;
       border-radius: 8px;
-      background: var(--seasalt);
+      background: var(--bg-surface, #ffffff);
       transition: all 0.2s ease;
 
       &:hover {
-        border-color: var(--teal);
+        border-color: var(--accent-secondary, #376170);
         transform: translateY(-1px);
       }
 
       &:focus-visible {
         outline: none;
-        border-color: var(--carrot);
-        box-shadow: 0 0 0 2px rgba(247, 145, 3, 0.2);
+        border-color: var(--accent, #f79103);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #f79103) 20%, transparent);
       }
     }
 
@@ -311,13 +296,13 @@ export class QuickSearch extends LitElement {
       font-weight: bold;
       font-size: 1.1rem;
       margin-bottom: 0.25rem;
-      color: var(--gunmetal);
+      color: var(--text, #1b2f36);
       line-height: 1.2;
     }
 
     .excerpt {
       font-size: 0.9rem;
-      color: var(--paynes-gray);
+      color: var(--text-secondary, #4d5963);
       line-height: 1.4;
       margin-bottom: 0.5rem;
     }
@@ -331,8 +316,8 @@ export class QuickSearch extends LitElement {
 
       & span {
         padding: 0.125rem 0.5rem;
-        background: var(--teal);
-        color: var(--seasalt);
+        background: var(--accent-secondary, #376170);
+        color: var(--button-text, #fafafa);
         border-radius: 4px;
         font-weight: 500;
       }

@@ -20,6 +20,17 @@ export class ExplainSection extends LitElement {
     :host(:first-of-type) {
       padding-top: 0;
     }
+
+    slot {
+      display: block;
+      border-left: 3px solid transparent;
+      padding-left: 1rem;
+      transition: border-color 0.3s ease;
+    }
+
+    :host([active]) slot {
+      border-left-color: var(--accent, #f79103);
+    }
   `;
 }
 

@@ -1,5 +1,12 @@
 # @jschofield/quick-search
 
+## 0.4.0
+
+### Minor Changes
+
+- 87eba9c: Adding learnings
+- 561a888: Live preview added
+
 ## 0.3.0
 
 ### Minor Changes

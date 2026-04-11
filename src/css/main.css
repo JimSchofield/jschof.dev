@@ -717,6 +717,20 @@ article h1 {
   }
 }
 
+/*--- link preview popovers ---*/
+
+.link-preview-popover {
+  position: fixed;
+  position-area: top;
+  position-try-fallbacks: flip-block, flip-inline;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  overflow: visible;
+  width: auto;
+}
+
 /*--- learnings / TIL ---*/
 
 .learnings-list {

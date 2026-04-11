@@ -15,7 +15,8 @@ export default class {
       excerpt: post.data.excerpt,
       categories: post.data.tags || [],
       type: "post",
-      url: post.url
+      url: post.url,
+      image: post.data.image || ""
     }));
 
     const learnings = (data.collections.learnings || []).map(learning => ({

@@ -1,0 +1,31 @@
+---
+layout: index.njk
+---
+
+<main class="constrain">
+  <article>
+    <h1>{{ title }}</h1>
+    <div class="learning-meta small">
+      {% prettyDate date %} · TIL
+    </div>
+    {{ content | safe }}
+  </article>
+  <div class="next-previous-nav">
+    {% set previousPost = collections.learnings | getPreviousCollectionItem %}
+    {% set nextPost = collections.learnings | getNextCollectionItem %}
+    <span>
+    {% if previousPost %}
+    <a class="button" href="{{ previousPost.url }}" title="{{ previousPost.data.title }}">⬅️  Previous</a>
+    {% endif %}
+    </span>
+    <span>
+    {% if nextPost %}
+    <a class="button" href="{{ nextPost.url }}" title="{{ nextPost.data.title }}">Next ➡️</a>
+    {% endif %}
+    </span>
+  </div>
+</main>
+
+<a href="#" id="back-to-top">
+  Back to top
+</a>

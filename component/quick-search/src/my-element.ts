@@ -11,6 +11,7 @@ type Option = {
   excerpt?: string;
   url: string;
   categories: string[];
+  type?: "post" | "learning";
 };
 
 @customElement("quick-search")
@@ -115,8 +116,9 @@ export class QuickSearch extends LitElement {
                     <ul>
                       ${map(this.results, ({ item }) => {
                         return html`<li>
-                          <a part="qs-result" class="result" href=${item.url}>
+                          <a part="qs-result" class="result ${item.type === "learning" ? "result--learning" : ""}" href=${item.url}>
                             <div part="qs-title" class="title">
+                              ${item.type === "learning" ? html`<span class="type-badge">TIL</span>` : ""}
                               ${item.title}
                             </div>
                             <div part="qs-excerpt" class="excerpt">
@@ -325,6 +327,21 @@ export class QuickSearch extends LitElement {
       & span:last-child::after {
         content: none;
       }
+    }
+
+    .type-badge {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      background: var(--accent, #f79103);
+      color: var(--button-text, #fafafa);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-right: 0.25rem;
+      vertical-align: middle;
+    }
+
+    .result--learning {
     }
 
 

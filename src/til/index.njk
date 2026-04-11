@@ -1,0 +1,43 @@
+---
+eleventyImport:
+  collections: ["learnings"]
+eleventyExcludeFromCollections: true
+layout: index
+title: "TIL"
+pagination:
+  data: collections.learnings
+  size: 5
+  reverse: true
+  alias: learnings
+permalink: "til/{% if pagination.pageNumber > 0 %}page/{{ pagination.pageNumber + 1 }}/{% endif %}"
+---
+
+<main class="constrain">
+    <h1>TIL (Today I Learned)</h1>
+    <div class="learnings-list">
+        {%- for learning in learnings -%}
+        <article class="learning-item">
+            <h1><a href="{{ learning.url }}">{{ learning.data.title }}</a></h1>
+            <div class="learning-item__date small">{% prettyDate learning.date %}</div>
+            <div class="learning-item__content">
+                {{ learning.content | safe }}
+            </div>
+        </article>
+        {%- endfor -%}
+    </div>
+
+    {% if pagination.href.previous or pagination.href.next %}
+    <nav class="pagination" aria-label="Pagination">
+        <span>
+        {% if pagination.href.previous %}
+            <a class="button" href="{{ pagination.href.previous }}">← Newer</a>
+        {% endif %}
+        </span>
+        <span>
+        {% if pagination.href.next %}
+            <a class="button" href="{{ pagination.href.next }}">Older →</a>
+        {% endif %}
+        </span>
+    </nav>
+    {% endif %}
+</main>

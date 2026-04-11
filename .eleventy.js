@@ -49,12 +49,19 @@ export default function (eleventyConfig) {
     author,
   });
 
+  eleventyConfig.addCollection("allContent", (collectionApi) => {
+    return [
+      ...collectionApi.getFilteredByTag("posts"),
+      ...collectionApi.getFilteredByTag("learnings"),
+    ].sort((a, b) => b.date - a.date);
+  });
+
   eleventyConfig.addPlugin(feedPlugin, {
-    type: "rss", // or "rss", "json"
+    type: "rss",
     outputPath: "/rss.xml",
     collection: {
-      name: "posts", // iterate over `collections.posts`
-      limit: 0, // 0 means no limit
+      name: "allContent",
+      limit: 0,
     },
     metadata: {
       language: "en",

@@ -1,6 +1,38 @@
+const ALLOWED_ORIGINS = [
+  "https://jschof.dev",
+  "https://www.jschof.dev",
+  "http://localhost:8080",
+  "http://localhost:8888",
+];
+
+function isPrivateIP(hostname) {
+  // Block private/reserved IPs to prevent SSRF
+  const patterns = [
+    /^localhost$/i,
+    /^127\./,
+    /^10\./,
+    /^172\.(1[6-9]|2\d|3[01])\./,
+    /^192\.168\./,
+    /^0\./,
+    /^169\.254\./,
+    /^\[?::1\]?$/,
+    /^\[?fe80:/i,
+    /^\[?fc00:/i,
+    /^\[?fd/i,
+  ];
+  return patterns.some((p) => p.test(hostname));
+}
+
 export const handler = async (event) => {
+  const origin = event.headers?.origin || event.headers?.Origin || "";
+  const referer = event.headers?.referer || event.headers?.Referer || "";
+
+  const isAllowed =
+    ALLOWED_ORIGINS.some((o) => origin === o) ||
+    ALLOWED_ORIGINS.some((o) => referer.startsWith(o));
+
   const headers = {
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": isAllowed ? origin : ALLOWED_ORIGINS[0],
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Content-Type": "application/json",
@@ -8,6 +40,14 @@ export const handler = async (event) => {
 
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "" };
+  }
+
+  if (!isAllowed) {
+    return {
+      statusCode: 403,
+      headers,
+      body: JSON.stringify({ error: "Forbidden" }),
+    };
   }
 
   if (event.httpMethod !== "GET") {
@@ -46,6 +86,15 @@ export const handler = async (event) => {
       statusCode: 400,
       headers,
       body: JSON.stringify({ error: "Only http/https URLs are supported" }),
+    };
+  }
+
+  // Block requests to private/internal IPs (SSRF protection)
+  if (isPrivateIP(parsed.hostname)) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: "Private/internal URLs are not allowed" }),
     };
   }
 

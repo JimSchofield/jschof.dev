@@ -55,8 +55,6 @@ function isInternalLink(anchor: HTMLAnchorElement): boolean {
 }
 
 export function initLinkPreviews(scope: string | Element) {
-  if (!window.matchMedia("(hover: hover)").matches) return;
-
   const container =
     typeof scope === "string" ? document.querySelector(scope) : scope;
   if (!container) return;
@@ -73,9 +71,17 @@ export function initLinkPreviews(scope: string | Element) {
     if (!href || href.startsWith("#") || href.startsWith("javascript:")) return;
 
     const anchorName = `--link-preview-${counter++}`;
+    const linkText = anchor.textContent?.trim() || href;
 
-    // Set anchor name on the link
-    anchor.style.anchorName = anchorName;
+    // Create the inspection button
+    const inspectBtn = document.createElement("button");
+    inspectBtn.className = "link-preview-inspect";
+    inspectBtn.setAttribute("aria-label", `Link preview for: ${linkText}`);
+    inspectBtn.textContent = "🔍";
+    inspectBtn.style.anchorName = anchorName;
+
+    // Insert after the anchor
+    anchor.after(inspectBtn);
 
     // Create popover container
     const popover = document.createElement("div");
@@ -90,81 +96,121 @@ export function initLinkPreviews(scope: string | Element) {
     popover.appendChild(preview);
     document.body.appendChild(popover);
 
-    // Hover/focus delay management
-    let showTimeout: ReturnType<typeof setTimeout> | null = null;
-    let hideTimeout: ReturnType<typeof setTimeout> | null = null;
+    let isOpen = false;
 
-    const show = () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
+    const showPopover = () => {
+      try {
+        popover.showPopover();
+        isOpen = true;
+      } catch {
+        // Already showing
       }
-      showTimeout = setTimeout(async () => {
-        // Populate metadata if not already loaded
-        if (!preview.title) {
-          if (isInternalLink(anchor)) {
-            const searchData = await getSearchData();
-            const pathname = new URL(anchor.href).pathname;
-            const entry = searchData.get(pathname);
-            if (entry) {
-              preview.title = entry.title;
-              preview.description = entry.excerpt || "";
-              if (entry.image) {
-                preview.image = entry.url + entry.image;
-              }
-            }
-          } else {
-            preview.loading = true;
-            popover.showPopover();
-            const meta = await fetchExternalMeta(anchor.href);
-            preview.loading = false;
-            if (meta) {
-              preview.title = meta.title;
-              preview.description = meta.description;
-              preview.image = meta.image;
-            } else {
-              // No metadata available, hide and bail
-              popover.hidePopover();
-              return;
+    };
+
+    const hidePopover = () => {
+      try {
+        popover.hidePopover();
+        isOpen = false;
+      } catch {
+        // Already hidden
+      }
+    };
+
+    const closeAndReturn = () => {
+      hidePopover();
+      inspectBtn.focus();
+    };
+
+    const populateAndShow = async () => {
+      if (!preview.title) {
+        if (isInternalLink(anchor)) {
+          const searchData = await getSearchData();
+          const pathname = new URL(anchor.href).pathname;
+          const entry = searchData.get(pathname);
+          if (entry) {
+            preview.title = entry.title;
+            preview.description = entry.excerpt || "";
+            if (entry.image) {
+              preview.image = entry.url + entry.image;
             }
           }
+        } else {
+          preview.loading = true;
+          showPopover();
+          const meta = await fetchExternalMeta(anchor.href);
+          preview.loading = false;
+          if (meta) {
+            preview.title = meta.title;
+            preview.description = meta.description;
+            preview.image = meta.image;
+          } else {
+            hidePopover();
+            return;
+          }
         }
-
-        try {
-          popover.showPopover();
-        } catch {
-          // Popover might already be showing
-        }
-      }, 300);
-    };
-
-    const hide = () => {
-      if (showTimeout) {
-        clearTimeout(showTimeout);
-        showTimeout = null;
       }
-      hideTimeout = setTimeout(() => {
-        try {
-          popover.hidePopover();
-        } catch {
-          // Popover might already be hidden
-        }
-      }, 200);
+      showPopover();
+      // Wait for Lit to render, then delegatesFocus sends focus to the close button
+      await preview.updateComplete;
+      preview.focus();
     };
 
-    // Anchor hover/focus
-    anchor.addEventListener("pointerenter", show);
-    anchor.addEventListener("focusin", show);
-    anchor.addEventListener("pointerleave", hide);
-    anchor.addEventListener("focusout", hide);
-
-    // Popover hover (so user can interact with the actions)
-    popover.addEventListener("pointerenter", () => {
-      if (hideTimeout) {
-        clearTimeout(hideTimeout);
-        hideTimeout = null;
+    // --- Click / activate the inspect button ---
+    inspectBtn.addEventListener("click", () => {
+      if (isOpen) {
+        closeAndReturn();
+      } else {
+        populateAndShow();
       }
     });
-    popover.addEventListener("pointerleave", hide);
+
+    // --- Close event from the preview's close button ---
+    preview.addEventListener("close", () => {
+      closeAndReturn();
+    });
+
+    // --- Keyboard on the popover ---
+    popover.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeAndReturn();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const actions = Array.from(
+          preview.shadowRoot?.querySelectorAll<HTMLElement>(
+            "button, a[href]"
+          ) || []
+        );
+        if (actions.length === 0) return;
+
+        const active = preview.shadowRoot?.activeElement as HTMLElement | null;
+
+        if (e.shiftKey && active === actions[0]) {
+          // Shift+Tab on first focusable: close and return
+          e.preventDefault();
+          closeAndReturn();
+        } else if (!e.shiftKey && active === actions[actions.length - 1]) {
+          // Tab past last focusable: close and return
+          e.preventDefault();
+          closeAndReturn();
+        }
+      }
+    });
+
+    // If focus leaves the popover entirely (click elsewhere), close it
+    popover.addEventListener("focusout", (e: FocusEvent) => {
+      requestAnimationFrame(() => {
+        const related = e.relatedTarget as Node | null;
+        if (
+          !related ||
+          (!popover.contains(related) &&
+            !preview.shadowRoot?.contains(related) &&
+            related !== inspectBtn)
+        ) {
+          hidePopover();
+        }
+      });
+    });
   });
 }

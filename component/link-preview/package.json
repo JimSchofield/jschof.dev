@@ -1,6 +1,6 @@
 {
-  "name": "@jschofield/quick-search",
-  "version": "0.4.0",
+  "name": "@jschofield/link-preview",
+  "version": "0.5.0",
   "type": "module",
   "main": "./dist/assets/index.js",
   "exports": {
@@ -9,23 +9,20 @@
   "files": [
     "dist"
   ],
-  "description": "Site-wide search web component built with Lit and Fuse.js",
+  "description": "Link preview popover web component with anchor positioning",
   "author": "Jim Schofield",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/JimSchofield/jschof.dev",
-    "directory": "component/quick-search"
+    "directory": "component/link-preview"
   },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "@lit/task": "catalog:",
-    "fuse.js": "^7.0.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "lit": "^3.0.0"
   },

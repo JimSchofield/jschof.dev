@@ -72,6 +72,37 @@ For async code or heavier workloads:
 </repl-playground>
 ```
 
+### Line numbers
+
+Opt into a line-number gutter. The attribute can be toggled dynamically — add or remove it at runtime and the gutter appears/disappears without losing cursor position, undo history, or vim state.
+
+```html
+<repl-playground line-numbers>
+  <template>
+    <script>
+      const greet = name => `hello, ${name}`;
+      console.log(greet("world"));
+    </script>
+  </template>
+</repl-playground>
+```
+
+### Code folding
+
+Fold specific lines or ranges on load. Single numbers use language-aware folding (fold the block starting at that line); ranges fold the specified lines explicitly. The fold gutter and fold keymap are always active when the attribute is set.
+
+```html
+<repl-playground fold="1,5,23-34">
+  <template>
+    <script>
+      // ... long example ...
+    </script>
+  </template>
+</repl-playground>
+```
+
+Syntax: comma-separated. Whitespace around tokens is tolerated (`"1, 5, 23-34"` works). Out-of-range or invalid entries are skipped silently.
+
 ### Without a bundler
 
 This component has many CodeMirror peer dependencies, so a bundler is strongly recommended. If you must go without one, you'll need an import map for all peers:
@@ -103,6 +134,8 @@ This component has many CodeMirror peer dependencies, so a bundler is strongly r
 |---|---|---|---|
 | `web-worker` | `boolean` | `false` | Execute code in a web worker instead of iframe |
 | `start-collapsed` | `boolean` | `false` | Start with the console output collapsed |
+| `line-numbers` | `boolean` | `false` | Show line numbers in the editor gutter (toggleable at runtime) |
+| `fold` | `string` | `""` | Comma-separated fold spec applied on load, e.g. `"1,5,23-34"`. Single numbers fold the block starting at that line; ranges fold the specified lines explicitly. |
 
 ## Controls
 

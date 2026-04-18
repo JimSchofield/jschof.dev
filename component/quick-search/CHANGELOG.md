@@ -1,5 +1,11 @@
 # @jschofield/quick-search
 
+## 0.4.0
+
+### Minor Changes
+
+- Readme/claudefile updates, linkpreview quickfixes
+
 ## 0.3.0
 
 ### Minor Changes

@@ -13,7 +13,7 @@ npm install @jschofield/play-ground
 This component requires the following peer dependencies:
 
 ```bash
-npm install lit prettier codemirror @codemirror/commands @codemirror/lang-html @codemirror/lang-javascript @codemirror/language @codemirror/state @codemirror/view @replit/codemirror-vim
+npm install lit prettier codemirror @codemirror/commands @codemirror/lang-html @codemirror/lang-javascript @codemirror/language @codemirror/state @codemirror/view @lezer/highlight @replit/codemirror-vim
 ```
 
 | Peer | Version |
@@ -27,6 +27,7 @@ npm install lit prettier codemirror @codemirror/commands @codemirror/lang-html @
 | `@codemirror/language` | `^6.10.1` |
 | `@codemirror/state` | `^6.4.1` |
 | `@codemirror/view` | `^6.24.1` |
+| `@lezer/highlight` | `^1.2.0` |
 | `@replit/codemirror-vim` | `^6.3.0` |
 
 ## Usage
@@ -84,6 +85,7 @@ This component has many CodeMirror peer dependencies, so a bundler is strongly r
     "@codemirror/language": "https://esm.run/@codemirror/language",
     "@codemirror/state": "https://esm.run/@codemirror/state",
     "@codemirror/view": "https://esm.run/@codemirror/view",
+    "@lezer/highlight": "https://esm.run/@lezer/highlight",
     "@replit/codemirror-vim": "https://esm.run/@replit/codemirror-vim"
   }
 }

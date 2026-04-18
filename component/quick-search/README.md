@@ -50,7 +50,7 @@ No attributes needed — drop it in and it works.
 
 ## How it works
 
-1. Fetches `/search-data.json` on first open
+1. Fetches `/search-data.json` on first render (via `@lit/task`)
 2. Fuzzy-searches by title, excerpt, and categories
 3. Results link directly to matching pages
 

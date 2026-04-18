@@ -11,7 +11,8 @@ export default class {
       title: post.data.title,
       excerpt: post.data.excerpt,
       categories: post.data.tags || [],
-      url: post.url
+      url: post.url,
+      image: post.data.image || ""
     }));
 
     return JSON.stringify(searchData, null, 0);

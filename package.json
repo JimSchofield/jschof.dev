@@ -31,6 +31,7 @@
     "@codemirror/theme-one-dark": "^6.1.3",
     "@codemirror/view": "^6.38.8",
     "@jschofield/code-highlight": "workspace:*",
+    "@jschofield/link-preview": "workspace:*",
     "@jschofield/play-ground": "workspace:*",
     "@jschofield/quick-search": "workspace:*",
     "@jschofield/reading-list": "workspace:*",

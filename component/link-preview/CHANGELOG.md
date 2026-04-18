@@ -1,5 +1,11 @@
 # @jschofield/link-preview
 
+## 0.5.0
+
+### Minor Changes
+
+- 7516fe7: Small bump
+
 ## 0.4.0
 
 ### Minor Changes

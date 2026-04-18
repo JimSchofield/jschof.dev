@@ -1,9 +1,9 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { EditorView, keymap, drawSelection } from "@codemirror/view";
+import { EditorView, keymap, drawSelection, lineNumbers } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
-import { indentOnInput } from "@codemirror/language";
+import { indentOnInput, foldGutter, foldKeymap, foldEffect, foldable } from "@codemirror/language";
 import { tokyoNight } from "./codemirror-tokyo-night";
 import {
   history,
@@ -44,6 +44,12 @@ export class ReplPlayground extends LitElement {
 
   @property({ type: Boolean, attribute: "web-worker" })
   webWorker = false;
+
+  @property({ type: Boolean, attribute: "line-numbers" })
+  lineNumbers = false;
+
+  @property({ attribute: "fold" })
+  fold = "";
 
   @state() private output: string[] = [];
   @state() private isExecuting = false;
@@ -175,6 +181,14 @@ export class ReplPlayground extends LitElement {
     // Add drawSelection for proper vim visual mode rendering
     extensions.push(drawSelection());
 
+    // Add line numbers if attribute is set
+    if (this.lineNumbers) {
+      extensions.push(lineNumbers());
+    }
+
+    // Add fold gutter and keymap
+    extensions.push(foldGutter());
+
     // Add history for undo/redo functionality
     extensions.push(history());
 
@@ -186,6 +200,7 @@ export class ReplPlayground extends LitElement {
       javascript(),
       tokyoNight,
       keymap.of([
+        ...foldKeymap,
         indentWithTab,
         {
           key: "Enter",
@@ -269,6 +284,56 @@ export class ReplPlayground extends LitElement {
       state: startState,
       parent: editorContainer as Element,
     });
+
+    // Apply initial folds from the fold attribute
+    if (this.fold) {
+      this.applyFolds();
+    }
+  }
+
+  private parseFoldSpec(): Array<{ type: "line"; line: number } | { type: "range"; from: number; to: number }> {
+    const specs: Array<{ type: "line"; line: number } | { type: "range"; from: number; to: number }> = [];
+    for (const part of this.fold.split(",")) {
+      const trimmed = part.trim();
+      if (!trimmed) continue;
+      const rangeMatch = trimmed.match(/^(\d+)\s*-\s*(\d+)$/);
+      if (rangeMatch) {
+        specs.push({ type: "range", from: parseInt(rangeMatch[1], 10), to: parseInt(rangeMatch[2], 10) });
+      } else {
+        const num = parseInt(trimmed, 10);
+        if (!isNaN(num)) specs.push({ type: "line", line: num });
+      }
+    }
+    return specs;
+  }
+
+  private applyFolds() {
+    if (!this.editor) return;
+    const state = this.editor.state;
+    const doc = state.doc;
+    const effects: ReturnType<typeof foldEffect.of>[] = [];
+
+    for (const spec of this.parseFoldSpec()) {
+      if (spec.type === "range") {
+        // Explicit range: fold from end of "from" line to end of "to" line
+        if (spec.from < 1 || spec.to > doc.lines || spec.from >= spec.to) continue;
+        const from = doc.line(spec.from).to;
+        const to = doc.line(spec.to).to;
+        effects.push(foldEffect.of({ from, to }));
+      } else {
+        // Single line: use language-aware folding (fold the block starting at this line)
+        if (spec.line < 1 || spec.line > doc.lines) continue;
+        const line = doc.line(spec.line);
+        const range = foldable(state, line.from, line.to);
+        if (range) {
+          effects.push(foldEffect.of({ from: range.from, to: range.to }));
+        }
+      }
+    }
+
+    if (effects.length > 0) {
+      this.editor.dispatch({ effects });
+    }
   }
 
   private initializeSandbox() {

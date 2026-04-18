@@ -55,6 +55,9 @@ importers:
       '@jschofield/code-highlight':
         specifier: workspace:*
         version: link:component/code-highlight
+      '@jschofield/link-preview':
+        specifier: workspace:*
+        version: link:component/link-preview
       '@jschofield/play-ground':
         specifier: workspace:*
         version: link:component/play-ground
@@ -131,6 +134,19 @@ importers:
       prettier:
         specifier: ^3.0.0
         version: 3.8.1
+    devDependencies:
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.0.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)(@types/node@25.5.2)(esbuild@0.25.12)
+
+  component/link-preview:
+    dependencies:
+      lit:
+        specifier: ^3.0.0
+        version: 3.3.2
     devDependencies:
       typescript:
         specifier: 'catalog:'

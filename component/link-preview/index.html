@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Link Preview Demo</title>
+    <script type="module" src="/src/link-preview.ts"></script>
+    <style>
+      body { font-family: system-ui; padding: 2rem; max-width: 60ch; margin: 0 auto; }
+    </style>
+  </head>
+  <body>
+    <h1>Link Preview Component</h1>
+
+    <h2>Standalone usage:</h2>
+    <link-preview
+      url="https://example.com"
+      title="Example Site"
+      description="This is a description of the example site that shows how the card renders."
+      image="https://picsum.photos/400/250"
+    ></link-preview>
+
+    <h2>Without image:</h2>
+    <link-preview
+      url="https://example.com"
+      title="No Image Example"
+      description="This card has no image, just title and description."
+      hide-image
+    ></link-preview>
+
+    <h2>Without actions:</h2>
+    <link-preview
+      url="https://example.com"
+      title="No Actions"
+      description="This card hides the action links at the bottom."
+      hide-actions
+    ></link-preview>
+  </body>
+</html>

@@ -122,7 +122,7 @@ export function initLinkPreviews(scope: string | Element) {
     };
 
     const populateAndShow = async () => {
-      if (!preview.title) {
+      if (!preview.title && !preview.error) {
         if (isInternalLink(anchor)) {
           const searchData = await getSearchData();
           const pathname = new URL(anchor.href).pathname;
@@ -133,19 +133,20 @@ export function initLinkPreviews(scope: string | Element) {
             if (entry.image) {
               preview.image = entry.url + entry.image;
             }
+          } else {
+            preview.error = true;
           }
         } else {
           preview.loading = true;
           showPopover();
           const meta = await fetchExternalMeta(anchor.href);
           preview.loading = false;
-          if (meta) {
+          if (meta && (meta.title || meta.description)) {
             preview.title = meta.title;
             preview.description = meta.description;
             preview.image = meta.image;
           } else {
-            hidePopover();
-            return;
+            preview.error = true;
           }
         }
       }

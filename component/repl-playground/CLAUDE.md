@@ -41,11 +41,13 @@ The Vite build config (`vite.config.js`) uses `rollupOptions.external` to exclud
 
 ### Main Features
 - **Split-pane layout**: Editor (left) + output (right)
-- **Secure sandbox execution**: iframe with `allow-scripts` only
+- **Secure sandbox execution**: iframe with `allow-scripts` only (or web worker via `web-worker` attribute)
 - **Tokyo Night theme**: Custom dark theme for editor
 - **Vim mode support**: Toggle between normal and vim editing modes
 - **Global state management**: Vim mode preference persists across browser sessions and syncs across all component instances
 - **Real-time output**: Captures console.log, errors, and return values
+- **Line numbers** (opt-in via `line-numbers` attribute): Dynamically toggleable — uses a CodeMirror `Compartment` so flipping the attribute reconfigures the extension set without rebuilding the editor
+- **Code folding** (via `fold="1,5,23-34"`): Single numbers use language-aware folding (the block starting at that line); ranges fold specified lines explicitly. Fold gutter + fold keymap are active when the attribute is set.
 - **Mobile responsive**: Stacks vertically on small screens
 
 ### Key Files
@@ -134,8 +136,9 @@ The Vite build config (`vite.config.js`) uses `rollupOptions.external` to exclud
 
 ### Extension Compatibility
 - Avoid complex CodeMirror extensions due to version conflicts
-- Current setup uses minimal, stable extensions only
+- Active extensions: `drawSelection`, `lineNumbers` (compartmentalized), `foldGutter`, `history`, `indentOnInput`, `javascript`, `tokyoNight`, keymaps. `vim` is added conditionally.
 - AutoCompletion was removed due to compatibility issues
+- **Dynamic extension toggling**: Use `Compartment` from `@codemirror/state` and dispatch `compartment.reconfigure(...)` in Lit's `updated()` lifecycle. `lineNumbers` uses this pattern — preserves cursor, selection, undo stack, and vim state across toggles.
 
 ### Component State
 - Uses Lit `@state()` for reactive properties

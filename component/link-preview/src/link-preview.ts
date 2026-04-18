@@ -25,13 +25,37 @@ export class LinkPreview extends LitElement {
   @property({ type: Boolean })
   loading = false;
 
+  @property({ type: Boolean })
+  error = false;
+
   private _dispatchClose() {
     this.dispatchEvent(new Event("close", { bubbles: true, composed: true }));
+  }
+
+  private _handleImageError() {
+    this.image = "";
   }
 
   render() {
     if (this.loading) {
       return html`<div class="card"><button class="close-btn" @click=${this._dispatchClose} aria-label="Close preview">&times;</button><div class="loading">Loading preview…</div></div>`;
+    }
+
+    if (this.error) {
+      return html`
+        <div class="card">
+          <button class="close-btn" @click=${this._dispatchClose} aria-label="Close preview">&times;</button>
+          <div class="error">No preview meta found</div>
+          ${!this.hideActions
+            ? html`
+                <div class="card-actions">
+                  <a class="action" href=${this.url}>Go to link</a>
+                  <a class="action" href=${this.url} target="_blank" rel="noopener">Open in new tab</a>
+                </div>
+              `
+            : nothing}
+        </div>
+      `;
     }
 
     if (!this.title && !this.description) {
@@ -42,7 +66,7 @@ export class LinkPreview extends LitElement {
       <div class="card">
         <button class="close-btn" @click=${this._dispatchClose} aria-label="Close preview">&times;</button>
         ${this.image && !this.hideImage
-          ? html`<img class="card-image" src=${this.image} alt="" loading="lazy" />`
+          ? html`<img class="card-image" src=${this.image} alt="" loading="lazy" @error=${this._handleImageError} />`
           : nothing}
         <div class="card-body">
           ${this.title
@@ -178,7 +202,8 @@ export class LinkPreview extends LitElement {
       }
     }
 
-    .loading {
+    .loading,
+    .error {
       padding: 1rem;
       padding-right: 2.5rem;
       text-align: center;

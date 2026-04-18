@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { EditorView, keymap, drawSelection, lineNumbers } from "@codemirror/view";
-import { EditorState } from "@codemirror/state";
+import { Compartment, EditorState } from "@codemirror/state";
 import { javascript } from "@codemirror/lang-javascript";
 import { indentOnInput, foldGutter, foldKeymap, foldEffect, foldable } from "@codemirror/language";
 import { tokyoNight } from "./codemirror-tokyo-night";
@@ -61,6 +61,7 @@ export class ReplPlayground extends LitElement {
   private sandboxFrame?: HTMLIFrameElement;
   private activeWorker?: Worker;
   private activeWorkerUrl?: string;
+  private lineNumbersCompartment = new Compartment();
   private stateChangeCallback?: (newState: {
     vimMode: "enabled" | "disabled";
   }) => void;
@@ -159,6 +160,16 @@ export class ReplPlayground extends LitElement {
     this.initializeSandbox();
   }
 
+  updated(changedProperties: Map<string, unknown>) {
+    if (changedProperties.has("lineNumbers") && this.editor) {
+      this.editor.dispatch({
+        effects: this.lineNumbersCompartment.reconfigure(
+          this.lineNumbers ? lineNumbers() : []
+        ),
+      });
+    }
+  }
+
   private initializeEditor() {
     const editorContainer = this.shadowRoot?.querySelector(".editor-container");
     if (!editorContainer) return;
@@ -181,10 +192,10 @@ export class ReplPlayground extends LitElement {
     // Add drawSelection for proper vim visual mode rendering
     extensions.push(drawSelection());
 
-    // Add line numbers if attribute is set
-    if (this.lineNumbers) {
-      extensions.push(lineNumbers());
-    }
+    // Line numbers in a compartment so the attribute can be toggled dynamically
+    extensions.push(
+      this.lineNumbersCompartment.of(this.lineNumbers ? lineNumbers() : [])
+    );
 
     // Add fold gutter and keymap
     extensions.push(foldGutter());

@@ -40,7 +40,7 @@ This is a **pnpm workspace** monorepo. The root package is the 11ty blog, and ea
 - **Input**: `src/` → **Output**: `_site/`
 - **JS bundling**: `site-entry.js` is the client JS entry point. It's bundled with **esbuild** via an `eleventy.before` hook in `.eleventy.js`, outputting to `_site/index.js`. This resolves bare workspace package imports (`@jschofield/*`) and `baseline-status` into a single bundle.
 - **Deployed on Netlify** (`netlify.toml`): production build uses `pnpm build`
-- **Netlify functions**: `netlify/functions/` (currently has `reading-list.mjs`)
+- **Netlify functions**: `netlify/functions/` contains `reading-list.mjs` (Google Sheets proxy for `<reading-list>`) and `link-meta.mjs` (OG/Twitter meta-tag proxy for `<link-preview>`, with origin allowlisting and SSRF protection)
 - Passthrough copy handles static assets (CSS, JS in posts, images, fonts, videos, webmanifest)
 
 ## Architecture
@@ -81,6 +81,7 @@ Custom web components live in `component/` as **pnpm workspace packages** (Vite 
 | `@jschofield/reading-list` | `component/reading-list/` | Reading list from Google Sheets API |
 | `@jschofield/repl-playground` | `component/repl-playground/` | REPL-based playground |
 | `@jschofield/scroll-explain` | `component/scroll-explain/` | Scroll-driven explanations |
+| `@jschofield/link-preview` | `component/link-preview/` | Hover/click link preview popover with Netlify-backed metadata |
 
 **Peer dependencies**: Components externalize shared libraries as peer dependencies to avoid bundle duplication. The root `package.json` provides all peer deps (lit, prettier, codemirror, @codemirror/*, @replit/codemirror-vim) as regular dependencies, so esbuild deduplicates them into a single copy in the final bundle. Each component's `vite.config.js` uses `rollupOptions.external` with a regex to exclude peer deps from its own build.
 
@@ -92,6 +93,7 @@ Custom web components live in `component/` as **pnpm workspace packages** (Vite 
 | `reading-list` | lit |
 | `repl-playground` | lit, prettier, @codemirror/*, @replit/codemirror-vim |
 | `scroll-explain` | lit |
+| `link-preview` | lit |
 
 **Build pattern**: Each component builds with `tsc && vite build` into its own `dist/` directory. The root project imports them as workspace dependencies via `site-entry.js`, which esbuild bundles into the final `_site/index.js`.
 
@@ -109,8 +111,10 @@ pnpm build:components
 
 `site-entry.js` (at project root) is the client JS entry point, bundled by esbuild during the 11ty build:
 - `@jschofield/*` workspace package imports (web components)
+- `initLinkPreviews('article')` from `@jschofield/link-preview` — scoped to article elements
 - `baseline-status` (npm package)
 - `src/js/heading-links.js` — clipboard copy for heading links
+- `src/js/theme-toggle.js` — light/dark theme toggle
 - `src/js/mobile-menu.js` — hamburger menu class
 
 ### Data Files

@@ -5,11 +5,12 @@ overrides:
   lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
   markdown-it@>=13.0.0 <14.1.1: '>=14.1.1'
   minimatch@<10.2.1: '>=10.2.1'
+  liquidjs@<10.25.5: '>=10.25.5'
 
 catalog:
   lit: ^3.2.0
   '@lit/task': ^1.0.1
-  vite: ^8.0.3
+  vite: ^8.0.8
   typescript: ^6.0.2
   prettier: ^3.6.2
 

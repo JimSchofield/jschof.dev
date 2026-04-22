@@ -10,6 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build:components": "pnpm -r --filter './component/*' run build",
     "dev:components": "pnpm -r --parallel --filter './component/*' run dev",
+    "dev:netlify": "netlify dev --filter jschof-dev",
+    "dev:full": "pnpm run \"/^dev:(components|netlify)$/\"",
     "prepare": "git config core.hooksPath .githooks",
     "release": "pnpm build:components && pnpm changeset version && pnpm changeset publish"
   },

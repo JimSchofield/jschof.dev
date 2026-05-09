@@ -1,0 +1,52 @@
+---
+title: "JavaScript Reactivity (Part 6): Agnostic Reactivity - Does It Exist?"
+excerpt: "TC39 Signals, Preact signals, the Solid/Vue/Angular convergence on the signal primitive. Can a reactive core actually be framework-agnostic, or does the rendering model always leak in?"
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+  - signals
+date: 2026-05-08
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 6): Agnostic Reactivity - Does It Exist?</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>A Global Look</li>
+    <li>Deep vs. Shallow Reactivity</li>
+    <li>Coarse vs. Fine-Grained Reactivity Tracking</li>
+    <li>Push vs. Pull Reactivity</li>
+    <li>Reactivity as Cache Invalidation</li>
+    <li><strong>Agnostic Reactivity - Does It Exist?</strong></li>
+  </ol>
+</nav>
+
+<p>TODO: intro. Every major framework now has signals. Is the primitive truly portable?</p>
+
+<h2>The convergence</h2>
+
+<p>TODO: Solid's signals, Vue refs, Angular signals, Svelte 5 runes, Preact signals. Same shape, different scheduling.</p>
+
+<h2>The TC39 Signals proposal</h2>
+
+<p>TODO: a standard primitive at the language level. What it specifies, what it deliberately leaves to userland (effects, scheduling).</p>
+
+<h2>Where the rendering model leaks in</h2>
+
+<p>TODO: batching, scheduling, ownership/cleanup, SSR. The primitive is portable; the integration with a renderer is where opinions show up.</p>
+
+<h2>So — does it exist?</h2>
+
+<p>TODO: the honest answer.</p>
+
+<h2>Wrap-up</h2>
+
+<p>TODO.</p>

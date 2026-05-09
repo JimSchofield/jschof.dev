@@ -1,0 +1,47 @@
+---
+title: "JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity"
+excerpt: "Should the framework reach into your nested objects and arrays, or stop at the top level? An ergonomics-vs-predictability tradeoff with surprising performance consequences."
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+date: 2026-05-08
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>A Global Look</li>
+    <li><strong>Deep vs. Shallow Reactivity</strong></li>
+    <li>Coarse vs. Fine-Grained Reactivity Tracking</li>
+    <li>Push vs. Pull Reactivity</li>
+    <li>Reactivity as Cache Invalidation</li>
+    <li>Agnostic Reactivity - Does It Exist?</li>
+  </ol>
+</nav>
+
+<p>TODO: intro.</p>
+
+<h2>Deep: proxies all the way down</h2>
+
+<p>TODO: Vue's <code>reactive()</code>. Mutating <code>state.user.address.city</code> just works. Cost: every nested read goes through a Proxy.</p>
+
+<h2>Shallow: top-level only</h2>
+
+<p>TODO: Solid stores, React's <code>useState</code>. You opt into nested reactivity explicitly, or replace the reference. Predictable, but you have to think about it.</p>
+
+<h2>The ergonomics tradeoff</h2>
+
+<p>TODO: deep feels magic until something doesn't track and you can't tell why. Shallow makes the boundary explicit at the cost of more code.</p>
+
+<h2>Wrap-up</h2>
+
+<p>TODO.</p>

@@ -1,0 +1,47 @@
+---
+title: "JavaScript Reactivity (Part 4): Push vs. Pull Reactivity"
+excerpt: "Does the source notify subscribers when it changes, or do consumers ask for the value when they need it? Most modern frameworks are quietly both."
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+date: 2026-05-08
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 4): Push vs. Pull Reactivity</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>A Global Look</li>
+    <li>Deep vs. Shallow Reactivity</li>
+    <li>Coarse vs. Fine-Grained Reactivity Tracking</li>
+    <li><strong>Push vs. Pull Reactivity</strong></li>
+    <li>Reactivity as Cache Invalidation</li>
+    <li>Agnostic Reactivity - Does It Exist?</li>
+  </ol>
+</nav>
+
+<p>TODO: intro.</p>
+
+<h2>Push: the source tells you</h2>
+
+<p>TODO: signals, observables, event emitters. Updates flow outward from the source to its subscribers.</p>
+
+<h2>Pull: the consumer asks</h2>
+
+<p>TODO: React's render cycle. The framework decides when to re-read; values are looked up on demand.</p>
+
+<h2>Why most frameworks are both</h2>
+
+<p>TODO: fine-grained systems push at the dependency layer (mark dirty) and pull at the read site (recompute lazily). Glitch-free reactivity usually requires this split.</p>
+
+<h2>Wrap-up</h2>
+
+<p>TODO.</p>

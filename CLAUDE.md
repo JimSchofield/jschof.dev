@@ -155,3 +155,51 @@ When adding new resources or features, maintain these existing patterns:
 ## CSS
 
 Single stylesheet at `src/css/main.css`. Uses CSS custom properties for the color palette (e.g., `--paynes-gray`, `--seasalt`, `--carrot`, `--teal`). Font stack: Atkinson Hyperlegible Next (variable font in `src/assets/fonts/`) with Fira Code from Google Fonts for code blocks.
+
+## Theming (light/dark)
+
+The site supports three theme states, controlled by `<theme-toggle>` (`src/js/theme-toggle.js`):
+
+- `data-theme="light"` on `<html>` — explicit light
+- `data-theme="dark"` on `<html>` — explicit dark
+- *(attribute absent)* — "system" mode, follows `prefers-color-scheme`
+
+The user's choice is persisted in `localStorage` under `theme-preference` and reapplied on load.
+
+### The gating pattern (use this everywhere)
+
+Dark mode applies when **the user explicitly chose dark, OR the OS prefers dark and the user has not explicitly chosen light**. In CSS this is two rules:
+
+```css
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* dark tokens */
+  }
+}
+:root[data-theme="dark"] {
+  /* same dark tokens */
+}
+```
+
+The `:not([data-theme="light"])` is essential — without it, the OS-dark rule fires even when the user picked light, creating a mismatch between the chrome and dark-mode-aware components.
+
+### Shadow DOM components
+
+Web components with their own dark-mode CSS (e.g. `<javascript-reactivity-quadrants>`) cannot read `prefers-color-scheme` independently of the host's choice. They must use `:host-context()` to mirror the gating:
+
+```css
+@media (prefers-color-scheme: dark) {
+  :host-context(:root:not([data-theme="light"])) {
+    /* dark tokens */
+  }
+}
+:host-context([data-theme="dark"]) {
+  /* same dark tokens */
+}
+```
+
+If a Shadow-DOM component only uses `@media (prefers-color-scheme: dark)` and ignores `data-theme`, it will go dark whenever the OS is dark even if the user toggled the site to light. Always pair the media query with `:host-context()`.
+
+### Adding new dark-mode-aware styles
+
+Prefer adding tokens to `:root` and consuming them via `var(--token)` so the gating only needs to live in one place. Component-specific dark overrides should still follow the two-rule pattern above.

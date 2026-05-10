@@ -335,8 +335,12 @@
       --shadow:           rgba(0,0,0,0.08);
       --popover-bg:       #ffffff;
     }
+    /* Dark mode applies when:
+       - User explicitly chose dark via the site toggle (data-theme="dark"), OR
+       - OS prefers dark AND user hasn't explicitly chosen light.
+       Mirrors the gating used in the site's main.css. */
     @media (prefers-color-scheme: dark) {
-      :host {
+      :host-context(:root:not([data-theme="light"])) {
         --text-primary:     #f2f1eb;
         --text-secondary:   #cccbbf;
         --border-primary:   #585550;
@@ -346,7 +350,6 @@
         --popover-bg:       #2a2927;
       }
     }
-    /* Mirror dark-mode tokens when the site's manual theme toggle is set */
     :host-context([data-theme="dark"]) {
       --text-primary:     #f2f1eb;
       --text-secondary:   #cccbbf;
@@ -365,7 +368,9 @@
 
     /* In dark mode, framework labels read better at full primary brightness */
     @media (prefers-color-scheme: dark) {
-      svg text.fw-label { fill: var(--text-primary); }
+      :host-context(:root:not([data-theme="light"])) svg text.fw-label {
+        fill: var(--text-primary);
+      }
     }
     :host-context([data-theme="dark"]) svg text.fw-label {
       fill: var(--text-primary);
@@ -380,9 +385,11 @@
 
     /* Boost faint opacity labels in dark mode — CSS overrides SVG presentation attrs */
     @media (prefers-color-scheme: dark) {
-      text.ts[opacity="0.4"] { opacity: 0.95; }
-      text.ts[opacity="0.5"] { opacity: 0.95; }
+      :host-context(:root:not([data-theme="light"])) text.ts[opacity="0.4"] { opacity: 0.95; }
+      :host-context(:root:not([data-theme="light"])) text.ts[opacity="0.5"] { opacity: 0.95; }
     }
+    :host-context([data-theme="dark"]) text.ts[opacity="0.4"] { opacity: 0.95; }
+    :host-context([data-theme="dark"]) text.ts[opacity="0.5"] { opacity: 0.95; }
     :host-context([data-theme="dark"]) text.ts[opacity="0.4"] { opacity: 0.95; }
     :host-context([data-theme="dark"]) text.ts[opacity="0.5"] { opacity: 0.95; }
 

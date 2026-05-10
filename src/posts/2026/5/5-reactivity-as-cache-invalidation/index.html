@@ -1,0 +1,47 @@
+---
+title: "JavaScript Reactivity (Part 5): Reactivity as Cache Invalidation"
+excerpt: "A reactive system is a dependency graph that knows which cached computations to throw away when an input changes. Once you see it, you can't unsee it."
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+date: 2026-05-08
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 5): Reactivity as Cache Invalidation</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>A Global Look</li>
+    <li>Deep vs. Shallow Reactivity <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Coarse vs. Fine-Grained Reactivity Tracking <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span></li>
+    <li><strong>Reactivity as Cache Invalidation</strong></li>
+    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+  </ol>
+</nav>
+
+<p>TODO: intro. Karlton's joke about the two hard things; reactivity is the framework doing one of them for you.</p>
+
+<h2>Every derived value is a cache</h2>
+
+<p>TODO: <code>computed</code>, <code>useMemo</code>, Solid's <code>createMemo</code>. The cached output stays valid until one of its tracked inputs changes.</p>
+
+<h2>The dependency graph is the invalidation strategy</h2>
+
+<p>TODO: tracking reads builds the graph automatically. A write walks the graph and marks dependents dirty.</p>
+
+<h2>Why "stale" is the bug you hit most</h2>
+
+<p>TODO: stale closures in React, missed dependencies in <code>useMemo</code>, untracked reads in Vue. All variations of "the cache wasn't invalidated when it should have been."</p>
+
+<h2>Wrap-up</h2>
+
+<p>TODO.</p>

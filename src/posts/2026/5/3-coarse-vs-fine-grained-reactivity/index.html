@@ -1,0 +1,47 @@
+---
+title: "JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking"
+excerpt: "Re-render the world and diff, or track individual reads and update only what changed? The two ends of the reactivity spectrum and what each one costs you."
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+date: 2026-05-08
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>A Global Look</li>
+    <li>Deep vs. Shallow Reactivity <span class="coming-soon">(Coming soon!)</span></li>
+    <li><strong>Coarse vs. Fine-Grained Reactivity Tracking</strong></li>
+    <li>Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Reactivity as Cache Invalidation <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+  </ol>
+</nav>
+
+<p>TODO: intro.</p>
+
+<h2>The coarse end: re-render and diff</h2>
+
+<p>TODO: React's model. Component re-runs top to bottom; reconciler figures out what actually changed in the DOM.</p>
+
+<h2>The fine-grained end: track every read</h2>
+
+<p>TODO: Solid, Vue refs, Svelte 5 runes, Angular signals. Reads are subscriptions; writes notify exactly the computations that depend on them.</p>
+
+<h2>What each one costs</h2>
+
+<p>TODO: coarse = simpler mental model, predictable, but does work proportional to component size. Fine-grained = less wasted work, but you pay in dependency-graph bookkeeping and a sharper learning curve around what is and isn't reactive.</p>
+
+<h2>Wrap-up</h2>
+
+<p>TODO.</p>

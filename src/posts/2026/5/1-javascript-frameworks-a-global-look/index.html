@@ -1,0 +1,283 @@
+---
+title: "JavaScript Reactivity (Part 1): A Global Look"
+excerpt: "Reactivity is a creative, opinionated, scrappy corner of front-end JavaScript. Part 1 of a series getting the lay of the land on reactivity - defining some terms, introducing the actors, and marveling at the diversity."
+layout: post
+tags:
+  - posts
+  - javascript
+  - frameworks
+  - reactivity
+  - signals
+date: 2026-05-08
+image: butterfly.webp
+---
+
+<h1>JavaScript Reactivity (Part 1): A Global Look</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li><strong>A Global Look</strong></li>
+    <li>
+      Deep vs. Shallow Reactivity
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Coarse vs. Fine-Grained Reactivity Tracking
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+  </ol>
+</nav>
+
+<p>
+  My world lately at work has been implementing a platform that supports product
+  groups bringing in their own web components. These web components are just the
+  entry point, and often we can see React, Lit, Ember, or Svelte running
+  alongside each other. It's part of my job to help with the services layer.
+  It's my baby. And that means each of these frameworks needs to share a common
+  kind of reactivity.
+</p>
+
+<p>
+  It's fun, it's tough, it's fascinating, and it's taught me a whole lot about
+  JavaScript reactivity, front-end frameworks, and agnostic patterns.
+</p>
+
+<p>
+  I want us to get a lay of the land in this post - understand where common
+  frameworks and reactivity libraries lie in relation to each other based on
+  three dimensions: depth, granularity, and directionality.
+</p>
+
+<ul>
+  <li>
+    <strong>Depth:</strong> Are we concerned with paying attention to the whole
+    tree or graph of state? Or do we only care if the reference we're given is
+    different? Do we know when a leaf node in our state tree changes?
+  </li>
+  <li>
+    <strong>Granularity:</strong> Does the reactivity pay attention to
+    individual values or references? Or does it only care about whole objects or
+    services? Or is it even more coarse than that?
+  </li>
+  <li>
+    <strong>Directionality:</strong> Do we get pushed a notification when
+    something has changed? Do we sit back and wait for rendering time to pull
+    and then determine changes? Is it a combination of both?
+  </li>
+</ul>
+
+<p>
+  Let's get a sense of where the most common frameworks and libraries are in
+  this diverse landscape. My hope here is to lay out a comprehensive framework
+  (pun intended) to categorize front-end reactivity, compare strengths and
+  weaknesses, and understand how frameworks converge on similar solutions.
+</p>
+
+<h2>Visualizing reactivity strategies</h2>
+
+<p>
+  At work we offer a service layer that provides dependency injection of
+  singleton services which each might contain state. Consumers need to react to
+  state changes, so we have the concept of "notifications" across servicices and
+  their consumers. It's a "meta-framework" of sorts- a runtime platform.
+</p>
+
+<aside>
+  <p>
+    The service layer I'm talking about is heavily based off of my
+    <a href="https://github.com/JimSchofield/wc-services"
+      >wc-service dependency injection</a
+    >
+    library that I developed on my own. You can check out a post where I
+    describe the basics of what it does and how it provides a runtime dependency
+    injection that is very close to the Ember model of services
+    <a href="/posts/2025/2/the-case-for-services/">here</a>.
+  </p>
+</aside>
+
+<p>
+  If service state changes, we want to notify all of our consumers. A
+  notification is pushed, but, long story short, the consumer has to investigate
+  and understand what has changed and react accordingly. In React and Lit
+  worlds, two libraries that are coarse-grained and utilize pull reactivity,
+  this is not a problem. In the Ember Octane world, which is push-based and
+  fine-grained, this was a headache.
+</p>
+
+<p>
+  This got me thinking about libraries along these axes. Reactivity systems
+  don't all play well together, and they vary in a lot of ways - which makes
+  writing adapters between them annoying. With Claude's help I plotted some
+  common libraries on a graph: granularity on the x-axis, depth on the y-axis,
+  and push/pull as color. The result is an image of where each library lives.
+</p>
+
+<p>
+  <em>Click on the circles to see analysis of their placement.</em>
+</p>
+
+<script type="module" src="javascript-reactivity-quadrants.js"></script>
+<javascript-reactivity-quadrants></javascript-reactivity-quadrants>
+
+<h2>Anatomy of reactivity</h2>
+
+<p>Reactivity has two parts: the notification and the update.</p>
+
+<p>
+  <strong>The notification</strong> is fired letting participants know
+  <em>something's changed</em>. This is where granularity and depth are
+  determined. In wc-services, for example, there is an explicit notification
+  that gets sent to all service dependency chains. The catch, though, is that
+  service notifications are deduped, and so the consumer gets a notification but
+  can't tell from that alone what actually is the source of the change. This is
+  coarse reactivity. This is similar to what zone.js does. Zone.js'
+  notifications come in from every async event that can happen, which means that
+  it is being notified all the time, but it has to do the hard work of then
+  going out and figuring out what actually changed.
+</p>
+
+<p>
+  The notification also is closely tied with the depth of the reactivity.
+  Basically, at what level will a change trigger a notification? This isn't as
+  cut and dry as you would think. In wc-services, for example, there is a setter
+  for some fields on services that will notify as soon as a particular field is
+  overwritten. This might be slightly fine-grained, but it's coarse because if
+  you are storing an object on that field, changes of nested properties within
+  that object won't trigger this notification. And then to top it off, you can
+  call <code>this.notify()</code> manually to trigger notifications so you can
+  manually make up for deeply nested value changes. Zone.js has it worse,
+  though. A notification can happen
+  <em>even if there isn't a change in state</em>. At least in most reactivity
+  notifications like this there is at least a guarantee that something has
+  changed.
+</p>
+
+<p>
+  Then there's <strong>the update</strong>. When you notify, you have to do
+  something to respond to the changes and keep state in sync. This is largely
+  what determines if a strategy is push or pull. Wc-services works the best in
+  pull frameworks, because we can simply ask the framework to diff and
+  re-render. Frameworks like React or Lit do this extremely efficiently.
+  Signals-based libraries like Solid and Preact Signals push invalidations when
+  a value is written, and then effects pull the current value when they re-run.
+</p>
+
+<p>
+  Other push-based systems do all the work in reaction to the notification. For
+  example, Svelte 4 wires in the view changes at compile time, meaning that
+  Svelte pushes particular updates in the view when a change notification
+  occurs. The same happens with Solid, and partially with Preact signals. Solid
+  makes fine grained reactive changes to the view when a signal is notified, and
+  it doesn't call an overall re-render of the system. It does make the
+  fine-grained updates within the view, though. Preact Signals can opt into
+  this, but otherwise still participates in virtual DOM diffing like React.
+</p>
+
+<p>
+  If your eyes are glazing over a bit I don't blame you! Describing all these
+  systems, and trying to keep the descriptions accurate, is really hard and
+  wordy and I start to sound like my obsessed 9-year-old talking at length about
+  every single detail of all the blocks and properties of builds in Minecraft.
+  (Not that that's ever happened 🤣)
+</p>
+
+<p>
+  Still, there's a reason each one of these systems exist, and it's fascinating
+  to me how nuanced and varied reactivity can be in the same platform, and the
+  different categories and patterns that emerge.
+</p>
+
+<h2>Four quadrants emerge</h2>
+
+<p>
+  Splitting up the 2D quadrant graph we have four major categories of
+  reactivity:
+</p>
+
+<ul>
+  <li>
+    <strong>Reactive Graphs:</strong> this category tracks properties on graphs
+    of objects deeply. Most of the time, recursive proxies are used to track
+    what is actually being referenced from within the graph of state, and then
+    highly efficient checks can be done on state changes to see what needs to be
+    notified.
+  </li>
+  <li>
+    <strong>Atomic Primitives:</strong> a collection of more generic state
+    mechanisms that can be used more agnostically. The interesting thing is that
+    most of these primitives are containers that wrap a value (an applicative
+    functor, if you will!) and expose the value through <code>.value</code>.
+    They also tend to use getters or proxies to signal when a change has
+    happened.
+  </li>
+  <li>
+    <strong>Diffing:</strong> most famous in this group is React since they
+    basically started this category. Replace the state, render the DOM graph
+    virtually, and compare the new graph with the old one. At first, React was
+    criticized that this was quite expensive, but over time people experienced
+    the fact that this diffing was performant and efficient... mostly!
+  </li>
+  <li>
+    <strong>Wholesale discovery:</strong> there are groups of reactivity where
+    notifications are sent with limited information about
+    <em>what exactly changed</em>. For one reason or another, this is done to
+    avoid computing notification graphs, avoiding cycles, and de-duplicating
+    notification signals. In the end, this means that the framework or change
+    detection needs to discover what actually changed. Arguably the least
+    efficient, but probably the most easily shared agnostically across a
+    platform.
+  </li>
+</ul>
+
+<h2>Libraries vs. frameworks</h2>
+
+<p>
+  I don't mean to start a fight about
+  <a
+    href="https://react.dev/#:~:text=The%20library%20for%20web%20and%20native%20user%20interfaces"
+    >what makes a library a framework</a
+  >. I just want to point out that there are libraries that don't have strong
+  rendering preferences, and they fit on this graph as well. Valtio, MobX,
+  Nanostores, XState, Zustand, Redux, Cycle.js, Immer, event buses... MobX, for
+  example, is a Reactive Graph just like Vue, but it leaves the view layer up to
+  you.
+</p>
+
+<p>
+  These libraries' main goal is to hold state and/or notify of changes. They are
+  often developed within particular frameworks, but always assume they function
+  in a system that allows consumers to discover state changes in a systemic way,
+  and inform the framework or view of those changes.
+</p>
+
+<p>
+  You'll note that "event bus" is in the graph, but this is the oddest oddball
+  of all. Events don't hold state. Yes, technically, they can pass payloads of
+  data, but they are not long-lived. All others on the graph hold state and
+  track changes over time. But I find that event buses are an option and
+  sometimes used, so we should include them.
+</p>
+
+<h2>Up next: depth</h2>
+
+<p>
+  In Part 2 (<strong>Deep vs. Shallow Reactivity</strong>) we'll dive into
+  depth: what it means, and the strategies for tracking state changes from
+  shallow all the way to the deepest, most nested state graph.
+</p>
+
+<p>If you like my work, please let me know! {% socials %}</p>

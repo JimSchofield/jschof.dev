@@ -346,12 +346,30 @@
         --popover-bg:       #2a2927;
       }
     }
+    /* Mirror dark-mode tokens when the site's manual theme toggle is set */
+    :host-context([data-theme="dark"]) {
+      --text-primary:     #f2f1eb;
+      --text-secondary:   #cccbbf;
+      --border-primary:   #585550;
+      --border-secondary: #423f3c;
+      --border-tertiary:  #343230;
+      --shadow:           rgba(0,0,0,0.45);
+      --popover-bg:       #2a2927;
+    }
 
     .wrap { position: relative; }
     svg { display: block; width: 100%; overflow: visible; }
 
     svg text { font-family: 'DM Sans', system-ui, sans-serif; }
     svg text.ts { font-size: 12px; fill: var(--text-secondary); }
+
+    /* In dark mode, framework labels read better at full primary brightness */
+    @media (prefers-color-scheme: dark) {
+      svg text.fw-label { fill: var(--text-primary); }
+    }
+    :host-context([data-theme="dark"]) svg text.fw-label {
+      fill: var(--text-primary);
+    }
 
     /* Label highlights when its dot is hovered or focused */
     text.fw-label { transition: fill 0.1s; }
@@ -362,9 +380,11 @@
 
     /* Boost faint opacity labels in dark mode — CSS overrides SVG presentation attrs */
     @media (prefers-color-scheme: dark) {
-      text.ts[opacity="0.4"] { opacity: 0.75; }
-      text.ts[opacity="0.5"] { opacity: 0.80; }
+      text.ts[opacity="0.4"] { opacity: 0.95; }
+      text.ts[opacity="0.5"] { opacity: 0.95; }
     }
+    :host-context([data-theme="dark"]) text.ts[opacity="0.4"] { opacity: 0.95; }
+    :host-context([data-theme="dark"]) text.ts[opacity="0.5"] { opacity: 0.95; }
 
     /* ── Dots ───────────────────────────── */
     .dot-group { cursor: pointer; outline: none; }
@@ -677,10 +697,10 @@
         ${dotGroups}
 
         <!-- Axes -->
-        <line x1="80"  y1="525" x2="618" y2="525"
+        <line x1="100" y1="525" x2="595" y2="525"
               stroke="var(--text-secondary)" stroke-width="1"
               marker-start="url(#arr)" marker-end="url(#arr)"/>
-        <line x1="44"  y1="500" x2="44"  y2="62"
+        <line x1="44"  y1="495" x2="44"  y2="85"
               stroke="var(--text-secondary)" stroke-width="1"
               marker-start="url(#arr)" marker-end="url(#arr)"/>
         <text class="ts" x="82"  y="542">coarse-grained</text>

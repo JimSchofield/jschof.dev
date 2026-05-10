@@ -20,11 +20,25 @@ image: butterfly.webp
   <p><strong>Series: JavaScript Reactivity</strong></p>
   <ol>
     <li><strong>A Global Look</strong></li>
-    <li>Deep vs. Shallow Reactivity</li>
-    <li>Coarse vs. Fine-Grained Reactivity Tracking</li>
-    <li>Push vs. Pull Reactivity</li>
-    <li>Reactivity as Cache Invalidation</li>
-    <li>Agnostic Reactivity - Does It Exist?</li>
+    <li>
+      Deep vs. Shallow Reactivity
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Coarse vs. Fine-Grained Reactivity Tracking
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
   </ol>
 </nav>
 
@@ -76,9 +90,10 @@ image: butterfly.webp
 <h2>Visualizing reactivity strategies</h2>
 
 <p>
-  At work we offer a service layer that allows dependency injection of singleton
-  services which each might contain state. It's a "meta-framework" of sorts- a
-  runtime platform.
+  At work we offer a service layer that provides dependency injection of
+  singleton services which each might contain state. Consumers need to react to
+  state changes, so we have the concept of "notifications" across servicices and
+  their consumers. It's a "meta-framework" of sorts- a runtime platform.
 </p>
 
 <aside>
@@ -98,9 +113,9 @@ image: butterfly.webp
   If service state changes, we want to notify all of our consumers. A
   notification is pushed, but, long story short, the consumer has to investigate
   and understand what has changed and react accordingly. In React and Lit
-  worlds, two libraries that are coarse-grained, pull reactivity, this is not a
-  problem. In the Ember Octane world, which is push-based and fine-grained, this
-  was a headache.
+  worlds, two libraries that are coarse-grained and utilize pull reactivity,
+  this is not a problem. In the Ember Octane world, which is push-based and
+  fine-grained, this was a headache.
 </p>
 
 <p>
@@ -112,7 +127,7 @@ image: butterfly.webp
 </p>
 
 <p>
-  <em>Click on the circles to see Claude's analysis of their placement.</em>
+  <em>Click on the circles to see analysis of their placement.</em>
 </p>
 
 <script type="module" src="javascript-reactivity-quadrants.js"></script>
@@ -237,9 +252,9 @@ image: butterfly.webp
     >what makes a library a framework</a
   >. I just want to point out that there are libraries that don't have strong
   rendering preferences, and they fit on this graph as well. Valtio, MobX,
-  Nanostores, XState, Zustand, Redux, Cycle.js, Immer, event buses...
-  MobX, for example, is a Reactive Graph just like Vue, but it leaves the view
-  layer up to you.
+  Nanostores, XState, Zustand, Redux, Cycle.js, Immer, event buses... MobX, for
+  example, is a Reactive Graph just like Vue, but it leaves the view layer up to
+  you.
 </p>
 
 <p>

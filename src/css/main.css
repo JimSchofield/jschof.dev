@@ -930,3 +930,36 @@ h6:hover .heading-link {
     }
   }
 }
+
+.series-toc {
+  margin: 1.5em 0;
+  padding: 1em 1.25em;
+  border: 5px solid var(--accent-secondary);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--text-secondary) 15%, transparent);
+}
+
+.series-toc > p:first-child {
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.series-toc ol {
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+.series-toc li {
+  margin: 0.25em 0;
+}
+
+.series-toc .coming-soon {
+  font-style: italic;
+  font-size: 0.875em;
+  color: var(--text-secondary);
+  margin-left: 0.25em;
+}

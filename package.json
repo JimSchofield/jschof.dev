@@ -21,7 +21,8 @@
   "devDependencies": {
     "@11ty/eleventy": "^3.1.5",
     "@changesets/cli": "^2.30.0",
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "sharp": "^0.34.5"
   },
   "dependencies": {
     "@11ty/eleventy-plugin-rss": "^3.0.0",

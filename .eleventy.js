@@ -25,6 +25,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
+  eleventyConfig.addPassthroughCopy("./src/**/*.jpg");
   eleventyConfig.addPassthroughCopy("./src/**/*.gif");
   eleventyConfig.addPassthroughCopy("./src/**/*.webp");
   eleventyConfig.addPassthroughCopy("./src/**/*.png");

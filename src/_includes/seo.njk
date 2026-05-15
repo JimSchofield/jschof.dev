@@ -12,14 +12,18 @@
 {%- set _ogType = ogType or ("article" if "posts" in (tags or []) else "website") -%}
 
 {#- Resolve image: `image` may be an absolute path ("/foo.jpg"), an absolute URL
-    ("https://..."), or a bare filename relative to the page's URL. -#}
+    ("https://..."), or a bare filename relative to the page's URL.
+    LinkedIn (and some other scrapers) reject WebP for og:image, so we swap
+    a .webp extension for .jpg here. scripts/generate-og-jpegs.js keeps the
+    .jpg siblings in sync. -#}
 {%- if image -%}
-  {%- if image.startsWith("http") -%}
-    {%- set _imageUrl = image -%}
-  {%- elif image.startsWith("/") -%}
-    {%- set _imageUrl = site.url + image -%}
+  {%- set _ogImage = image.replace(".webp", ".jpg") -%}
+  {%- if _ogImage.startsWith("http") -%}
+    {%- set _imageUrl = _ogImage -%}
+  {%- elif _ogImage.startsWith("/") -%}
+    {%- set _imageUrl = site.url + _ogImage -%}
   {%- else -%}
-    {%- set _imageUrl = site.url + page.url + image -%}
+    {%- set _imageUrl = site.url + page.url + _ogImage -%}
   {%- endif -%}
 {%- elif site.defaultImage -%}
   {%- set _imageUrl = site.url + site.defaultImage -%}

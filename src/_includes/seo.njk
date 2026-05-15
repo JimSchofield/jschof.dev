@@ -13,11 +13,11 @@
 
 {#- Resolve image: `image` may be an absolute path ("/foo.jpg"), an absolute URL
     ("https://..."), or a bare filename relative to the page's URL.
-    LinkedIn (and some other scrapers) reject WebP for og:image, so we swap
-    a .webp extension for .jpg here. scripts/generate-og-jpegs.js keeps the
-    .jpg siblings in sync. -#}
+    LinkedIn (and some other scrapers) reject WebP for og:image and time out
+    on multi-MB originals, so we swap a .webp extension for the resized
+    sibling produced by scripts/generate-og-jpegs.js (`<name>.og.jpg`). -#}
 {%- if image -%}
-  {%- set _ogImage = image.replace(".webp", ".jpg") -%}
+  {%- set _ogImage = image.replace(".webp", ".og.jpg") -%}
   {%- if _ogImage.startsWith("http") -%}
     {%- set _imageUrl = _ogImage -%}
   {%- elif _ogImage.startsWith("/") -%}

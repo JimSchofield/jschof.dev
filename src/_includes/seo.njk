@@ -1,0 +1,59 @@
+{#-
+  SEO + social preview meta tags.
+  Reads from frontmatter (title, excerpt, image, date, tags, author, ogType)
+  and falls back to site-level defaults from _data/site.js.
+-#}
+
+{%- set _pageTitle = title or site.title -%}
+{%- set _fullTitle = (title + " - " + site.title) if title else site.title -%}
+{%- set _description = excerpt or description or site.description -%}
+{%- set _canonical = site.url + page.url -%}
+{%- set _author = author or site.author -%}
+{%- set _ogType = ogType or ("article" if "posts" in (tags or []) else "website") -%}
+
+{#- Resolve image: `image` may be an absolute path ("/foo.jpg"), an absolute URL
+    ("https://..."), or a bare filename relative to the page's URL. -#}
+{%- if image -%}
+  {%- if image.startsWith("http") -%}
+    {%- set _imageUrl = image -%}
+  {%- elif image.startsWith("/") -%}
+    {%- set _imageUrl = site.url + image -%}
+  {%- else -%}
+    {%- set _imageUrl = site.url + page.url + image -%}
+  {%- endif -%}
+{%- elif site.defaultImage -%}
+  {%- set _imageUrl = site.url + site.defaultImage -%}
+{%- endif -%}
+
+<title>{{ _fullTitle }}</title>
+<meta name="description" content="{{ _description }}">
+<meta name="author" content="{{ _author }}">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{{ _canonical }}">
+
+<meta property="og:site_name" content="{{ site.title }}">
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="{{ _ogType }}">
+<meta property="og:title" content="{{ _fullTitle }}">
+<meta property="og:description" content="{{ _description }}">
+<meta property="og:url" content="{{ _canonical }}">
+{%- if _imageUrl %}
+<meta property="og:image" content="{{ _imageUrl }}">
+<meta property="og:image:alt" content="{{ imageAlt or _pageTitle }}">
+{%- endif %}
+
+{%- if _ogType == "article" %}
+{%- if date %}
+<meta property="article:published_time" content="{{ date.toISOString() }}">
+{%- endif %}
+<meta property="article:author" content="{{ _author }}">
+{%- for tag in (tags or []) %}{% if tag != "posts" %}
+<meta property="article:tag" content="{{ tag }}">{% endif %}{%- endfor %}
+{%- endif %}
+
+<meta name="twitter:card" content="{{ "summary_large_image" if _imageUrl else "summary" }}">
+<meta name="twitter:title" content="{{ _fullTitle }}">
+<meta name="twitter:description" content="{{ _description }}">
+{%- if _imageUrl %}
+<meta name="twitter:image" content="{{ _imageUrl }}">
+{%- endif %}

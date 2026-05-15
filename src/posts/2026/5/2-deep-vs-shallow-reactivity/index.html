@@ -1,6 +1,6 @@
 ---
 title: "JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity"
-excerpt: "Should the framework reach into your nested objects and arrays, or stop at the top level? An ergonomics-vs-predictability tradeoff with surprising performance consequences."
+excerpt: ""
 layout: post
 tags:
   - posts
@@ -8,8 +8,9 @@ tags:
   - javascript
   - frameworks
   - reactivity
-date: 2026-05-08
-eleventyExcludeFromCollections: true
+  - object reference and identity
+date: 2026-05-15
+eleventyExcludeFromCollections: false
 ---
 
 <h1>JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity</h1>
@@ -19,12 +20,27 @@ eleventyExcludeFromCollections: true
 <nav class="series-toc">
   <p><strong>Series: JavaScript Reactivity</strong></p>
   <ol>
-    <li>A Global Look</li>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
     <li><strong>Deep vs. Shallow Reactivity</strong></li>
-    <li>Coarse vs. Fine-Grained Reactivity Tracking <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Reactivity as Cache Invalidation <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+    <li>
+      Coarse vs. Fine-Grained Reactivity Tracking
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
   </ol>
 </nav>
 
@@ -32,15 +48,26 @@ eleventyExcludeFromCollections: true
 
 <h2>Deep: proxies all the way down</h2>
 
-<p>TODO: Vue's <code>reactive()</code>. Mutating <code>state.user.address.city</code> just works. Cost: every nested read goes through a Proxy.</p>
+<p>
+  TODO: Vue's <code>reactive()</code>. Mutating
+  <code>state.user.address.city</code> just works. Cost: every nested read goes
+  through a Proxy.
+</p>
 
 <h2>Shallow: top-level only</h2>
 
-<p>TODO: Solid stores, React's <code>useState</code>. You opt into nested reactivity explicitly, or replace the reference. Predictable, but you have to think about it.</p>
+<p>
+  TODO: Solid stores, React's <code>useState</code>. You opt into nested
+  reactivity explicitly, or replace the reference. Predictable, but you have to
+  think about it.
+</p>
 
 <h2>The ergonomics tradeoff</h2>
 
-<p>TODO: deep feels magic until something doesn't track and you can't tell why. Shallow makes the boundary explicit at the cost of more code.</p>
+<p>
+  TODO: deep feels magic until something doesn't track and you can't tell why.
+  Shallow makes the boundary explicit at the cost of more code.
+</p>
 
 <h2>Wrap-up</h2>
 

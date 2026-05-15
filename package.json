@@ -12,6 +12,7 @@
     "dev:components": "pnpm -r --parallel --filter './component/*' run dev",
     "dev:netlify": "netlify dev --filter jschof-dev",
     "dev:full": "pnpm run \"/^dev:(components|netlify)$/\"",
+    "og:gen": "node scripts/generate-post-images.js",
     "prepare": "git config core.hooksPath .githooks",
     "release": "pnpm build:components && pnpm changeset version && pnpm changeset publish"
   },
@@ -21,7 +22,8 @@
   "devDependencies": {
     "@11ty/eleventy": "^3.1.5",
     "@changesets/cli": "^2.30.0",
-    "esbuild": "^0.28.0"
+    "esbuild": "^0.28.0",
+    "sharp": "^0.34.5"
   },
   "dependencies": {
     "@11ty/eleventy-plugin-rss": "^3.0.0",
@@ -44,7 +46,6 @@
     "baseline-status": "^1.1.1",
     "codemirror": "^6.0.1",
     "date-fns": "^4.1.0",
-    "eleventy-plugin-seo": "^0.5.2",
     "gaxios": "^7.1.4",
     "google-auth-library": "^10.6.2",
     "google-logging-utils": "^1.1.3",

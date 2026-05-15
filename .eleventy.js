@@ -1,5 +1,4 @@
 import { lightFormat } from "date-fns";
-import pluginSEO from "eleventy-plugin-seo";
 import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
@@ -26,6 +25,7 @@ export default function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("./src/**/*.css");
   eleventyConfig.addPassthroughCopy("./src/**/*.js", { expand: true });
   eleventyConfig.addPassthroughCopy("./src/**/*.jpeg");
+  eleventyConfig.addPassthroughCopy("./src/**/*.jpg");
   eleventyConfig.addPassthroughCopy("./src/**/*.gif");
   eleventyConfig.addPassthroughCopy("./src/**/*.webp");
   eleventyConfig.addPassthroughCopy("./src/**/*.png");
@@ -41,13 +41,6 @@ export default function (eleventyConfig) {
     "I love to collaborate and solve problems. A front end dev blogging about html, css, javascript, web components... and more!";
   const url = "https://jschof.dev";
   const author = "Jim Schofield";
-
-  eleventyConfig.addPlugin(pluginSEO, {
-    title,
-    description,
-    url,
-    author,
-  });
 
   eleventyConfig.addPlugin(feedPlugin, {
     type: "rss", // or "rss", "json"

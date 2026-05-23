@@ -95,3 +95,4 @@ pnpm -r --filter './component/*' publish --access public
 ## Deployment
 
 Deployed on [Netlify](https://www.netlify.com/). The build command (`pnpm build`) builds all components with Vite, bundles `site-entry.js` with esbuild, then runs 11ty to generate the static site into `_site/`.
+

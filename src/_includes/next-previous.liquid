@@ -1,5 +1,5 @@
-{% set previousPost = collections.posts | getPreviousCollectionItem %}
-{% set nextPost = collections.posts | getNextCollectionItem %}
+{% assign previousPost = collections.posts | getPreviousCollectionItem %}
+{% assign nextPost = collections.posts | getNextCollectionItem %}
 <span>
 {% if previousPost %}
 <a class="button" href="{{ previousPost.url }}" title="{{ previousPost.data.title }}">⬅️  Previous Post</a>

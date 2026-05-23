@@ -51,7 +51,7 @@ export default function (eleventyConfig) {
 
       const window = new Window();
       const document = window.document;
-      document.body.innerHTML = content;
+      document.write(content);
 
       const usedIds = new Set();
 
@@ -106,7 +106,7 @@ export default function (eleventyConfig) {
         heading.appendChild(link);
       });
 
-      return document.body.innerHTML;
+      return "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
     },
   );
 }

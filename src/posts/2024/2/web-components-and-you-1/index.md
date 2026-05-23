@@ -7,6 +7,7 @@ tags:
   - web-components
 image: back_1.webp
 date: 2024-02-23
+series: "Web Components and You"
 ---
 
 # Web Components and You (Part 1): The Shadow Dom

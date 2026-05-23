@@ -123,14 +123,14 @@
     },
     {
       id: "vue-ref",
-      name: "Vue ref()",
+      name: "Vue shallowRef()",
       cx: 466,
       cy: 432,
       color: "#7F77DD",
       granularity: "fine",
       depth: "shallow",
       pushPull: "push-pull",
-      desc: "A single reactive container that pushes a dirty signal when .value changes, then lazily re-evaluates dependents when read in a reactive context. Fine-grained and precise, but tracks only the top-level scalar value. For deep object tracking, Vue provides reactive() instead.",
+      desc: "Vue's truly-shallow wrapper: only .value = newVal triggers reactivity, and the inner value is never converted. ref() looks similar but applies reactive() to any object you store in it via toReactive(), so ref() of an object is deep in practice. shallowRef() does not do that swap.",
     },
     {
       id: "solid-signal",
@@ -163,7 +163,7 @@
       granularity: "fine",
       depth: "shallow",
       pushPull: "push-pull",
-      desc: "Glimmer's @tracked decorator uses getter interception to auto-build a reactive dependency graph. The Octane rewrite moved Ember from the center of the chart to the fine+shallow signals cluster — same push-pull hybrid as Vue ref() and Solid signals. The migration arrow on the chart shows this trajectory from classic KVO.",
+      desc: "Glimmer's @tracked decorator uses getter interception to auto-build a reactive dependency graph. The Octane rewrite moved Ember from the center of the chart to the fine+shallow signals cluster — same push-pull hybrid as Vue shallowRef() and Solid signals. The migration arrow on the chart shows this trajectory from classic KVO.",
     },
     {
       id: "svelte5",
@@ -178,14 +178,14 @@
     },
     {
       id: "vue-reactive",
-      name: "Vue reactive()",
+      name: "Vue reactive() and ref(object)",
       cx: 488,
       cy: 148,
       color: "#7F77DD",
       granularity: "fine",
       depth: "deep",
       pushPull: "push-pull",
-      desc: "A recursive Proxy that intercepts property access at every nesting level, building a fine-grained dependency graph on the fly. Only the exact paths you read get tracked. Push dirty on mutation, pull lazily on read — but tracking extends as deep as the object graph goes.",
+      desc: "A recursive Proxy that intercepts property access at every nesting level, building a fine-grained dependency graph on the fly. Only the exact paths you read get tracked. Push dirty on mutation, pull lazily on read — but tracking extends as deep as the object graph goes. ref() lands here too whenever you store an object in it: Vue substitutes the object with a reactive() proxy at construction (via toReactive()), so the contents are deeply tracked. The ref wrapper itself stays shallow; its contents are deep when they're objects.",
     },
     {
       id: "mobx",
@@ -666,7 +666,7 @@
         <text class="ts fw-label" data-fw="angular-zone"   x="125" y="192">Angular (Zone.js)</text>
         <text class="ts fw-label" data-fw="react-immer"    x="182" y="162">React + Immer</text>
         <text class="ts fw-label" data-fw="svelte4"        x="412" y="469" text-anchor="middle">Svelte 4</text>
-        <text class="ts fw-label" data-fw="vue-ref"        x="466" y="418" text-anchor="middle">Vue ref()</text>
+        <text class="ts fw-label" data-fw="vue-ref"        x="466" y="418" text-anchor="middle">Vue shallowRef()</text>
         <text class="ts fw-label" data-fw="solid-signal"   x="578" y="472" text-anchor="middle">Solid (signal)</text>
         <text class="ts fw-label" data-fw="preact-signals" x="602" y="418" text-anchor="end">Preact + signals</text>
         <text class="ts fw-label" data-fw="ember-octane"   x="453" y="458">Ember (Octane)</text>

@@ -225,6 +225,27 @@ image: kids-on-a-log.webp
   >. For the most part, this is not unique to Vue, you see this everywhere.)
 </p>
 
+<aside>
+  <p>
+    And I have to add a note about <code>ref</code> vs
+    <code>shallowRef</code> in vue. You don't
+    <em>have to only put primitives</em> in <code>ref</code>. You can put a deep
+    object into <code>ref</code> and Vue is smart enough to detect that and make
+    it deeply reactive. You can see where Vue does this
+    <a
+      href="https://github.com/vuejs/core/blob/main/packages/reactivity/src/reactive.ts#L437"
+      >here</a
+    >.
+  </p>
+  <p>
+    The technical truth is that <code>ref</code> is shallow, but makes deep
+    values reactive on creation. The practical truth is that this means
+    <code>ref</code> functions as a deeply reactive Vue primitive. This is why
+    <code>shallowRef</code> exists, so you have the option to work 100% shallow
+    if you wish.
+  </p>
+</aside>
+
 <p>
   Here is the simplest sketch I can come up with that shows two primitives in a
   hypothetical reactivity framework.
@@ -370,7 +391,7 @@ image: kids-on-a-log.webp
         Since primitives can't be proxied, we just re-use object proxying and
         place the primitive inside a useful object with a common key:
         <code>value</code>. The shape - an object with <code>.value</code> - is
-        exactly what <code>useState</code>, <code>ref()</code>,
+        exactly what <code>useState</code>, <code>shallowRef()</code>,
         <code>signal()</code>, and friends all converge on. Ember cells do the
         same thing, they just call the key <code>current</code>.
       </p>
@@ -556,7 +577,7 @@ image: kids-on-a-log.webp
   This one is pretty crazy. It's the shallowest of the bunch, because Zone.js
   notably has no idea what's changed. It hooks into and watches all async
   processes that could occur, and when they occur, it signals that "something
-  might have changed." It's the same pattern we from our MVC thought experiement
+  might have changed." It's the same pattern we saw from our MVC thought experiment
   earlier. zone.js has an extremely shallow trigger. However, what Angular then
   does in response is very different.
 </p>

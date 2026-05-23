@@ -93,7 +93,7 @@ image: butterfly.webp
 <p>
   At work we offer a service layer that provides dependency injection of
   singleton services which each might contain state. Consumers need to react to
-  state changes, so we have the concept of "notifications" across servicices and
+  state changes, so we have the concept of "notifications" across services and
   their consumers. It's a "meta-framework" of sorts- a runtime platform.
 </p>
 
@@ -181,7 +181,7 @@ image: butterfly.webp
   Other push-based systems do all the work in reaction to the notification. For
   example, Svelte 4 wires in the view changes at compile time, meaning that
   Svelte pushes particular updates in the view when a change notification
-  occurs. The same happens with Solid, and partially with Preact signals. Solid
+  occurs. The same kind of fine-grained DOM updating happens with Solid, and partially with Preact signals. Solid
   makes fine grained reactive changes to the view when a signal is notified, and
   it doesn't call an overall re-render of the system. It does make the
   fine-grained updates within the view, though. Preact Signals can opt into
@@ -197,7 +197,7 @@ image: butterfly.webp
 </p>
 
 <p>
-  Still, there's a reason each one of these systems exist, and it's fascinating
+  Still, there are reasons all these systems exist, and it's fascinating
   to me how nuanced and varied reactivity can be in the same platform, and the
   different categories and patterns that emerge.
 </p>

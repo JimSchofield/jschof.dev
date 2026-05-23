@@ -49,17 +49,17 @@
         "Shallow: only top-level property assignment is tracked. No visibility into nested object contents.",
     },
     {
-      name: "Vue ref()",
+      name: "Vue shallowRef()",
       pos: 23,
       row: 0,
       cat: "hybrid",
-      note: "ref.value = new\nwrapper-level only",
-      unit: "the ref wrapper — .value replacement",
-      mechanism: "ref() tracks assignment to .value, not nested contents",
+      note: "shallowRef.value = new\nwrapper-level only",
+      unit: "the shallowRef wrapper — .value replacement",
+      mechanism: "shallowRef() tracks assignment to .value, never reaches into contents",
       analysis:
-        "ref() is a single-value container. For primitives it is completely shallow — only .value = newVal triggers reactivity. When wrapping an object, Vue internally applies reactive() to it, so nested mutations technically work — but the design intent of ref is a shallow scalar wrapper. When you need deep nested tracking, Vue provides reactive() as an explicit, separate primitive.",
+        "shallowRef() is Vue's truly-shallow wrapper. Only .value = newVal triggers reactivity, and the inner value is left untouched - no reactive() conversion happens, so nested mutations on a stored object are invisible. This is the primitive to reach for when you want the .value contract without deep tracking. ref() looks similar but is different: when you store an object in ref(), Vue silently swaps it for a reactive() proxy, so observed behavior is deep. shallowRef() does not do that swap.",
       placement:
-        "Shallow: the primary use case of ref() is wrapping scalars. Contrast directly with Vue reactive() at the deep end of this axis.",
+        "Shallow end: the wrapper is shallow and nothing inside is converted. Contrast with Vue ref(), which has the same shallow wrapper but applies reactive() to objects you store in it, and with reactive() itself at the deep end.",
     },
     {
       name: "Solid signal",
@@ -233,7 +233,7 @@
         "Deep: transparent mutation syntax with full-depth tracking. Like React+Immer but with fine-grained path-level subscriptions rather than whole-component re-renders.",
     },
     {
-      name: "Vue reactive()",
+      name: "Vue reactive() and ref(object)",
       pos: 97,
       row: 1,
       cat: "hybrid",
@@ -241,9 +241,9 @@
       unit: "any nested property write on the reactive object",
       mechanism: "reactive() wraps objects in deep ES Proxy with track/trigger",
       analysis:
-        "Vue 3's reactive() wraps the entire object tree in ES Proxy. Any property read is tracked (building a WeakMap dep graph), and any property write triggers all dependents. Nested objects are lazily converted to Proxies on first access. No declarations needed, no explicit set() calls, no depth limits.",
+        "Vue 3's reactive() wraps the entire object tree in ES Proxy. Any property read is tracked (building a WeakMap dep graph), and any property write triggers all dependents. Nested objects are lazily converted to Proxies on first access. No declarations needed, no explicit set() calls, no depth limits. ref() lands here too whenever you store an object in it: at construction, Vue substitutes the object with a reactive() proxy via toReactive(), so nested mutations on the stored object are tracked. The ref wrapper itself stays shallow, but its contents are deep when they're objects.",
       placement:
-        "Deep end: reactive() is Vue's canonical deep-tracking primitive. This function is contrasted with ref(), which is comparably shallow and far left on this axis.",
+        "Deep end: reactive() is Vue's canonical deep-tracking primitive. ref() inherits this depth for any object value via the same toReactive() call. The strictly-shallow Vue primitive is shallowRef(), which sits far left on this axis.",
     },
   ];
 

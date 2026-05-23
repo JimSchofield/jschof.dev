@@ -12,19 +12,37 @@ date: 2026-05-08
 eleventyExcludeFromCollections: true
 ---
 
-<h1>JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking</h1>
+<h1>
+  JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking
+</h1>
 
 <p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
 
 <nav class="series-toc">
   <p><strong>Series: JavaScript Reactivity</strong></p>
   <ol>
-    <li><a href="/posts/2026/5/1-javascript-frameworks-a-global-look/">A Global Look</a></li>
-    <li><a href="/posts/2026/5/2-deep-vs-shallow-reactivity/">Deep vs. Shallow Reactivity</a></li>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/2-deep-vs-shallow-reactivity/"
+        >Deep vs. Shallow Reactivity</a
+      >
+    </li>
     <li><strong>Coarse vs. Fine-Grained Reactivity Tracking</strong></li>
-    <li>Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Reactivity as Cache Invalidation <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+    <li>
+      Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
   </ol>
 </nav>
 
@@ -32,16 +50,79 @@ eleventyExcludeFromCollections: true
 
 <h2>The coarse end: re-render and diff</h2>
 
-<p>TODO: React's model. Component re-runs top to bottom; reconciler figures out what actually changed in the DOM.</p>
+<p>
+  TODO: React's model. Component re-runs top to bottom; reconciler figures out
+  what actually changed in the DOM.
+</p>
 
 <h2>The fine-grained end: track every read</h2>
 
-<p>TODO: Solid, Vue refs, Svelte 5 runes, Angular signals. Reads are subscriptions; writes notify exactly the computations that depend on them.</p>
+<p>
+  TODO: Solid, Vue refs, Svelte 5 runes, Angular signals. Reads are
+  subscriptions; writes notify exactly the computations that depend on them.
+</p>
 
 <h2>What each one costs</h2>
 
-<p>TODO: coarse = simpler mental model, predictable, but does work proportional to component size. Fine-grained = less wasted work, but you pay in dependency-graph bookkeeping and a sharper learning curve around what is and isn't reactive.</p>
+<p>
+  TODO: coarse = simpler mental model, predictable, but does work proportional
+  to component size. Fine-grained = less wasted work, but you pay in
+  dependency-graph bookkeeping and a sharper learning curve around what is and
+  isn't reactive.
+</p>
 
 <h2>Wrap-up</h2>
 
 <p>TODO.</p>
+
+<!--
+  ============================================================================
+  DRAFT / REFERENCE - moved from Part 2 (deep vs. shallow).
+  Imperative vs. implicit signaling is not really a depth question, and not
+  really a granularity question either - it's about HOW the tripwire gets
+  placed (who calls it, you or the system). Parking here because fine-grained
+  systems tend to use implicit signaling, so it's a natural digression in
+  this post. Decide later whether to use it here, move to Part 4 (push/pull),
+  or split into its own aside.
+  ============================================================================
+
+<p>
+  This becomes important when you set up systems to notify when changes are
+  occuring. There are two general ways to "notify" when a change has occured:
+</p>
+
+<ol>
+  <li>
+    <strong>Imperative signaling</strong> - Have the user of the reactivity
+    signal explicitly when state has changed. This is done through calling a
+    method, or dirtying some flag somewhere directly. Some examples:
+    <ul>
+      <li>
+        React <code>this.setState()</code> or, more modern,
+        <code>setSomething()</code> hook conventions
+      </li>
+      <li>Wc-services <code>this.notify()</code></li>
+      <li>Nanostores <code>$store.set(...)</code></li>
+    </ul>
+  </li>
+  <li>
+    <strong>Implicit signaling</strong> - The data structure somehow
+    automatically detects data changes. There is no explicit calling of any
+    tracking mechanism.
+    <ul>
+      <li>
+        Signals either use a <a href="">Proxy wrapper</a> where if anything
+        triggers a `set()` trap on the proxy, it automatically notifies the
+        reactivity system in the background. This is common in Solid, Preact
+        signals, Vue, and Svelte just to name a few
+      </li>
+      <li>
+        Reactive properties might be set using the (now old) method of creating
+        getters using `Object.defineProperty`. This allows the same setter trap,
+        but does not create a proxy middleman. This can be seen in frameworks
+        like Vue 2.
+      </li>
+    </ul>
+  </li>
+</ol>
+-->

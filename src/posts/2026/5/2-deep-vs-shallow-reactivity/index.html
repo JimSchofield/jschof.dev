@@ -1,6 +1,6 @@
 ---
 title: "JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity"
-excerpt: ""
+excerpt: "The fundamental reactivity question is: what's changed?  Let's dive into the spectrum of reactivity depth and understand the pros and cons of these different strategies."
 layout: post
 tags:
   - posts
@@ -10,7 +10,7 @@ tags:
   - reactivity
   - object reference and identity
 date: 2026-05-15
-eleventyExcludeFromCollections: false
+image: kids-on-a-log.webp
 ---
 
 <h1>JavaScript Reactivity (Part 2): Deep vs. Shallow Reactivity</h1>
@@ -44,31 +44,606 @@ eleventyExcludeFromCollections: false
   </ol>
 </nav>
 
-<p>TODO: intro.</p>
-
-<h2>Deep: proxies all the way down</h2>
-
 <p>
-  TODO: Vue's <code>reactive()</code>. Mutating
-  <code>state.user.address.city</code> just works. Cost: every nested read goes
-  through a Proxy.
+  When you first start coding in Javascript, if you're starting with good ol'
+  plain vanilla Javascript, you most likely learned about the MVC strategy to
+  organize your code. It goes something like this:
 </p>
 
-<h2>Shallow: top-level only</h2>
+<ol>
+  <li>
+    The <strong>controller</strong> uses the <strong>view</strong> to render the
+    <strong>model</strong>.
+  </li>
+  <li>The <strong>controller</strong> also sets up event listeners.</li>
+  <li>
+    The listeners call methods on the <strong>controller</strong> to modify
+    state (in the <strong>model</strong>).
+  </li>
+  <li>
+    The methods that modify state also call methods to re-render the appropriate
+    parts of the <strong>view</strong>.
+  </li>
+  <li>Voila! The <strong>view</strong> is synced to the state!</li>
+</ol>
 
 <p>
-  TODO: Solid stores, React's <code>useState</code>. You opt into nested
-  reactivity explicitly, or replace the reference. Predictable, but you have to
-  think about it.
+  People started to notice that it was inefficient to manually and imperatively
+  tell javascript what needs to be re-rendered when we changed the model. Should
+  we have to call view changes every time related data changes? This is very
+  manual, and is prone to buggy behavior. Plus, humans have to use a lot of
+  extra brain space to make sure to only update parts of the view that need it.
+  And there could be state from the model in lots of different places! That's a
+  lot of different methods and event listeners and fragments of the view to
+  track!
+</p>
+<p>
+  Can we somehow build a <em>framework</em> that is structured in such a way
+  that all we do is change the data, and the view knows implicitly what to
+  re-render? After all, the view knows what data it needs to render the html.
 </p>
 
-<h2>The ergonomics tradeoff</h2>
+<p>And thus reactivity was born.</p>
 
 <p>
-  TODO: deep feels magic until something doesn't track and you can't tell why.
-  Shallow makes the boundary explicit at the cost of more code.
+  The next natural question as you start to think of how your framework will
+  react to data changes: <strong>How do we detect changes in the data?</strong>
 </p>
 
-<h2>Wrap-up</h2>
+<p>
+  Depth falls out of this discussion because of the way that Javascript stores
+  values, and the nature of getters and setters.
+</p>
 
-<p>TODO.</p>
+<h2>The naivest of the naive approach</h2>
+
+<p>
+  What if we just rerendered everything whenever the model is touched? If we
+  modify the model <strong>ever</strong>, let's just tell the view to re-render
+  everything! We'll never miss anything, and state will be accurately shown.
+</p>
+
+<p>
+  If you're reading this you probably already understand the issues involved
+  here. It's part of the reason people looked at React with suspicion in the
+  beginning. Rendering can be expensive, and re-rendering <em>everything</em> is
+  <em>very</em> expensive. We're not even getting into the peculiarities of DOM
+  thrashing: the problems you encounter with focus state, accessibility,
+  DOM-held state that gets lost in an unnecessary rerender...
+</p>
+
+<p>
+  There is an important distinction to make here. Re-rendering the entire view
+  is not what tells us how deep the change detection is. The thing that
+  determines the depth is
+  <strong>at what level is the change understood by our framework?</strong>
+</p>
+
+<p>
+  The answer here is that any change at all will cause renders, so the depth of
+  our thought experiment framework is <strong>very shallow.</strong>
+</p>
+
+<aside class="blue">
+  <p>
+    "But wait," you might be thinking, "in this case arbitrarily nested
+    properties in the state tree will be re-rendered, so isn't this deep?"
+  </p>
+  <p>
+    Really good question. It might be bothering you that this is considered
+    "shallow." But consider this: the response, or re-renders, to the state
+    change make that happen. Here, we are only considering what
+    <strong>causes</strong> the re-render in the first place. And if anything,
+    anywhere, changes, that means that we do not pay any deep attention to any
+    level of a state graph. It's the shallowest attention we can pay to changes.
+  </p>
+</aside>
+
+<p>
+  Consider this analogy that most definitely has not happened to me with one of
+  my children:
+</p>
+
+<p>
+  You have a toddler that wakes up in the middle of the night and steals food
+  from the kitchen. You have two strategies to be alerted about the toddler's
+  activities. We could put motion sensors throughout the house that go off
+  wherever the toddler roams, and you can know the exact path and position of
+  that thieving toddler, or we could set a single alarm on the toddler's bedroom
+  door.
+</p>
+
+<p>
+  Setting one alarm at the single door is a shallow detection. It will trigger
+  no matter how deeply the toddler ends up roaming in the house to steal ice
+  cream from the freezer. If we were to set up many, many alarms, we would know
+  how deep the toddler executed his thievery, and exactly the paths, and we
+  might even know through cameras exactly what they are doing. This is deep
+  detection.
+</p>
+
+<p>
+  Now what we do in response to the thieving toddler is separate. This is also
+  the re-rendering part of our analogy. So in our MVC naive example, the trigger
+  is extremely shallow, the rerendering response, though important, is something
+  separate.
+</p>
+
+<h2>Why does this happen? The spectrum of depth</h2>
+
+<p>
+  This leads us to an interesting way to view the
+  <a
+    href="/posts/2026/5/1-javascript-frameworks-a-global-look/#visualizing-reactivity-strategies"
+    >graph of reactivity in Javascript</a
+  >. We can flatten this graph to look only at depth. Here's one take on what
+  that looks like:
+</p>
+
+<script type="module" src="reactivity-depth-axis.js"></script>
+<reactivity-depth-axis class="wide"></reactivity-depth-axis>
+
+<p>
+  If you were to graph MVC on this axis, it is probably the most shallow of the
+  shallow reactivity strategies you can get. And there are frameworks that
+  leverage this strategy- zone.js and my wc-services are two.
+</p>
+
+<p>
+  But the strategies of detection start to fill out a spectrum, and this is
+  mostly because of the constraints that Javascript puts on us with references
+  and values. You've probably seen this sort of topic in coding or technical
+  interviews. When you store a primitive in a variable, that primitive's value
+  is stored directly. Primitive values are immutable, and if you change the
+  value you change the whole entity itself. Javascript does not keep some sort
+  of reference to that memory for that value and swap the value internally.
+</p>
+
+<p>
+  However, with objects you share values by reference. If you save an object
+  <code>let obj = { foo: "bar" }</code>, and then later change the foo property
+  on that object, the "container" <code>obj</code> is not affected.
+  <code>obj</code> is a reference to the thing in memory, and if that thing gets
+  changed, the reference is happily unaware that such a thing has even occurred.
+</p>
+
+<p>
+  The level at which Javascript has visibility into what changed is a
+  fundamental issue that reactivity systems try to solve. This is why many
+  reactivity frameworks choose to create "containers", or require that watched
+  objects are not primitives themselves. This is why Vue has a distinction
+  between
+  <code>ref()</code> and <code>reactive()</code>. Even though they are closely
+  related and share the same underlying dependency tracking, there is a
+  difference in strategy if you're dealing with primitives or objects in
+  Javascript. Basically, if you are trying to make a reactive primitive, under
+  the hood you put it on an object so we can leverage proxies or
+  getters/setters! (And this also explains
+  <a
+    href="https://vuejs.org/guide/essentials/reactivity-fundamentals.html#limitations-of-reactive"
+    >limitations of reactivity in vue</a
+  >. For the most part, this is not unique to Vue, you see this everywhere.)
+</p>
+
+<p>
+  Here is the simplest sketch I can come up with that shows two primitives in a
+  hypothetical reactivity framework.
+  <em
+    >This example just shows how a reactive primitive shallowly detects value
+    changes for primitives and objects.</em
+  >
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      function logDetection(target, prop) {
+        console.log(`---${prop} changed on my reactive primitive!`);
+      }
+
+      function makeReactive(obj) {
+        return new Proxy(obj, {
+          set(target, prop, value) {
+            target[prop] = value;
+            logDetection(target, prop);
+          },
+        });
+      }
+
+      const myObject = makeReactive({ foo: "bar", nested: { v: 1 } });
+
+      // changing a first level property triggers detection
+      myObject.foo = "baz";
+
+      // Changing a deep property does not get caught, it's Shallow!
+      myObject.nested.v = 42;
+
+      // Now we make a related function to help when we only want to
+      // track a primitive, string, number, etc.  We can't use proxy directly,
+      // because `Proxy` requires an object.  So this function just wraps it!
+      function makeReactivePrimitive(primitive) {
+        return makeReactive({
+          value: primitive,
+          set(value) {
+            this.value = value;
+          },
+        });
+      }
+
+      const myPrimitive = makeReactivePrimitive(42);
+
+      myPrimitive.value = 100;
+
+      myPrimitive.set(42000);
+
+      console.log("Note that the value on the wrapper object is tracked!");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  Let's walk through that example piece by piece to see exactly where the
+  shallow boundary lives.
+</p>
+
+<scroll-explain class="wide">
+  <code-highlight slot="code" lang="javascript">
+    <template>
+      <script>
+        function logDetection(target, prop) {
+          console.log(`---${prop} changed on my reactive primitive!`);
+        }
+
+        function makeReactive(obj) {
+          return new Proxy(obj, {
+            set(target, prop, value) {
+              target[prop] = value;
+              logDetection(target, prop);
+            },
+          });
+        }
+
+        const myObject = makeReactive({ foo: "bar", nested: { v: 1 } });
+
+        myObject.foo = "baz";
+
+        myObject.nested.v = 42;
+
+        function makeReactivePrimitive(primitive) {
+          return makeReactive({
+            value: primitive,
+            set(value) {
+              this.value = value;
+            },
+          });
+        }
+
+        const myPrimitive = makeReactivePrimitive(42);
+
+        myPrimitive.value = 100;
+
+        myPrimitive.set(42000);
+
+        console.log("Note that the value on the wrapper object is tracked!");
+      </script>
+    </template>
+  </code-highlight>
+
+  <div slot="prose">
+    <explain-section lines="5-12">
+      <p>
+        <code>makeReactive</code> wraps an object in a Proxy with a
+        <code>set</code> trap. Any write to a property on that proxy gets
+        intercepted and we call a function. In practice, this would be something
+        like "schedule a rerender!" Here, we log so we can see that the set trap
+        fired.
+      </p>
+    </explain-section>
+
+    <explain-section lines="14">
+      <p>
+        Notice here that we're putting a nested object in this wrapper. Only the
+        top level fields will trigger if we set them. If we set
+        <code>nested.v</code>, the outer proxy has no idea!
+      </p>
+    </explain-section>
+
+    <explain-section lines="16">
+      <p>
+        Setting a value on <code>myObject.foo</code> goes through the proxy's
+        <code>set</code> trap. We see that our detection log fires.
+      </p>
+    </explain-section>
+
+    <explain-section lines="18">
+      <p>
+        <code>myObject.nested.v</code> first reads
+        <code>myObject.nested</code> (which returns the unwrapped inner object),
+        then writes <code>v</code> on that inner object. Because we're setting
+        on the nested object's properties, no trap gets triggered. We set on the
+        nested object and <code>myObject</code> has no idea.
+      </p></explain-section
+    >
+
+    <explain-section lines="20-29">
+      <p>
+        Since primitives can't be proxied, we just re-use object proxying and
+        place the primitive inside a useful object with a common key:
+        <code>value</code>. The shape - an object with <code>.value</code> - is
+        exactly what <code>useState</code>, <code>ref()</code>,
+        <code>signal()</code>, and friends all converge on. Ember cells do the
+        same thing, they just call the key <code>current</code>.
+      </p>
+    </explain-section>
+
+    <explain-section lines="31-33">
+      <p>
+        We added a little detail here. Not only did we create a useful object to
+        proxy, we added a quick API method <code>set(value)</code> which lets us
+        update the value via a method call if we wish. Either way, we are
+        triggering the same detection function.
+      </p>
+    </explain-section>
+  </div>
+</scroll-explain>
+
+<p>Hopefully this example makes a few things clear:</p>
+<ul>
+  <li>
+    Why primitive reactivity wrappers always have you access the value through
+    something like <code>.value</code>.
+  </li>
+  <li>Why objects sometimes get a "free pass."</li>
+  <li>
+    Why shallowness is sometimes a direct result of simply one layer of
+    proxying.
+  </li>
+</ul>
+
+<aside class="blue">
+  <p>
+    There used to be a time where we didn't have proxies, and we still had
+    similar reactivity. How did they do it?
+  </p>
+  <p>
+    Vue 2, Ember (pre-Octane), and MobX all used
+    <a
+      href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty"
+      ><code>Object.defineProperty</code></a
+    >
+    to set up setters and getters similar to the set/get traps we can make with
+    Proxies. There were notable downsides- for example, if your rendering
+    depended on some properties of an array like <code>length</code>, it was
+    hard to capture that case. Similarly, if arrays were mutated in place, these
+    frameworks wouldn't notice. Proxies have mostly resolved these cases.
+  </p>
+  <p>
+    Many others just used methods that you had to work through, much like the
+    <code>set</code> method in the above example. Knockout and Backbone, I
+    believe, primarily used functions.
+  </p>
+</aside>
+
+<h2>How can we get deep detection?</h2>
+
+<p>
+  But we know many frameworks are somehow aware of deep changes. How do they do
+  that?
+</p>
+
+<p>The answer nowadays seems to be recursive proxies!</p>
+
+<p>
+  The idea is that you would create a proxy just like before, but you would pay
+  attention to what you're setting or getting. If you're getting a nested
+  object, you would wrap that object before you return it with a proxy which
+  would function the same way but now on that nested level. This way, no matter
+  how deep you went, you would be able to detect when a change occurs deeply!
+</p>
+
+<p>Let's look at a toy demonstration:</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      function logDetection(target, property) {
+        console.log(`--- [${property}] changed!`);
+      }
+
+      function makeReactive(obj) {
+        return new Proxy(obj, {
+          get(target, property) {
+            const thing = target[property];
+            if (typeof thing === "object") {
+              return makeReactive(thing);
+            }
+
+            return thing;
+          },
+          set(target, property, value) {
+            target[property] = value;
+            logDetection(target, property);
+          },
+        });
+      }
+
+      const myDeeplyReactive = makeReactive({
+        foo: "bar",
+        nested: {
+          value: {
+            thingy: 1,
+          },
+        },
+      });
+
+      myDeeplyReactive.foo = "baz";
+
+      myDeeplyReactive.nested.value.thingy = 42;
+
+      myDeeplyReactive; // last line so this displays the final value
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  It's a very small change, but extremely powerful: recursively wrapping and
+  returning any objects you find as you descend down the access path within the
+  wrapped object.
+</p>
+
+<aside class="blue">
+  <p>
+    One thing to note here is that for every level of nested access, you are
+    adding on a layer of proxying. This means if you access
+    <code>reactive.a.b.c.d</code>, you have just created 3 additional, anonymous
+    proxies. This leads to some weird behaviors.
+  </p>
+  <p>
+    For example, <code>reactive.nested === reactive.nested</code> will return
+    <code>false</code> because each time you access <code>nested</code> you
+    receive a different proxy of that sub-object.
+  </p>
+  <p>
+    "The professionals" have been able to work around these things using tricks
+    and systems so that you don't get these unexpected side effects. Maybe I'll
+    talk about deep access tracking in a future post. In the meantime, you can
+    take a look at how it works
+    <a
+      href="https://github.com/vuejs/core/blob/main/packages/reactivity/src/reactive.ts"
+      >in Vue 3 here</a
+    >.
+  </p>
+</aside>
+
+<p>
+  But there are other options! Let's go high level over what some other
+  frameworks do:
+</p>
+
+<h3>Oldschool Vue (&lt;=2) and Mobx</h3>
+
+<p>
+  These frameworks didn't do this work lazily. At the time of wrapping or
+  setting up an object, they walked the object state tree and set up setters and
+  getters at the beginning. This was nice, because we don't have that identity
+  issue we just saw in the recursive proxy example above. But, there were issues
+  if you changed the structure of the data, you had to notify the reactivity
+  system or it would not be aware of the structure changes to the data. This
+  method was mostly out of necessity since proxies didn't exist yet.
+</p>
+
+<h3>Solid.js and Preact Signals</h3>
+
+<p>
+  Solid signals are shallow. Users can then address depth by creating a tree of
+  shallow signals in any data shape they choose. If any of those individual
+  signal leaves changes, it's notified. It's shallow, technically. But the
+  strategy feels deep. More recently, Solid has included "stores" which are deep
+  because each property in the store at any depth is wrapped in a signal.
+</p>
+
+<p>
+  Preact has the ability to do this as well, but this is an opt-in thing. Preact
+  straddles the worlds of signals and React, so sometimes Preact will follow
+  virtual DOM diffing per component, and sometimes (when explicitly told to) it
+  will have those shallow leaf notifications of changes. This, however, is about
+  push vs. pull and not depth, so we'll save more discussion for that post!
+</p>
+
+<h3>Zone.js</h3>
+
+<p>
+  This one is pretty crazy. It's the shallowest of the bunch, because Zone.js
+  notably has no idea what's changed. It hooks into and watches all async
+  processes that could occur, and when they occur, it signals that "something
+  might have changed." It's the same pattern we from our MVC thought experiement
+  earlier. zone.js has an extremely shallow trigger. However, what Angular then
+  does in response is very different.
+</p>
+
+<h2>Every system has an escape hatch</h2>
+
+<p>
+  Invariably, there are edge cases where data changes slip past the reactivity
+  system. You see this in almost every framework.
+</p>
+
+<p>
+  And here's why: the traps weren't triggered. But you can force it with
+  self-assignment. If you have a nested object in a signal, and need the signal
+  to react, you can make the deep change and reassign the top layer. For
+  example:
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      function logDetection(target, prop) {
+        console.log(`---${prop} changed on my reactive primitive!`);
+      }
+
+      function makeReactive(obj) {
+        return new Proxy(obj, {
+          set(target, prop, value) {
+            target[prop] = value;
+            logDetection(target, prop);
+          },
+        });
+      }
+
+      const myObject = makeReactive({ foo: "bar", nested: { v: 1 } });
+
+      myObject.nested.v = 42;
+
+      console.log("Not triggered yet!");
+
+      myObject.nested = myObject.nested;
+
+      console.log("Now it's triggered!");
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  I don't know about you, but this feels very close to the mental model for
+  React, Lit, and Svelte. These frameworks compare references to know what
+  should be re-rendered. Re-assigning the reference is how they look for
+  changes, and the reason is the same one that often keeps proxy depth at one
+  layer.
+</p>
+
+<p>
+  Wc-services is meant to be as light and vanilla JavaScript as possible.
+  Because of this, we provide only one way to signal a change: explicitly
+  calling <code>this.notify()</code> after a service has changed data. This is
+  shallow- probably on par with zone.js in how unaware the system is of actually
+  what changed.
+</p>
+
+<p>
+  Other frameworks have this "notification method" that triggers reactivity.
+  They differ in the details of what they actually do, but they all share a
+  single goal: telling the system something's changed. In Lit, it's
+  <code>this.requestUpdate()</code>. In Vue 2 you have
+  <code>Vue.set(...)</code>. In Vue 3, <code>triggerRef()</code>. In Backbone,
+  <code>model.trigger('change')</code>...
+</p>
+
+<p>
+  The moral of this story is that no matter how good your detection system is,
+  there will always be edge cases your system doesn't cover.
+</p>
+
+<h2>What's next?</h2>
+
+<p>
+  Dang, that was a long post. If you're with me still, thank you. This is a lot
+  of fun, and I hope you enjoy diving deep with me!
+</p>
+
+<p>
+  Next we will analyze the other axis that reactivity can be analyzed against:
+  granularity. See you then!
+</p>
+
+<p>{% socials %}</p>

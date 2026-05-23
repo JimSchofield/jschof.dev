@@ -523,9 +523,13 @@ embed,
 iframe {
   margin-left: calc(50% - 45vw);
   width: 90vw;
+}
+embed,
+iframe {
   height: 80vh;
 }
 @media (max-width: 900px) {
+  .wide,
   embed,
   iframe {
     margin-left: initial;

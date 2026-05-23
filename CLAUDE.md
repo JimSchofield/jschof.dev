@@ -47,10 +47,12 @@ This is a **pnpm workspace** monorepo. The root package is the 11ty blog, and ea
 
 ### Templates & Layouts
 
-- **Nunjucks + Markdown**: Pages use `.njk` and `.md` files in `src/`
-- **Main layout**: `src/_includes/index.njk` — HTML shell with preloads, SEO shortcode, nav, footer
-- **Post layout**: `src/_includes/post.njk` — wraps `index.njk`, adds article wrapper + prev/next nav
-- **Partials**: `src/_includes/` contains `nav.njk`, `footer.njk`, `next-previous.njk`, `contact.njk`, `socials.njk`, `written-by-human.njk`, `quick-search.njk`
+- **Template engine: Liquid everywhere.** `.md`, `.html`, and `.liquid` files all use Liquid (11ty's default for `.md` and `.html`). Write new templates in Liquid: `{% assign x = y %}`, `{% for %}`, `{% if %}` / `{% elsif %}`, filters via `{{ x | filter }}`, includes via `{% include "name.liquid" %}`, comments via `{% comment %}...{% endcomment %}`. Do **not** use Nunjucks-only constructs: `{% set %}`, inline `{{ x if cond else y }}`, `{% elif %}`, JS-method calls like `.startsWith()` / `.replace()` / `.toISOString()`, the `| safe` filter (Liquid outputs raw HTML by default), or `{#- -#}` comments.
+- Cross-engine includes do **not** work. A Liquid template including a `.njk` file will parse the included file as Liquid (extension is ignored). Keep every partial in the same engine as the templates that include it.
+- **Custom Liquid filters** registered in `.eleventy.js` to fill gaps: `toISO` (Date → ISO string), `startsWith` (string prefix check), `groupBySeries` (posts → series buckets). Standard Liquid filters cover most other needs (`default`, `append`, `replace`, `slice`, `contains`, etc.).
+- **Main layout**: `src/_includes/index.liquid` — HTML shell with preloads, SEO partial, nav, footer
+- **Post layout**: `src/_includes/post.liquid` — wraps `index.liquid`, adds article wrapper + prev/next nav
+- **Partials** (all in `src/_includes/`): `nav.liquid`, `footer.liquid`, `next-previous.liquid`, `contact.liquid`, `socials.liquid`, `written-by-human.liquid`, `quick-search.liquid`, `seo.liquid`
 
 ### SEO & Social Previews
 

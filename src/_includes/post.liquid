@@ -1,13 +1,13 @@
 ---
-layout: index.njk
+layout: index
 ---
 
 <main class="constrain">
   <article>
-  {{ content | safe }}
+  {{ content }}
   </article>
   <div class="next-previous-nav">
-  {% include "next-previous.njk" %}
+  {% include "next-previous.liquid" %}
   </div>
 </main>
 

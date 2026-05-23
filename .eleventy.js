@@ -67,6 +67,39 @@ export default function (eleventyConfig) {
     return JSON.stringify(value);
   });
 
+  eleventyConfig.addFilter("toISO", function(date) {
+    return date instanceof Date ? date.toISOString() : new Date(date).toISOString();
+  });
+
+  eleventyConfig.addFilter("startsWith", function(value, prefix) {
+    return typeof value === "string" && value.startsWith(prefix);
+  });
+
+  eleventyConfig.addFilter("groupBySeries", function(posts) {
+    const seriesMap = new Map();
+    const standalone = [];
+
+    for (const post of posts) {
+      const name = post.data.series;
+      if (name) {
+        if (!seriesMap.has(name)) seriesMap.set(name, []);
+        seriesMap.get(name).push(post);
+      } else {
+        standalone.push(post);
+      }
+    }
+
+    const seriesGroups = Array.from(seriesMap, ([name, items]) => {
+      const sorted = [...items].sort((a, b) => a.date - b.date);
+      return { name, posts: sorted, latestDate: sorted[sorted.length - 1].date };
+    }).sort((a, b) => b.latestDate - a.latestDate);
+
+    return {
+      series: seriesGroups,
+      standalone: [...standalone].sort((a, b) => a.date - b.date),
+    };
+  });
+
   eleventyConfig.addShortcode(
     "prettyDate",
     function (date, format = "yyyy-MM-dd") {

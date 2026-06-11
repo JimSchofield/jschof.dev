@@ -20,12 +20,30 @@ eleventyExcludeFromCollections: true
 <nav class="series-toc">
   <p><strong>Series: JavaScript Reactivity</strong></p>
   <ol>
-    <li><a href="/posts/2026/5/1-javascript-frameworks-a-global-look/">A Global Look</a></li>
-    <li><a href="/posts/2026/5/2-deep-vs-shallow-reactivity/">Deep vs. Shallow Reactivity</a></li>
-    <li>Coarse vs. Fine-Grained Reactivity Tracking <span class="coming-soon">(Coming soon!)</span></li>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/2-deep-vs-shallow-reactivity/"
+        >Deep vs. Shallow Reactivity</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/3-coarse-vs-fine-grained-reactivity/"
+        >Coarse vs. Fine-Grained Reactivity</a
+      >
+    </li>
     <li><strong>Push vs. Pull Reactivity</strong></li>
-    <li>Reactivity as Cache Invalidation <span class="coming-soon">(Coming soon!)</span></li>
-    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
   </ol>
 </nav>
 
@@ -33,15 +51,76 @@ eleventyExcludeFromCollections: true
 
 <h2>Push: the source tells you</h2>
 
-<p>TODO: signals, observables, event emitters. Updates flow outward from the source to its subscribers.</p>
+<!--
+  ============================================================================
+  DRAFT / REFERENCE - moved from Part 2 (deep vs. shallow).
+  Imperative vs. implicit signaling is not really a depth question, and not
+  really a granularity question either - it's about HOW the tripwire gets
+  placed (who calls it, you or the system). Parking here because fine-grained
+  systems tend to use implicit signaling, so it's a natural digression in
+  this post. Decide later whether to use it here, move to Part 4 (push/pull),
+  or split into its own aside.
+  ============================================================================
+
+<p>
+  This becomes important when you set up systems to notify when changes are
+  occuring. There are two general ways to "notify" when a change has occured:
+</p>
+
+<ol>
+  <li>
+    <strong>Imperative signaling</strong> - Have the user of the reactivity
+    signal explicitly when state has changed. This is done through calling a
+    method, or dirtying some flag somewhere directly. Some examples:
+    <ul>
+      <li>
+        React <code>this.setState()</code> or, more modern,
+        <code>setSomething()</code> hook conventions
+      </li>
+      <li>Wc-services <code>this.notify()</code></li>
+      <li>Nanostores <code>$store.set(...)</code></li>
+    </ul>
+  </li>
+  <li>
+    <strong>Implicit signaling</strong> - The data structure somehow
+    automatically detects data changes. There is no explicit calling of any
+    tracking mechanism.
+    <ul>
+      <li>
+        Signals either use a <a href="">Proxy wrapper</a> where if anything
+        triggers a `set()` trap on the proxy, it automatically notifies the
+        reactivity system in the background. This is common in Solid, Preact
+        signals, Vue, and Svelte just to name a few
+      </li>
+      <li>
+        Reactive properties might be set using the (now old) method of creating
+        getters using `Object.defineProperty`. This allows the same setter trap,
+        but does not create a proxy middleman. This can be seen in frameworks
+        like Vue 2.
+      </li>
+    </ul>
+  </li>
+</ol>
+-->
+<p>
+  TODO: signals, observables, event emitters. Updates flow outward from the
+  source to its subscribers.
+</p>
 
 <h2>Pull: the consumer asks</h2>
 
-<p>TODO: React's render cycle. The framework decides when to re-read; values are looked up on demand.</p>
+<p>
+  TODO: React's render cycle. The framework decides when to re-read; values are
+  looked up on demand.
+</p>
 
 <h2>Why most frameworks are both</h2>
 
-<p>TODO: fine-grained systems push at the dependency layer (mark dirty) and pull at the read site (recompute lazily). Glitch-free reactivity usually requires this split.</p>
+<p>
+  TODO: fine-grained systems push at the dependency layer (mark dirty) and pull
+  at the read site (recompute lazily). Glitch-free reactivity usually requires
+  this split.
+</p>
 
 <h2>Wrap-up</h2>
 

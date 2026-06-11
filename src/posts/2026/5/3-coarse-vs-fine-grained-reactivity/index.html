@@ -1,6 +1,6 @@
 ---
-title: "JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking"
-excerpt: "Re-render the world and diff, or track individual reads and update only what changed? The two ends of the reactivity spectrum and what each one costs you."
+title: "JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity"
+excerpt: "Some frameworks recheck the world when data changes.  Some change only a DOM node.  This is reactivity granularity.  Let's look at granularity from coarse to fine and talk about the tradeoffs."
 layout: post
 tags:
   - posts
@@ -8,14 +8,12 @@ tags:
   - javascript
   - frameworks
   - reactivity
-date: 2026-05-08
+date: 2026-06-06
+image: clouds.webp
 series: "JavaScript Reactivity"
-eleventyExcludeFromCollections: true
 ---
 
-<h1>
-  JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity Tracking
-</h1>
+<h1>JavaScript Reactivity (Part 3): Coarse vs. Fine-Grained Reactivity</h1>
 
 <p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
 
@@ -32,7 +30,7 @@ eleventyExcludeFromCollections: true
         >Deep vs. Shallow Reactivity</a
       >
     </li>
-    <li><strong>Coarse vs. Fine-Grained Reactivity Tracking</strong></li>
+    <li><strong>Coarse vs. Fine-Grained Reactivity</strong></li>
     <li>
       Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span>
     </li>
@@ -47,83 +45,454 @@ eleventyExcludeFromCollections: true
   </ol>
 </nav>
 
-<p>TODO: intro.</p>
+<p>
+  In Part 2 we framed reactivity depth with a question:
+  <em
+    >"What is the smallest change I can make that still triggers updates in the
+    reactivity system?"</em
+  >
+  In this part granularity has two corresponding questions:
+</p>
 
-<h2>The coarse end: re-render and diff</h2>
+<ul>
+  <li><em>"At what level are changes detected?"</em></li>
+  <li>
+    <em>"How does the reactivity system detect what actually changed?"</em>
+  </li>
+</ul>
 
 <p>
-  TODO: React's model. Component re-runs top to bottom; reconciler figures out
-  what actually changed in the DOM.
+  The first question is about <strong>scope</strong>- where does the system have
+  to look to figure out what changed? The second is about
+  <strong>mechanism</strong>- what technique does it use within that scope? The
+  radar diagram below plots scope on the rings (window, application, service,
+  component, template, DOM node) and lets you click a framework to read how its
+  mechanism lands it there.
+</p>
+
+<script type="module" src="granularity-radar-visual.js"></script>
+<reactivity-granularity-radar class="wide"></reactivity-granularity-radar>
+
+<aside class="blue">
+  <p>
+    This is one of the most difficult aspects of reactivity to try to
+    systematically describe. I'm sure that there are other descriptions of
+    granularity out there that don't align with what I'm saying here, and to me
+    that isn't an issue. There is a lot of nuance and "it depends" and
+    exceptions. I'm going to try to brush broad strokes here and try to not to
+    get too sidetracked by detail.
+  </p>
+</aside>
+
+<p>
+  Let's work our way from the outside of the onion in. This means we're starting
+  with coarse and moving inward to fine.
+</p>
+
+<h2>The coarsest of the coarse: zone.js</h2>
+
+<p>
+  Let's start with the weirdest one in this category: Zone.js. This library
+  monkey patches and listens in to all asynchronous processes in the browser
+  (!). The idea is that if anything happens, it likely has a related state
+  change that needs to be figured out and consequently a UI update that needs to
+  be applied. When this "something changed" notification happens, Angular has no
+  idea what's changed. It has to instruct components to check for dirtied data,
+  and then recursively call for the same type of checking and refreshing across
+  the app.
+</p>
+
+<p>
+  You might think this is extremely expensive to walk the entire application
+  tree- it could be thousands and thousands of components that we've rendered!
+  Well, for each of those checks we're just doing a quick comparison, which is
+  cheap. But also there are some escape hatches that help prune sections of the
+  tree. (If you're interested, check out
+  <a href="https://angular.dev/api/core/ChangeDetectionStrategy"
+    >ChangeDetectionStrategy.OnPush</a
+  >.)
+</p>
+
+<h2>Coarser: the more well-known re-render and diff strategy</h2>
+
+<p>
+  The next layer, the <code>application</code> layer, is the spot for React,
+  React + Immer, Preact (without signals), Redux, and Zustand. It's a React
+  party.
+</p>
+
+<p>
+  These libraries generally get the notification that state has updated and
+  re-render everything! The reason this is performant is because this strategy
+  relies on rendering a
+  <a href="https://legacy.reactjs.org/docs/reconciliation.html">virtual dom</a>
+  which then can participate in a process called
+  <a href="https://legacy.reactjs.org/docs/reconciliation.html"
+    >reconciliation</a
+  >
+  in which React compares actual DOM nodes with virtual DOM nodes to see what
+  should be patched, deleted, or added. And because there's a diff that filters
+  out the vast majority of candidate nodes that need to be put in the DOM, the
+  set of actual changes remains very small.
+</p>
+
+<p>
+  This is <em>very coarse still</em>! If the entry point to a React or Preact
+  application has state that changes, the rerendering that occurs afterwards
+  happens recursively down all the component branches in the app tree. The
+  comparison afterward is what makes this strategy tenable by doing quick
+  reference equality checks and pruning large branches of the component tree
+  where changes wouldn't actually make UI changes.
+</p>
+
+<p>
+  You could argue that this is more of a component-level strategy. It is true
+  that if a state hook further down a branch of react updates, the recursive
+  re-rendering only happens from that branch node down the branches underneath
+  that node. But, the fact that whole sections of the tree (and possibly even
+  the entire tree depending on the state's placement) could be re-rendered makes
+  it seem that the whole application participates in this re-rendering for
+  correctness.
+</p>
+
+<p>
+  Similarly, in Redux or Zustand, these change notifications are app-wide. You
+  can reduce the number of branches that re-render using selectors. But at the
+  end of the day, any dispatch to the reducer basically makes any state a
+  candidate for changes. React can only know when something has changed by doing
+  the re-render dance at scale and shake out the actual changes with a diff.
+</p>
+
+<aside>
+  <p><strong>But what about the React compiler? 🧐</strong></p>
+  <p>
+    Good question. The
+    <a href="https://react.dev/learn/react-compiler/introduction"
+      >shiny, new react compiler</a
+    >
+    might do things that make React feel more fine-grained. For example, state
+    changes don't cascade into re-rendering every child the way they used to.
+    The compiler inserts memoization at component boundaries, so a child only
+    re-renders when its actual inputs change- as if the component was
+    specifically memoized even if it wasn't. This starts to feel more and more
+    fine-grained. But it's not actually changing the granularity of React.
+  </p>
+  <p>
+    The compiler does compile away and optimize parts of React for you- but you
+    could argue that if you were to use <strong>useMemo</strong> or
+    <strong>useCallback</strong> perfectly, that that would be the same as using
+    the compiler. React provides these primitives to help remove unnecessary
+    candidates for DOM re-rendering. And the new compiler does this for you more
+    automatically and helps you avoid footguns and mistakes.
+  </p>
+</aside>
+
+<h2>The in between: wc-services, Lit, Ember, and Vue</h2>
+
+<p>
+  I placed wc-services in the service layer because, although it is very coarse
+  with notifications when any state changes (and no communication of what
+  changed where), only components or classes subscribed to the service would
+  receive notifications of changes. Also, importantly, only service dependency
+  chains would trigger notifications for subscribers in that chain. There is a
+  "splitting" of reactivity notifications that happens that is more fine than
+  what Redux or Zustand does.
+</p>
+
+<p>
+  Lit is really similar to React. When changes trigger re-renders, the component
+  re-renders completely but smartly. It doesn't have the same sort of
+  reconciliation as React, but bakes in value comparisons in the rendering
+  template internals. So the reactivity is quite coarse. The reason it isn't
+  further out on this radar graph is that Lit restricts reactivity primitives to
+  inside of custom elements. This means that state changes can never transcend
+  above a component. The most a component can do is subscribe to external
+  changes and call `this.requestUpdate()` when it's notified by outside state
+  changes.
+</p>
+
+<p>
+  That leaves Vue and Ember. They are very similar in how they handle changed
+  state: both invalidate specific parts of data and both will notify the
+  specific region where the data is rendered.
+</p>
+
+<p>
+  Ember increments a clock on tracked data. When a template renders tracked
+  data, the data is associated with the template that it was rendered in. When
+  data changes, Ember schedules a global "let's re-render" event, and templates
+  are checked quickly to see which templates need to be rendered by using those
+  tracked property clocks. In the end, only the templates with incremented
+  tracked data re-render, and the updates are precise. Ember has the distinctive
+  that components are almost incidental- templates can be rendered without a
+  backing class, from a route, or in a component. This is why templates are
+  distinct from components in our analysis.
+</p>
+
+<p>
+  Vue has a really cool distinctive: only properties that are actually consumed
+  are tracked. As we saw in my last post, when Vue wraps data it by default
+  recursively proxies data access. This means that in the template of a Vue
+  component, if you access <code>data.a</code> but don't access
+  <code>data.b</code>, only a change in <code>data.a</code> would notify the
+  component that it needs to re-run its template.
 </p>
 
 <h2>The fine-grained end: track every read</h2>
 
 <p>
-  TODO: Solid, Vue refs, Svelte 5 runes, Angular signals. Reads are
-  subscriptions; writes notify exactly the computations that depend on them.
+  Now we shall enter the inner sanctum: the fine-grained reactivity. Behold, my
+  compare and contrast table.
 </p>
-
-<h2>What each one costs</h2>
 
 <p>
-  TODO: coarse = simpler mental model, predictable, but does work proportional
-  to component size. Fine-grained = less wasted work, but you pay in
-  dependency-graph bookkeeping and a sharper learning curve around what is and
-  isn't reactive.
+  As we approach the inner DOM Node circle, we see frameworks basically doing
+  the same thing: if you read a value it subscribes you to it. When you write to
+  the value, it notifies the pertinent parts of the framework.
 </p>
 
-<h2>Wrap-up</h2>
-
-<p>TODO.</p>
-
-<!--
-  ============================================================================
-  DRAFT / REFERENCE - moved from Part 2 (deep vs. shallow).
-  Imperative vs. implicit signaling is not really a depth question, and not
-  really a granularity question either - it's about HOW the tripwire gets
-  placed (who calls it, you or the system). Parking here because fine-grained
-  systems tend to use implicit signaling, so it's a natural digression in
-  this post. Decide later whether to use it here, move to Part 4 (push/pull),
-  or split into its own aside.
-  ============================================================================
+<div class="table-scroll wide">
+  <table>
+    <thead>
+      <tr>
+        <th>&nbsp;</th>
+        <th>Angular signals</th>
+        <th>Solid signals</th>
+        <th>Svelte 5 runes</th>
+        <th>Preact signals</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Read</strong></td>
+        <td><code>count()</code></td>
+        <td><code>count()</code></td>
+        <td><code>count</code> (plain var)</td>
+        <td><code>count.value</code></td>
+      </tr>
+      <tr>
+        <td><strong>Write</strong></td>
+        <td><code>count.set(1)</code></td>
+        <td><code>setCount(1)</code></td>
+        <td><code>count = 1</code></td>
+        <td><code>count.value = 1</code></td>
+      </tr>
+      <tr>
+        <td><strong>Create</strong></td>
+        <td>
+          <a href="https://angular.dev/api/core/signal"
+            ><code>signal(0)</code></a
+          >
+        </td>
+        <td>
+          <a
+            href="https://docs.solidjs.com/reference/basic-reactivity/create-signal"
+            ><code>createSignal(0)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://svelte.dev/docs/svelte/$state"
+            ><code>$state(0)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://preactjs.com/guide/v10/signals/#signalinitialvalue"
+            ><code>signal(0)</code></a
+          >
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Derived</strong></td>
+        <td>
+          <a href="https://angular.dev/api/core/computed"
+            ><code>computed(...)</code></a
+          >
+        </td>
+        <td>
+          <a
+            href="https://docs.solidjs.com/reference/basic-reactivity/create-memo"
+            ><code>createMemo(...)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://svelte.dev/docs/svelte/$derived"
+            ><code>$derived(...)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://preactjs.com/guide/v10/signals/#computedfn"
+            ><code>computed(...)</code></a
+          >
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Effect</strong></td>
+        <td>
+          <a href="https://angular.dev/api/core/effect"
+            ><code>effect(...)</code></a
+          >
+        </td>
+        <td>
+          <a
+            href="https://docs.solidjs.com/reference/basic-reactivity/create-effect"
+            ><code>createEffect(...)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://svelte.dev/docs/svelte/$effect"
+            ><code>$effect(...)</code></a
+          >
+        </td>
+        <td>
+          <a href="https://preactjs.com/guide/v10/signals/#effectfn"
+            ><code>effect(...)</code></a
+          >
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Compiled or runtime?</strong></td>
+        <td>Runtime</td>
+        <td>Runtime</td>
+        <td>Compiler- runes are compile-time</td>
+        <td>Runtime</td>
+      </tr>
+      <tr>
+        <td><strong>Depth for objects</strong></td>
+        <td>Shallow</td>
+        <td>
+          Shallow (<a
+            href="https://docs.solidjs.com/reference/store-utilities/create-store"
+            ><code>createStore</code></a
+          >
+          for deep)
+        </td>
+        <td>Deep- proxies nested data</td>
+        <td>Shallow</td>
+      </tr>
+      <tr>
+        <td><strong>What re-runs on a write</strong></td>
+        <td>Marks the component dirty, re-renders it</td>
+        <td>The bound DOM node- no diff</td>
+        <td>The bound DOM node- no diff</td>
+        <td>The bound node if used directly, otherwise the component</td>
+      </tr>
+      <tr>
+        <td><strong>A diff step?</strong></td>
+        <td>Yes</td>
+        <td>No</td>
+        <td>No</td>
+        <td>Only when it falls back to a component render</td>
+      </tr>
+      <tr>
+        <td><strong>Where it comes from</strong></td>
+        <td>Angular core (v16+)</td>
+        <td>Solid's core primitive</td>
+        <td>Svelte 5 core</td>
+        <td>Standalone- runs in React too</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <p>
-  This becomes important when you set up systems to notify when changes are
-  occuring. There are two general ways to "notify" when a change has occured:
+  While I'm saying Angular is "DOM Node fine-grained," it's important to note
+  that the entire Angular component re-runs even with signals. The same thing
+  can happen with Preact when you don't use the
+  <a href="https://preactjs.com/guide/v10/signals/#rendering-optimizations"
+    >text node optimization</a
+  >.
 </p>
 
-<ol>
-  <li>
-    <strong>Imperative signaling</strong> - Have the user of the reactivity
-    signal explicitly when state has changed. This is done through calling a
-    method, or dirtying some flag somewhere directly. Some examples:
-    <ul>
-      <li>
-        React <code>this.setState()</code> or, more modern,
-        <code>setSomething()</code> hook conventions
-      </li>
-      <li>Wc-services <code>this.notify()</code></li>
-      <li>Nanostores <code>$store.set(...)</code></li>
-    </ul>
-  </li>
-  <li>
-    <strong>Implicit signaling</strong> - The data structure somehow
-    automatically detects data changes. There is no explicit calling of any
-    tracking mechanism.
-    <ul>
-      <li>
-        Signals either use a <a href="">Proxy wrapper</a> where if anything
-        triggers a `set()` trap on the proxy, it automatically notifies the
-        reactivity system in the background. This is common in Solid, Preact
-        signals, Vue, and Svelte just to name a few
-      </li>
-      <li>
-        Reactive properties might be set using the (now old) method of creating
-        getters using `Object.defineProperty`. This allows the same setter trap,
-        but does not create a proxy middleman. This can be seen in frameworks
-        like Vue 2.
-      </li>
-    </ul>
-  </li>
-</ol>
--->
+<h2>The tradeoffs</h2>
+
+<p>
+  <strong>Coarse granularity</strong> has some perks: it's simpler and easier to
+  implement. You can for the most part get away with naive coarse granularity
+  and take it very far before you need to start worrying about performance.
+</p>
+
+<p>
+  <strong>Fine granularity</strong> exists for a reason though: it's super
+  efficient and the primitives are more portable. However, there are some
+  gotchas you have to worry about with fine granularity that you don't with
+  coarse.
+</p>
+
+<p>
+  Fine grained strategies suffer from a particular anxiety: dependency tracking.
+  When a piece of data is read, because the whole world is not re-rendered and
+  only targeted pieces that rely on this data, the system needs to manage
+  subscribing, unsubscribing, and de-duping these dependencies.
+</p>
+
+<p>
+  For example, in an <code>effect()</code>, suppose we reference a signal twice.
+  We would need to make sure that the subscription is batched and the fact that
+  we referenced the same signal twice would not cause a double call of the
+  effect on this signal change. We also need to worry about conditionally called
+  data values in effects. What if the effect should be re-run only sometimes,
+  like in this code?
+</p>
+
+<code-highlight lang="javascript">
+  <template>
+    <script>
+      effect(() => {
+        if (something) {
+          // This signal needs to manage its subscribers
+          // _every_ time this effect runs
+          doSomethingWith(mySignal.value);
+        }
+      });
+    </script>
+  </template></code-highlight
+>
+
+<p>
+  But probably more difficult to settle is <strong>the diamond problem</strong>.
+  This occurs when B and C both depend on D, and A depends on both B and C. If D
+  changes, we have two paths to notify: <code> D → B → A</code> or
+  <code>D → C → A</code>. To make sure that data is resolved correctly (or
+  eventually correctly) requires strategies like
+  <a href="https://en.wikipedia.org/wiki/Topological_sorting"
+    >topological sorting</a
+  >. There is a well-known problem with this sort of dependency issue called
+  <a href="https://en.wikipedia.org/wiki/Reactive_programming#Glitches"
+    >glitches</a
+  >. I won't go into this more, but you can read what Ryan Carniato (Solid.js
+  creator) has to say about this
+  <a
+    href="https://dev.to/playfulprogramming/the-evolution-of-signals-in-javascript-8ob"
+    >here</a
+  >.
+</p>
+
+<p>
+  For the sake of time, I'm not going into Svelte4, Mobx, or nanostores. Sorry
+  if you're a fan. 😅 Svelte 4 is worth checking out if you are interested- it
+  famously "doesn't have a runtime." What this means is that changes are fine
+  grained and written (compiled) into the code that runs at run time. Play
+  around with
+  <a
+    href="https://svelte.dev/playground/eebeb6b82f1543f183171e262d966441?version=5.25.7"
+    >examples like this</a
+  >
+  and take a gander at the "js output" if you want to see some of the unique
+  internals.
+</p>
+
+<h2>What's next?</h2>
+
+<p>
+  So that's granularity. Coarse is simpler and gets you surprisingly far.
+  Fine-grained does less work but asks you to manage dependencies.
+</p>
+
+<p>
+  Next up is <strong>push vs. pull reactivity</strong>. When something changes,
+  does the source shove the update out to subscribers, or do consumers ask for
+  the value when they need it? As it turns out, most frameworks do a littl of
+  both! See you then!
+</p>
+
+<p>If you like my work, please let me know! {% socials %}</p>

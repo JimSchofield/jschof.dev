@@ -411,20 +411,9 @@
 
       return `
         <style>
+          /* Light tokens default; dark applied via the site's gating pattern.
+             See CLAUDE.md > Theming. */
           :host {
-            --bg:           #12152a;
-            --pop-bg:       #1a1d30;
-            --pop-border:   rgba(200,210,230,0.14);
-            --pop-shadow:   0 8px 32px rgba(0,0,0,0.45);
-            --pop-hr:       rgba(200,210,230,0.10);
-            --text-primary: rgba(215,220,235,0.92);
-            --text-note:    rgba(215,220,235,0.40);
-            --text-muted:   rgba(200,210,230,0.32);
-            --axis-color:   rgba(200,210,230,0.28);
-            --tick-color:   rgba(200,210,230,0.18);
-            display: block;
-          }
-          :host(.light) {
             --bg:           #f0ede8;
             --pop-bg:       #ffffff;
             --pop-border:   rgba(20,25,55,0.13);
@@ -435,6 +424,36 @@
             --text-muted:   rgba(20,25,55,0.35);
             --axis-color:   rgba(20,25,55,0.28);
             --tick-color:   rgba(20,25,55,0.18);
+            display: block;
+          }
+          /* Dark mode applies when:
+             - User explicitly chose dark via the site toggle, OR
+             - OS prefers dark AND the user has not explicitly chosen light. */
+          @media (prefers-color-scheme: dark) {
+            :host-context(:root:not([data-theme="light"])) {
+              --bg:           #12152a;
+              --pop-bg:       #1a1d30;
+              --pop-border:   rgba(200,210,230,0.14);
+              --pop-shadow:   0 8px 32px rgba(0,0,0,0.45);
+              --pop-hr:       rgba(200,210,230,0.10);
+              --text-primary: rgba(215,220,235,0.92);
+              --text-note:    rgba(215,220,235,0.40);
+              --text-muted:   rgba(200,210,230,0.32);
+              --axis-color:   rgba(200,210,230,0.28);
+              --tick-color:   rgba(200,210,230,0.18);
+            }
+          }
+          :host-context([data-theme="dark"]) {
+            --bg:           #12152a;
+            --pop-bg:       #1a1d30;
+            --pop-border:   rgba(200,210,230,0.14);
+            --pop-shadow:   0 8px 32px rgba(0,0,0,0.45);
+            --pop-hr:       rgba(200,210,230,0.10);
+            --text-primary: rgba(215,220,235,0.92);
+            --text-note:    rgba(215,220,235,0.40);
+            --text-muted:   rgba(200,210,230,0.32);
+            --axis-color:   rgba(200,210,230,0.28);
+            --tick-color:   rgba(200,210,230,0.18);
           }
 
           .wrap { background: var(--bg); position: relative; transition: background 0.2s; }

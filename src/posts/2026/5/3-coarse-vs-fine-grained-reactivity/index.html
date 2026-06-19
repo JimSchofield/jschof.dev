@@ -168,22 +168,20 @@ series: "JavaScript Reactivity"
   <p>
     Good question. The
     <a href="https://react.dev/learn/react-compiler/introduction"
-      >shiny, new react compiler</a
+      >shiny, new React compiler</a
     >
-    might do things that make React feel more fine-grained. For example, state
-    changes don't cascade into re-rendering every child the way they used to.
-    The compiler inserts memoization at component boundaries, so a child only
-    re-renders when its actual inputs change- as if the component was
-    specifically memoized even if it wasn't. This starts to feel more and more
-    fine-grained. But it's not actually changing the granularity of React.
+    moves React toward the fine-grained end. Instead of you wiring up reactive
+    primitives by hand, the compiler takes your component code and rewrites it
+    into granular, memoizable blocks. This reduces the number of renders and
+    calculations that need to be re-run in a way that <code>useCallback</code>,
+    <code>useMemo</code>, and friends can't. If we wanted to, we could place
+    "React + compiler" as its own distinct point on the granularity graph- close
+    to the fine-grained solutions, even though it's approaching from the coarse
+    end.
   </p>
   <p>
-    The compiler does compile away and optimize parts of React for you- but you
-    could argue that if you were to use <strong>useMemo</strong> or
-    <strong>useCallback</strong> perfectly, that that would be the same as using
-    the compiler. React provides these primitives to help remove unnecessary
-    candidates for DOM re-rendering. And the new compiler does this for you more
-    automatically and helps you avoid footguns and mistakes.
+    Also, see <a href="#dan-correction">my note below</a> for more context on
+    this aside.
   </p>
 </aside>
 
@@ -496,3 +494,31 @@ series: "JavaScript Reactivity"
 </p>
 
 <p>If you like my work, please let me know! {% socials %}</p>
+
+<hr />
+
+<aside class="blue" id="dan-correction">
+  <p>
+    <strong>Update (June 19th, 2026): a correction from Dan Abramov</strong>
+  </p>
+  <p>
+    After this post went out,
+    <a href="https://bsky.app/profile/danabra.mov/post/3mny6n4d7x22h"
+      >Dan Abramov kindly corrected</a
+    >
+    my original take on the React compiler, so I've rewritten the section above
+    to reflect this. For the record, I'd said the compiler memoizes "at
+    component boundaries" and that it amounts to hand-written
+    <code>useMemo</code>/<code>useCallback</code> done for you automatically.
+    That's not right.
+  </p>
+  <p>
+    Big thanks to Dan for calling that out. If you want to see the compiler
+    working at the expression level, check out
+    <a
+      href="https://playground.react.dev/#N4Igzg9grgTgxgUxALhASwLYAcIwC4AEwBUYCAyngIZ4IEC+BAZjBBgQOQwJVx4cBuADoA7UQgAeOfAQAmCJlSgAbQkygi+aCCIIBZAJ4BBLFgAUASiKiCBODrCEA2vY14ANATJ4AwtBF4ALoEALwkZJQ0CGYADBbCYrp2DoRomtwYCAGhBJahAHxeCL7+eGYQyrIFBBVVANQEAIzxojbJIpDKCAB0yhAA5mZCIAAqABZoYF5o8gQKTAh8BDAaUwgAbggwBstZ8jDDFm32HRU9fYPD5DN084t4U8poANZ0eGMIZARU3AQiEIRMhgIGgAF4IWSHBJtbh4WC6AA8sjQ63ybVswFcAXo6IICIARlA8HgdDURD4nnBniFgGk4Bksnh6Pk6giAPSE4k6NFJdnI1EJHEiEDuEAnJhofooEDANpstn2bBoZQ0bQiPQQeTIAjDKjKZTDUT0EXgMYQADuAEkAlsRHqwChFMoyPQgA"
+      >this playground snippet</a
+    >. It shows how values, JSX elements, and callback references get cached,
+    while ordinary side effects (not React effects) are left alone.
+  </p>
+</aside>

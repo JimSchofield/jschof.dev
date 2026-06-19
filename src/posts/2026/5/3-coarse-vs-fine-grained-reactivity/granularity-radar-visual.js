@@ -470,6 +470,13 @@
       margin: 0 4px 12px;
       line-height: 1.45;
     }
+    .ly-note {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      font-style: italic;
+      margin: 12px 4px 0;
+      line-height: 1.45;
+    }
     .ly-legend {
       display: flex;
       align-items: center;
@@ -496,93 +503,81 @@
     .ly-legend-ticks > span:first-child::before { content: ""; }
     .ly-legend-ticks > span { font-size: 10px; }
 
-    /* Nested rings — each ring is a rectangle that visually contains the
-       next. Inner padding gets smaller for visual rhythm. */
-    .ly-ring {
+    /* Strata layers — flush horizontal bands stacked coarse (top) to fine
+       (bottom), like geologic sediment. The whole stack shares one rounded
+       border; layers butt against each other with a hairline seam. */
+    .ly-strata {
       border: 1px solid var(--band-stroke);
       border-radius: 10px;
-      padding: 8px 8px 4px;
-      margin-top: 6px;
-      background: var(--band-1);
+      overflow: hidden;
     }
-    .ly-ring-application,
-    .ly-ring-component,
-    .ly-ring-template { background: var(--band-2); }
-    .ly-ring-window,
-    .ly-ring-service  { background: var(--band-1); }
-    .ly-ring-node     { background: var(--band-inner); }
+    .ly-ring {
+      padding: 9px 12px 11px;
+      background: var(--band-1);
+      border-top: 1px solid var(--band-stroke);
+    }
+    .ly-ring:first-child { border-top: 0; }
+    /* Alternate band tints + a subtle deepening toward the fine end so the
+       stack reads as descending strata. */
+    .ly-ring-window      { background: var(--band-1); }
+    .ly-ring-application { background: var(--band-2); }
+    .ly-ring-service     { background: var(--band-1); }
+    .ly-ring-component   { background: var(--band-2); }
+    .ly-ring-template    { background: var(--band-1); }
+    .ly-ring-node        { background: var(--band-inner); }
     .ly-ring-head {
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 1.2px;
       color: var(--text-tertiary);
       text-transform: uppercase;
-      padding: 2px 6px 6px;
+      margin-bottom: 7px;
     }
     .ly-rows {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    /* Framework row = full-width button, generous tap target. */
-    .ly-row {
-      display: flex;
+    /* Framework chip = compact inline button so layers stay shallow. */
+    .ly-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 10px;
-      width: 100%;
-      min-height: 44px;
-      padding: 8px 10px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      background: transparent;
+      gap: 7px;
+      min-height: 32px;
+      padding: 5px 11px 5px 9px;
+      border: 1px solid var(--band-stroke);
+      border-radius: 999px;
+      background: var(--pill-bg);
       color: var(--text-primary);
       font-family: var(--font-sans);
-      font-size: 14px;
+      font-size: 13px;
       text-align: left;
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease;
     }
-    .ly-row:hover,
-    .ly-row:focus-visible {
-      background: var(--pill-bg);
-      border-color: var(--band-stroke);
+    .ly-chip:hover,
+    .ly-chip:focus-visible {
+      border-color: var(--text-tertiary);
       outline: none;
     }
-    .ly-row-dot {
-      width: 14px;
-      height: 14px;
+    .ly-chip-dot {
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       flex: 0 0 auto;
       border: 1.5px solid var(--dot-stroke);
     }
-    .ly-row-name {
-      flex: 1 1 auto;
+    .ly-chip-name {
       font-weight: 600;
-      line-height: 1.25;
+      line-height: 1.2;
+      white-space: nowrap;
     }
-    .ly-row-note {
-      flex: 0 0 auto;
-      font-size: 11px;
+    .ly-chip-note {
+      font-size: 10.5px;
       color: var(--text-secondary);
       font-style: italic;
-    }
-
-    /* Nanostores spans Service → Component. Show a connector line on the
-       left edge of its row that drops down into the Component ring. */
-    .ly-row-span {
-      position: relative;
-    }
-    .ly-row-span::before {
-      content: "";
-      position: absolute;
-      left: -1px;
-      top: 50%;
-      bottom: -28px;
-      width: 3px;
-      border-radius: 2px;
-      background: linear-gradient(to bottom, ${COLOR["push-lean"]}, transparent);
-      opacity: 0.5;
+      white-space: nowrap;
     }
   `;
 
@@ -727,36 +722,33 @@
         const c = COLOR[fw.pp];
         const spanNote =
           fw.kind === "range"
-            ? `<span class="ly-row-note">spans Service → Component</span>`
+            ? `<span class="ly-chip-note">(spans into Component)</span>`
             : "";
         const scopeName = fw.scopeLabel || SCOPE_LABEL[fw.scope];
         const aria = `${fw.name}: change detection at the ${scopeName} level, ${PP_LABEL[fw.pp]}.`;
-        const spanClass = fw.kind === "range" ? " ly-row-span" : "";
         return (
-          `<button type="button" class="ly-row dot-group${spanClass}" ` +
+          `<button type="button" class="ly-chip dot-group" ` +
           `data-id="${fw.id}" role="button" aria-label="${aria}">` +
-          `<span class="ly-row-dot" style="background:${c}" aria-hidden="true"></span>` +
-          `<span class="ly-row-name">${fw.name}</span>` +
+          `<span class="ly-chip-dot" style="background:${c}" aria-hidden="true"></span>` +
+          `<span class="ly-chip-name">${fw.name}</span>` +
           spanNote +
           `</button>`
         );
       };
 
-      // Build nested structure: each ring wraps the next. Innermost (node)
-      // has no children.
-      const buildLayer = (idx) => {
-        if (idx >= RINGS.length) return "";
-        const [key, label] = RINGS[idx];
-        const rows = byRing[key].map(renderRow).join("");
-        const inner = buildLayer(idx + 1);
-        return (
-          `<section class="ly-ring ly-ring-${key}" aria-label="${label}">` +
-          `<header class="ly-ring-head">${label}</header>` +
-          `<div class="ly-rows">${rows}</div>` +
-          inner +
-          `</section>`
-        );
-      };
+      // Build a flat stack of strata layers, outermost (coarse) at top to
+      // innermost (fine) at bottom — like geologic sediment layers. Layers sit
+      // flush against each other rather than nesting.
+      const buildLayers = () =>
+        RINGS.map(([key, label]) => {
+          const rows = byRing[key].map(renderRow).join("");
+          return (
+            `<section class="ly-ring ly-ring-${key}" aria-label="${label}">` +
+            `<header class="ly-ring-head">${label}</header>` +
+            `<div class="ly-rows">${rows}</div>` +
+            `</section>`
+          );
+        }).join("");
 
       // Horizontal push-pull legend above the layered stack
       const legend =
@@ -769,9 +761,10 @@
       return (
         `<div class="ly-root" role="region" aria-label="Granularity, mobile view">` +
         `<h2 class="ly-title">Change detection scope map</h2>` +
-        `<p class="ly-subtitle">Each layer is the level at which change detection is forced. Outermost layer is the broadest scope.</p>` +
+        `<p class="ly-subtitle">Each layer is the level at which change detection is forced. The top layer is the broadest scope; the bottom is the finest.</p>` +
         legend +
-        buildLayer(0) +
+        `<div class="ly-strata">${buildLayers()}</div>` +
+        `<p class="ly-note">These are the same layers as the radar diagram, stacked for a narrow screen. To see the radar version, rotate to landscape or open this on a larger screen.</p>` +
         `</div>`
       );
     }

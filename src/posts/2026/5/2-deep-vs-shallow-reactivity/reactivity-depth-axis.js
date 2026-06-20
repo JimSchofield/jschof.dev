@@ -52,7 +52,7 @@
       name: "Vue shallowRef()",
       pos: 23,
       row: 0,
-      cat: "hybrid",
+      cat: "pushpull",
       note: "shallowRef.value = new\nwrapper-level only",
       unit: "the shallowRef wrapper — .value replacement",
       mechanism: "shallowRef() tracks assignment to .value, never reaches into contents",
@@ -65,11 +65,11 @@
       name: "Solid signal",
       pos: 30,
       row: 1,
-      cat: "push",
+      cat: "pushpull",
       note: "signal.set()\nwrapper replacement",
       unit: "the signal itself — you call set(newValue)",
       mechanism:
-        "Synchronous push when signal.set() or signal.update() is called",
+        "set() notifies subscribers (push); createMemo recomputes lazily on read (pull)",
       analysis:
         "A Solid signal holds one value — primitive or reference. Calling set(newValue) synchronously notifies all subscribers. Mutating a property of a held object (obj.x = 1 without calling set()) triggers nothing. For deep object reactivity, Solid provides createStore() as a completely separate primitive. The same framework appears at both ends of this axis.",
       placement:
@@ -79,7 +79,7 @@
       name: "Angular Signals",
       pos: 35,
       row: 0,
-      cat: "hybrid",
+      cat: "pushpull",
       note: "signal.set()\nwrapper replacement",
       unit: "the signal wrapper — explicit set() or update()",
       mechanism:
@@ -94,7 +94,7 @@
       pos: 42,
       row: 1,
       tier: 1,
-      cat: "hybrid",
+      cat: "push",
       note: "var assignment\n$$invalidate on write",
       unit: "declared variable — assignment triggers invalidation",
       mechanism: "Compiler rewrites assignments to $$invalidate() calls",
@@ -107,10 +107,10 @@
       name: "Ember Octane",
       pos: 48,
       row: 0,
-      cat: "hybrid",
+      cat: "pull",
       note: "@tracked property\ndeclared, not nested",
       unit: "@tracked class property — declared at definition time",
-      mechanism: "Revision tags on @tracked properties, polled by Glimmer VM",
+      mechanism: "Revision tags on @tracked properties, polled by Glimmer VM (pull)",
       analysis:
         "@tracked marks specific class properties as reactive. Assigning to that property bumps its revision tag. The system only tracks what you explicitly declare. If you have @tracked user = { name: 'Jim' }, mutating user.name does not trigger reactivity — only reassigning user does, unless name is on a @tracked class. Every reactive path must be declared.",
       placement:
@@ -121,7 +121,7 @@
       pos: 54,
       row: 1,
       tier: 1,
-      cat: "obs",
+      cat: "pushpull",
       note: "atom: replace value\ndeepMap: path write",
       unit: "atom: the whole value · map: key · deepMap: key path",
       mechanism:
@@ -149,7 +149,7 @@
       pos: 68,
       row: 1,
       tier: 1,
-      cat: "hybrid",
+      cat: "pull",
       note: "Zone intercepts async\nfull tree re-check",
       unit: "anything that mutated during an async operation",
       mechanism:
@@ -178,7 +178,7 @@
       name: "Svelte 5",
       pos: 78,
       row: 1,
-      cat: "hybrid",
+      cat: "pushpull",
       note: "$state proxy\nnested writes detected",
       unit: "any nested property write on a $state object",
       mechanism:
@@ -192,7 +192,7 @@
       name: "MobX",
       pos: 83,
       row: 0,
-      cat: "obs",
+      cat: "pushpull",
       note: "observable tree\nall nesting auto-tracked",
       unit: "any property write anywhere in the observable tree",
       mechanism:
@@ -207,7 +207,7 @@
       pos: 88,
       row: 1,
       tier: 1,
-      cat: "push",
+      cat: "pushpull",
       note: "createStore proxy\nnested writes detected",
       unit: "any nested property write on the store object",
       mechanism:
@@ -222,7 +222,7 @@
       pos: 92,
       row: 0,
       tier: 1,
-      cat: "hybrid",
+      cat: "pushpull",
       note: "Proxy snapshot\npath-level auto-tracking",
       unit: "any nested property write on the proxy state",
       mechanism:
@@ -236,7 +236,7 @@
       name: "Vue reactive() and ref(object)",
       pos: 97,
       row: 1,
-      cat: "hybrid",
+      cat: "pushpull",
       note: "reactive() Proxy\nall nesting auto-tracked",
       unit: "any nested property write on the reactive object",
       mechanism: "reactive() wraps objects in deep ES Proxy with track/trigger",
@@ -249,14 +249,12 @@
 
   const CAT_COLOR = {
     pull: "#5b8ed8",
-    hybrid: "#8b7fd4",
-    obs: "#b86070",
+    pushpull: "#8b7fd4",
     push: "#d8643a",
   };
   const CAT_LABEL = {
     pull: "pull",
-    hybrid: "push-pull",
-    obs: "push (observable)",
+    pushpull: "push-pull",
     push: "push",
   };
 
@@ -376,7 +374,7 @@
 
       const hLegend = [
         { cat: "pull", label: "pull" },
-        { cat: "hybrid", label: "push-pull" },
+        { cat: "pushpull", label: "push-pull" },
         { cat: "push", label: "push" },
       ]
         .map((lc, i) => {
@@ -397,7 +395,7 @@
 
       const vLegend = [
         { cat: "pull", label: "pull" },
-        { cat: "hybrid", label: "push-pull" },
+        { cat: "pushpull", label: "push-pull" },
         { cat: "push", label: "push" },
       ]
         .map((lc, i) => {

@@ -61,23 +61,17 @@
   /* ── push–pull palette ────────────────────────────────────────────────── */
   const COLOR = {
     pull: "#378ADD",
-    "pull-lean": "#5A7FDB",
     pushpull: "#7F77DD",
-    "push-lean": "#AF6485",
     push: "#D85A30",
   };
   const PP_LABEL = {
     pull: "pull",
-    "pull-lean": "pull-leaning",
     pushpull: "push\u2013pull",
-    "push-lean": "push-leaning",
     push: "push",
   };
   const PP_BADGE = {
     pull: "b-pull",
-    "pull-lean": "b-pull-lean",
     pushpull: "b-pushpull",
-    "push-lean": "b-push-lean",
     push: "b-push",
   };
   const SCOPE_LABEL = {
@@ -103,8 +97,8 @@
       kind: "arc",
       ring: "window",
       angle: 62,
-      pp: "push-lean",
-      desc: "Zone.js monkey-patches every global async API to fire a tick whenever anything happens - a Promise resolves, a setTimeout fires, an event listener returns. The tick carries no information about what changed, so Angular compensates by walking the entire component tree and dirty-checking every binding. The notification can\u2019t narrow the search, so detection has to start at the root. Push-leaning: the tick is pushed eagerly, bindings read on the following pass.",
+      pp: "pull",
+      desc: "Zone.js monkey-patches every global async API to fire a tick whenever anything happens - a Promise resolves, a setTimeout fires, an event listener returns. The tick carries no information about what changed, so Angular compensates by walking the entire component tree and dirty-checking every binding. The notification can\u2019t narrow the search, so detection has to start at the root. Pull: the tick only schedules a recheck; all the change discovery happens on the render pass. (When the tick fires is a scheduling question - see Part 7.)",
     },
 
     {
@@ -113,8 +107,8 @@
       kind: "arc",
       ring: "service",
       angle: 132,
-      pp: "push-lean",
-      desc: "A service\u2019s notify() pushes to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to investigate and figure out what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. Push-leaning: set() notifies subscribers immediately.",
+      pp: "pushpull",
+      desc: "A service\u2019s notify() pushes to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to investigate and figure out what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. Push-pull: notify() pushes to subscribers immediately, and consumers read to resolve what changed.",
     },
 
     {
@@ -122,8 +116,8 @@
       name: "nanostores",
       kind: "range",
       angle: 38,
-      pp: "push-lean",
-      desc: "The primitive sets the detection level. atom() pushes to every subscriber with no key information; map() narrows to per-key subscriptions; deepMap() narrows further to dot-path subscriptions like \"user.address.city\". Unlike proxy-based systems, you declare subscription paths explicitly rather than tracking access automatically. Shown as a range because the primitive choice determines how far the notification travels. Push-leaning: set() pushes to subscribers synchronously.",
+      pp: "pushpull",
+      desc: "The primitive sets the detection level. atom() pushes to every subscriber with no key information; map() narrows to per-key subscriptions; deepMap() narrows further to dot-path subscriptions like \"user.address.city\". Unlike proxy-based systems, you declare subscription paths explicitly rather than tracking access automatically. Shown as a range because the primitive choice determines how far the notification travels. Push-pull: set() pushes to subscribers synchronously, listeners read to resolve.",
     },
 
     {
@@ -132,8 +126,8 @@
       kind: "arc",
       ring: "component",
       angle: 25,
-      pp: "push-lean",
-      desc: "Per-property Proxy tracking knows exactly which observer-component depends on the changed value - no search, no broadcast. But the woken observer is a React component, and React still diffs that component\u2019s output to find the DOM change. Contrast Solid, which eliminates the diff entirely and lands at the node - that\u2019s the line between the two. Push-leaning: reactions run eagerly on mutation.",
+      pp: "pushpull",
+      desc: "Per-property Proxy tracking knows exactly which observer-component depends on the changed value - no search, no broadcast. But the woken observer is a React component, and React still diffs that component\u2019s output to find the DOM change. Contrast Solid, which eliminates the diff entirely and lands at the node - that\u2019s the line between the two. Push-pull: mutation notifies reactions (push), computeds resolve lazily on read (pull).",
     },
 
     {
@@ -192,8 +186,8 @@
       kind: "arc",
       ring: "template",
       angle: 50,
-      pp: "pushpull",
-      desc: "Glimmer\u2019s @tracked auto-tracking knows which template regions read the changed state and re-validates only those, re-rendering the affected bits rather than the whole component. Tag-based validation means consumers pull and check \"has this tag been invalidated since I last read?\" - a lazy variant of dependency tracking. Push-pull: dirty pushed, values pulled lazily on re-render.",
+      pp: "pull",
+      desc: "Glimmer\u2019s @tracked auto-tracking knows which template regions read the changed state and re-validates only those, re-rendering the affected bits rather than the whole component. But a tracked write only bumps a global revision clock - it notifies no dependents. Tag-based validation means consumers pull and check \"has this tag been invalidated since I last read?\" on the render pass. A clock bump isn't a notification, and the recompute is all read-time, so Ember is pull - fine-grained, but pull.",
     },
 
     {
@@ -418,9 +412,7 @@
     }
     .b-scope     { background: rgba(136,135,128,0.16); }
     .b-pull      { background: rgba( 55,138,221,0.16); }
-    .b-pull-lean { background: rgba( 91,122,221,0.16); }
     .b-pushpull  { background: rgba(127,119,221,0.16); }
-    .b-push-lean { background: rgba(175,100,133,0.16); }
     .b-push      { background: rgba(216, 90, 48,0.16); }
     .popover-desc { font-size: 12px; line-height: 1.6; color: var(--text-secondary); margin: 0; }
 
@@ -428,16 +420,12 @@
     @media (prefers-color-scheme: dark) {
       :host-context(:root:not([data-theme="light"])) .b-scope     { background: rgba(180,178,168,0.22); }
       :host-context(:root:not([data-theme="light"])) .b-pull      { background: rgba( 55,138,221,0.30); }
-      :host-context(:root:not([data-theme="light"])) .b-pull-lean { background: rgba( 91,122,221,0.30); }
       :host-context(:root:not([data-theme="light"])) .b-pushpull  { background: rgba(127,119,221,0.30); }
-      :host-context(:root:not([data-theme="light"])) .b-push-lean { background: rgba(175,100,133,0.30); }
       :host-context(:root:not([data-theme="light"])) .b-push      { background: rgba(216, 90, 48,0.30); }
     }
     :host-context([data-theme="dark"]) .b-scope     { background: rgba(180,178,168,0.22); }
     :host-context([data-theme="dark"]) .b-pull      { background: rgba( 55,138,221,0.30); }
-    :host-context([data-theme="dark"]) .b-pull-lean { background: rgba( 91,122,221,0.30); }
     :host-context([data-theme="dark"]) .b-pushpull  { background: rgba(127,119,221,0.30); }
-    :host-context([data-theme="dark"]) .b-push-lean { background: rgba(175,100,133,0.30); }
     :host-context([data-theme="dark"]) .b-push      { background: rgba(216, 90, 48,0.30); }
 
     /* Two layouts: only one is shown at a time, switched by container query. */
@@ -485,23 +473,36 @@
       font-size: 11px;
       color: var(--text-secondary);
     }
-    .ly-legend-head {
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      flex: 0 0 auto;
-    }
-    .ly-legend-bar {
+    /* Three discrete labeled dots on a hairline, matching the radar legend. */
+    .ly-legend-scale {
       flex: 1 1 auto;
-      height: 10px;
-      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
     }
-    .ly-legend-ticks {
-      flex: 0 0 auto;
+    .ly-legend-scale::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 5px;
+      height: 1px;
+      background: var(--band-stroke);
+    }
+    .ly-legend-stop {
+      position: relative;
       display: inline-flex;
-      gap: 6px;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
     }
-    .ly-legend-ticks > span:first-child::before { content: ""; }
-    .ly-legend-ticks > span { font-size: 10px; }
+    .ly-legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .ly-legend-label { font-size: 10px; white-space: nowrap; }
 
     /* Strata layers — flush horizontal bands stacked coarse (top) to fine
        (bottom), like geologic sediment. The whole stack shares one rounded
@@ -668,20 +669,17 @@
       const lx0 = 792;
       let legend =
         `<text class="legend-head" x="${lx0}" y="80">PUSH \u2013 PULL</text>` +
-        `<defs><linearGradient id="rgr-pp" x1="0" y1="0" x2="0" y2="1">` +
-        `<stop offset="0" stop-color="${COLOR.pull}"/><stop offset="0.30" stop-color="${COLOR["pull-lean"]}"/>` +
-        `<stop offset="0.5" stop-color="${COLOR.pushpull}"/><stop offset="0.72" stop-color="${COLOR["push-lean"]}"/>` +
-        `<stop offset="1" stop-color="${COLOR.push}"/></linearGradient>` +
-        `<clipPath id="rgr-top"><rect x="0" y="0" width="${VBW}" height="${OY}"/></clipPath></defs>` +
-        `<rect x="${lx0}" y="90" width="13" height="132" rx="4" fill="url(#rgr-pp)"/>`;
+        `<defs><clipPath id="rgr-top"><rect x="0" y="0" width="${VBW}" height="${OY}"/></clipPath></defs>` +
+        `<line x1="${lx0 + 6}" y1="90" x2="${lx0 + 6}" y2="222" stroke="var(--band-stroke)" stroke-width="1"/>`;
       [
-        [0, "pull"],
-        [0.3, "pull-lean"],
-        [0.5, "push-pull"],
-        [0.72, "push-lean"],
-        [1, "push"],
-      ].forEach(([o, t]) => {
-        legend += `<text class="legend-tick" x="${lx0 + 20}" y="${Math.round(90 + o * 132 + 3.5)}">${t}</text>`;
+        [0, "pull", COLOR.pull],
+        [0.5, "push-pull", COLOR.pushpull],
+        [1, "push", COLOR.push],
+      ].forEach(([o, t, c]) => {
+        const cy = Math.round(90 + o * 132);
+        legend +=
+          `<circle cx="${lx0 + 6}" cy="${cy}" r="6.5" fill="${c}"/>` +
+          `<text class="legend-tick" x="${lx0 + 22}" y="${cy + 3.5}">${t}</text>`;
       });
 
       return (
@@ -750,12 +748,25 @@
           );
         }).join("");
 
-      // Horizontal push-pull legend above the layered stack
+      // Horizontal push-pull legend above the layered stack: three discrete
+      // labeled dots (pull / push-pull / push), mirroring the radar legend.
       const legend =
         `<div class="ly-legend" aria-hidden="true">` +
-        `<span class="ly-legend-head">PUSH – PULL</span>` +
-        `<span class="ly-legend-bar" style="background:linear-gradient(to right, ${COLOR.pull}, ${COLOR["pull-lean"]} 30%, ${COLOR.pushpull} 50%, ${COLOR["push-lean"]} 72%, ${COLOR.push})"></span>` +
-        `<span class="ly-legend-ticks"><span>pull</span><span>push</span></span>` +
+        `<span class="ly-legend-scale">` +
+        [
+          ["pull", COLOR.pull],
+          ["push-pull", COLOR.pushpull],
+          ["push", COLOR.push],
+        ]
+          .map(
+            ([label, c]) =>
+              `<span class="ly-legend-stop">` +
+              `<span class="ly-legend-label">${label}</span>` +
+              `<span class="ly-legend-dot" style="background:${c}"></span>` +
+              `</span>`,
+          )
+          .join("") +
+        `</span>` +
         `</div>`;
 
       return (

@@ -93,11 +93,11 @@
       name: "Angular (Zone.js)",
       cx: 115,
       cy: 196,
-      color: "#AF6485",
+      color: "#378ADD",
       granularity: "coarse",
       depth: "deep",
-      pushPull: "push-leaning",
-      desc: "Zone.js monkey-patches every async browser API to push a change detection tick when any callback fires. Angular then deep-scans the entire component tree. Uniquely, it cannot distinguish meaningful state changes from irrelevant async noise — a heartbeat or a resolved Promise triggers the same full tree walk.",
+      pushPull: "pull",
+      desc: "Zone.js monkey-patches every async browser API to schedule a change detection tick when any callback fires. But that tick notifies no specific dependents — it just says \"something happened, recheck.\" Angular then pulls: it deep-scans the component tree and dirty-checks every binding on the render pass. The scheduling is eager, but the actual change discovery is all read-time, which makes it pull. (The tick itself is a scheduling concern — see Part 7.)",
     },
     {
       id: "react-immer",
@@ -159,11 +159,11 @@
       name: "Ember (Octane)",
       cx: 443,
       cy: 462,
-      color: "#7F77DD",
+      color: "#378ADD",
       granularity: "fine",
       depth: "shallow",
-      pushPull: "push-pull",
-      desc: "Glimmer's @tracked decorator uses getter interception to auto-build a reactive dependency graph. The Octane rewrite moved Ember from the center of the chart to the fine+shallow signals cluster — same push-pull hybrid as Vue shallowRef() and Solid signals. The migration arrow on the chart shows this trajectory from classic KVO.",
+      pushPull: "pull",
+      desc: "Glimmer's @tracked auto-tracking is fine-grained, but it's pull on the push/pull axis. A tracked write only bumps a global revision clock — it notifies no dependents. Rendered output remembers the revision it last read; on the next render pass the system compares clocks and recomputes whatever is stale. Invalidation by clock-bump is not a notification, and the recompute happens fully at read time, so Ember pulls — same bucket as React, despite the finer granularity.",
     },
     {
       id: "svelte5",
@@ -192,11 +192,11 @@
       name: "MobX",
       cx: 510,
       cy: 88,
-      color: "#AF6485",
+      color: "#7F77DD",
       granularity: "fine",
       depth: "deep",
-      pushPull: "push-leaning",
-      desc: "MobX makes objects observable via Proxy and runs reactions eagerly when dependencies change. autorun callbacks fire synchronously on mutation — closer to push than any other deep tracker here. The observable graph is comprehensive: nested objects, arrays, and maps are all tracked automatically. computed values are lazy (pull), but the dominant delivery model is push, distinguishing MobX from the balanced push-pull cluster.",
+      pushPull: "push-pull",
+      desc: "MobX makes objects observable via Proxy and notifies reactions when dependencies change — that notification is the push. But computed values are lazy, recomputing only when read — that's the pull. Notify-then-lazy-resolve is the canonical push-pull shape, the same as the signal libraries. The observable graph is comprehensive: nested objects, arrays, and maps are all tracked automatically.",
     },
     {
       id: "valtio",
@@ -225,21 +225,21 @@
       name: "nanostores",
       cx: 370,
       cy: 377,
-      color: "#AF6485",
+      color: "#7F77DD",
       granularity: "fine",
       depth: "shallow",
-      pushPull: "push-leaning",
-      desc: 'atom() is a push-subscribe primitive: set() notifies all subscribers immediately. map() adds key-level subscriptions. deepMap() enables dot-path subscriptions like "user.address.city". Unlike proxy-based systems, you declare paths explicitly rather than tracking access automatically. Shown as a range marker because depth depends on which primitive you use.',
+      pushPull: "push-pull",
+      desc: 'atom() is a push-subscribe primitive: set() notifies all subscribers immediately — that\'s the push. Listeners then read and derive on notify — the pull. map() adds key-level subscriptions and deepMap() enables dot-path subscriptions like "user.address.city". Unlike proxy-based systems, you declare paths explicitly rather than tracking access automatically. Shown as a range marker because depth depends on which primitive you use.',
     },
     {
       id: "wc-services",
       name: "wc-services",
       cx: 210,
       cy: 238,
-      color: "#AF6485",
+      color: "#7F77DD",
       granularity: "coarse",
       depth: "medium",
-      pushPull: "push-leaning",
+      pushPull: "push-pull",
       desc: "Service-oriented state management for web components. Notifications fire at the service level — subscribers know the service changed but not which specific property, making it coarse-grained. Depth is manual: no Proxy-based auto-tracking, but since you control when to notify, you can fire after deep mutations. This puts it between shallow (reference equality) and deep (automatic traversal) — closer to Ember classic's declared-deps model than to signal primitives.",
     },
     {
@@ -247,11 +247,11 @@
       name: "Ember (classic)",
       cx: 290,
       cy: 248,
-      color: "#5B7ADD",
+      color: "#378ADD",
       granularity: "medium",
       depth: "medium",
-      pushPull: "pull-leaning",
-      desc: 'Ember\'s KVO (Key-Value Observing) system requires explicit computed property declarations with dependency paths: computed("user.address.city", function(){...}). Invalidation is push but re-evaluation waits for a render. You get precision only where you explicitly declare it — neither fully coarse nor fine, neither fully shallow nor deep. Uniquely occupies the center of the chart.',
+      pushPull: "pull",
+      desc: 'Ember\'s KVO (Key-Value Observing) system requires explicit computed property declarations with dependency paths: computed("user.address.city", function(){...}). Invalidation flags the property, but re-evaluation waits for a render — and invalidation is not a notification to dependents, it\'s a dirty bit the render later pulls on. So it lands at pull. You get precision only where you explicitly declare it — neither fully coarse nor fine, neither fully shallow nor deep. Uniquely occupies the center of the chart.',
     },
     {
       id: "event-bus",
@@ -270,11 +270,11 @@
       name: "RxJS",
       cx: 508,
       cy: 494,
-      color: "#AF6485",
+      color: "#D85A30",
       granularity: "fine",
       depth: "shallow",
-      pushPull: "push-leaning",
-      desc: "Observable streams push values to subscribers when they emit. Fine-grained subscriptions (each Observable is its own channel) but shallow by default — operators like pluck() or map() let you project into nested structure, but the library does not auto-track property access. Cold Observables have a lazy initialization phase that resembles pull, but once subscribed all emission is push. BehaviorSubject and Subject patterns tip it firmly toward push-leaning.",
+      pushPull: "push",
+      desc: "Observable streams push values to subscribers the moment they emit — eager delivery, no lazy read phase for the value. Fine-grained subscriptions (each Observable is its own channel) but shallow by default — operators like pluck() or map() let you project into nested structure, but the library does not auto-track property access. Cold Observables have a lazy initialization phase, but that's a subscription concern, not a value-resolution pull. Emission is push.",
     },
     {
       id: "cyclejs",
@@ -292,10 +292,10 @@
       name: "XState",
       cx: 300,
       cy: 460,
-      color: "#AF6485",
+      color: "#D85A30",
       granularity: "medium",
       depth: "shallow",
-      pushPull: "push-leaning",
+      pushPull: "push",
       desc: "Models application behavior as explicit state machines and statecharts. The subscription unit is the actor (machine) — subscribers receive the full state snapshot on every transition, making it coarser than signal primitives but more precise than component-level re-renders. You always know exactly which state transition occurred. Context (extended state) uses explicit assign() calls with no Proxy-based auto-tracking, keeping it shallow. The machine pushes new snapshots to subscribers synchronously on each transition.",
     },
   ];
@@ -313,9 +313,7 @@
   };
   const PP_CLASS = {
     pull: "b-pull",
-    "pull-leaning": "b-pull-lean",
     "push-pull": "b-pushpull",
-    "push-leaning": "b-push-lean",
     push: "b-push",
   };
 
@@ -491,9 +489,7 @@
     .b-medium-d  { background: rgba(136,135,128, 0.16); }
     .b-deep      { background: rgba( 80, 79, 76, 0.14); }
     .b-pull      { background: rgba( 55,138,221, 0.16); }
-    .b-pull-lean { background: rgba( 91,122,221, 0.16); }
     .b-pushpull  { background: rgba(127,119,221, 0.16); }
-    .b-push-lean { background: rgba(175,100,133, 0.16); }
     .b-push      { background: rgba(216, 90, 48, 0.16); }
 
     /* More opaque badges in dark mode for legibility */
@@ -505,9 +501,7 @@
       .b-medium-d  { background: rgba(180,178,168, 0.22); }
       .b-deep      { background: rgba(160,158,154, 0.22); }
       .b-pull      { background: rgba( 55,138,221, 0.30); }
-      .b-pull-lean { background: rgba( 91,122,221, 0.30); }
       .b-pushpull  { background: rgba(127,119,221, 0.30); }
-      .b-push-lean { background: rgba(175,100,133, 0.30); }
       .b-push      { background: rgba(216, 90, 48, 0.30); }
     }
 
@@ -720,10 +714,8 @@
               stroke="var(--border-tertiary)" stroke-width="0.5"/>
         <circle cx="155" cy="592" r="5" fill="#378ADD"/>
         <text class="ts" x="155" y="582" text-anchor="middle">pull</text>
-        <circle cx="247" cy="592" r="4" fill="#5B7ADD"/>
         <circle cx="340" cy="592" r="5" fill="#7F77DD"/>
         <text class="ts" x="340" y="582" text-anchor="middle">push-pull</text>
-        <circle cx="433" cy="592" r="4" fill="#AF6485"/>
         <circle cx="525" cy="592" r="5" fill="#D85A30"/>
         <text class="ts" x="525" y="582" text-anchor="middle">push</text>
 

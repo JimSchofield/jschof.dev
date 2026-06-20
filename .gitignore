@@ -42,3 +42,6 @@ pnpm-debug.log*
 
 # Claude Code worktrees
 .claude/worktrees
+
+# Local-only working notes (not part of the repo)
+notes/

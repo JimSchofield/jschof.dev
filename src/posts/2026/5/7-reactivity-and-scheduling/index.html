@@ -1,6 +1,6 @@
 ---
 title: "JavaScript Reactivity (Part 7): Reactivity and Scheduling"
-excerpt: ""
+excerpt: "Once a system knows something changed, it still has to decide WHEN to do the work. From the game loop to microtask batching to React's lanes, scheduling is the axis that push/pull leaves out."
 layout: post
 tags:
   - posts
@@ -16,5 +16,74 @@ eleventyExcludeFromCollections: true
 <h1>JavaScript Reactivity (Part 7): Reactivity and Scheduling</h1>
 
 <p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li><a href="/posts/2026/5/1-javascript-frameworks-a-global-look/">A Global Look</a></li>
+    <li><a href="/posts/2026/5/2-deep-vs-shallow-reactivity/">Deep vs. Shallow Reactivity</a></li>
+    <li><a href="/posts/2026/5/3-coarse-vs-fine-grained-reactivity/">Coarse vs. Fine-Grained Reactivity</a></li>
+    <li>Push vs. Pull Reactivity <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Reactivity as Cache Invalidation <span class="coming-soon">(Coming soon!)</span></li>
+    <li>Agnostic Reactivity - Does It Exist? <span class="coming-soon">(Coming soon!)</span></li>
+    <li><strong>Reactivity and Scheduling</strong></li>
+  </ol>
+</nav>
+
+<p>
+  TODO: intro. Push/pull (Part 4) answers <em>whether</em> the system is told a
+  change happened and <em>whether</em> the value resolves eagerly or lazily. It
+  deliberately says nothing about <em>when</em> the work actually runs. That
+  "when" is its own axis: scheduling.
+</p>
+
+<h2>The simplest scheduler: the game loop</h2>
+
+<p>
+  TODO: the classic <code>while (running) { update(); render(); }</code> loop.
+  No notifications, no change detection- it just pulls the entire world and
+  redraws every frame, on a fixed clock. It is the purest pull there is, and the
+  simplest possible schedule: do everything, every frame, forever. AngularJS's
+  digest cycle is the same animal for the DOM.
+</p>
+
+<h2>Why frameworks can't just do that</h2>
+
+<p>
+  TODO: re-rendering everything every frame is too expensive for a real app, so
+  frameworks defer and coalesce the work instead. This is where scheduling
+  strategies diverge: microtask batching, <code>requestAnimationFrame</code>,
+  idle callbacks, time-slicing.
+</p>
+
+<h2>Scheduling is orthogonal to push/pull</h2>
+
+<p>
+  TODO: two frameworks can sit in the same push/pull bucket and schedule
+  completely differently. A game loop and React are both pull, but one runs on a
+  fixed tick and the other coalesces work on demand after a
+  <code>setState</code>. Note: this is where the Angular zone "tick" actually
+  belongs- it's a scheduling decision (when to run change detection), not a
+  push/pull one.
+</p>
+
+<h2>How the frameworks schedule</h2>
+
+<p>
+  TODO: Vue's <code>queueJob</code> + microtask flush. Solid's
+  synchronous-by-default. React's lanes / concurrent scheduler and time-slicing.
+  Svelte's <code>tick()</code>. Batching and why it exists (avoid redundant
+  work, avoid tearing).
+</p>
+
+<h2>Scheduling and glitches</h2>
+
+<p>
+  TODO: tie back to the diamond problem from Part 3. Scheduling order is part of
+  how systems stay glitch-free- you batch and order the recompute so consumers
+  never observe an inconsistent intermediate state.
+</p>
+
+<h2>Wrap-up</h2>
 
 <p>TODO.</p>

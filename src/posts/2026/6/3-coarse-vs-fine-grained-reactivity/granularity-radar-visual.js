@@ -61,23 +61,17 @@
   /* ── push–pull palette ────────────────────────────────────────────────── */
   const COLOR = {
     pull: "#378ADD",
-    "pull-lean": "#5A7FDB",
     pushpull: "#7F77DD",
-    "push-lean": "#AF6485",
     push: "#D85A30",
   };
   const PP_LABEL = {
     pull: "pull",
-    "pull-lean": "pull-leaning",
     pushpull: "push\u2013pull",
-    "push-lean": "push-leaning",
     push: "push",
   };
   const PP_BADGE = {
     pull: "b-pull",
-    "pull-lean": "b-pull-lean",
     pushpull: "b-pushpull",
-    "push-lean": "b-push-lean",
     push: "b-push",
   };
   const SCOPE_LABEL = {
@@ -103,8 +97,8 @@
       kind: "arc",
       ring: "window",
       angle: 62,
-      pp: "push-lean",
-      desc: "Zone.js monkey-patches every global async API to fire a tick whenever anything happens - a Promise resolves, a setTimeout fires, an event listener returns. The tick carries no information about what changed, so Angular compensates by walking the entire component tree and dirty-checking every binding. The notification can\u2019t narrow the search, so detection has to start at the root. Push-leaning: the tick is pushed eagerly, bindings read on the following pass.",
+      pp: "pull",
+      desc: "Zone.js monkey-patches every global async API to fire a tick whenever anything happens - a Promise resolves, a setTimeout fires, an event listener returns. The tick carries no information about what changed, so Angular compensates by walking the entire component tree and dirty-checking every binding. The notification can\u2019t narrow the search, so detection has to start at the root. Pull: the tick only schedules a recheck; all the change discovery happens on the render pass. (When the tick fires is a scheduling question - see Part 7.)",
     },
 
     {
@@ -113,8 +107,8 @@
       kind: "arc",
       ring: "service",
       angle: 132,
-      pp: "push-lean",
-      desc: "A service\u2019s notify() pushes to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to investigate and figure out what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. Push-leaning: set() notifies subscribers immediately.",
+      pp: "pushpull",
+      desc: "A service\u2019s notify() pushes to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to investigate and figure out what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. Push-pull: notify() pushes to subscribers immediately, and consumers read to resolve what changed.",
     },
 
     {
@@ -122,8 +116,8 @@
       name: "nanostores",
       kind: "range",
       angle: 38,
-      pp: "push-lean",
-      desc: "The primitive sets the detection level. atom() pushes to every subscriber with no key information; map() narrows to per-key subscriptions; deepMap() narrows further to dot-path subscriptions like \"user.address.city\". Unlike proxy-based systems, you declare subscription paths explicitly rather than tracking access automatically. Shown as a range because the primitive choice determines how far the notification travels. Push-leaning: set() pushes to subscribers synchronously.",
+      pp: "pushpull",
+      desc: "The primitive sets the detection level. atom() pushes to every subscriber with no key information; map() narrows to per-key subscriptions; deepMap() narrows further to dot-path subscriptions like \"user.address.city\". Unlike proxy-based systems, you declare subscription paths explicitly rather than tracking access automatically. Shown as a range because the primitive choice determines how far the notification travels. Push-pull: set() pushes to subscribers synchronously, listeners read to resolve.",
     },
 
     {
@@ -132,8 +126,8 @@
       kind: "arc",
       ring: "component",
       angle: 25,
-      pp: "push-lean",
-      desc: "Per-property Proxy tracking knows exactly which observer-component depends on the changed value - no search, no broadcast. But the woken observer is a React component, and React still diffs that component\u2019s output to find the DOM change. Contrast Solid, which eliminates the diff entirely and lands at the node - that\u2019s the line between the two. Push-leaning: reactions run eagerly on mutation.",
+      pp: "pushpull",
+      desc: "Per-property Proxy tracking knows exactly which observer-component depends on the changed value - no search, no broadcast. But the woken observer is a React component, and React still diffs that component\u2019s output to find the DOM change. Contrast Solid, which eliminates the diff entirely and lands at the node - that\u2019s the line between the two. Push-pull: mutation notifies reactions (push), computeds resolve lazily on read (pull).",
     },
 
     {
@@ -192,8 +186,8 @@
       kind: "arc",
       ring: "template",
       angle: 50,
-      pp: "pushpull",
-      desc: "Glimmer\u2019s @tracked auto-tracking knows which template regions read the changed state and re-validates only those, re-rendering the affected bits rather than the whole component. Tag-based validation means consumers pull and check \"has this tag been invalidated since I last read?\" - a lazy variant of dependency tracking. Push-pull: dirty pushed, values pulled lazily on re-render.",
+      pp: "pull",
+      desc: "Glimmer\u2019s @tracked auto-tracking knows which template regions read the changed state and re-validates only those, re-rendering the affected bits rather than the whole component. But a tracked write only bumps a global revision clock - it notifies no dependents. Tag-based validation means consumers pull and check \"has this tag been invalidated since I last read?\" on the render pass. A clock bump isn't a notification, and the recompute is all read-time, so Ember is pull - fine-grained, but pull.",
     },
 
     {
@@ -418,9 +412,7 @@
     }
     .b-scope     { background: rgba(136,135,128,0.16); }
     .b-pull      { background: rgba( 55,138,221,0.16); }
-    .b-pull-lean { background: rgba( 91,122,221,0.16); }
     .b-pushpull  { background: rgba(127,119,221,0.16); }
-    .b-push-lean { background: rgba(175,100,133,0.16); }
     .b-push      { background: rgba(216, 90, 48,0.16); }
     .popover-desc { font-size: 12px; line-height: 1.6; color: var(--text-secondary); margin: 0; }
 
@@ -428,16 +420,12 @@
     @media (prefers-color-scheme: dark) {
       :host-context(:root:not([data-theme="light"])) .b-scope     { background: rgba(180,178,168,0.22); }
       :host-context(:root:not([data-theme="light"])) .b-pull      { background: rgba( 55,138,221,0.30); }
-      :host-context(:root:not([data-theme="light"])) .b-pull-lean { background: rgba( 91,122,221,0.30); }
       :host-context(:root:not([data-theme="light"])) .b-pushpull  { background: rgba(127,119,221,0.30); }
-      :host-context(:root:not([data-theme="light"])) .b-push-lean { background: rgba(175,100,133,0.30); }
       :host-context(:root:not([data-theme="light"])) .b-push      { background: rgba(216, 90, 48,0.30); }
     }
     :host-context([data-theme="dark"]) .b-scope     { background: rgba(180,178,168,0.22); }
     :host-context([data-theme="dark"]) .b-pull      { background: rgba( 55,138,221,0.30); }
-    :host-context([data-theme="dark"]) .b-pull-lean { background: rgba( 91,122,221,0.30); }
     :host-context([data-theme="dark"]) .b-pushpull  { background: rgba(127,119,221,0.30); }
-    :host-context([data-theme="dark"]) .b-push-lean { background: rgba(175,100,133,0.30); }
     :host-context([data-theme="dark"]) .b-push      { background: rgba(216, 90, 48,0.30); }
 
     /* Two layouts: only one is shown at a time, switched by container query. */
@@ -470,6 +458,13 @@
       margin: 0 4px 12px;
       line-height: 1.45;
     }
+    .ly-note {
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      font-style: italic;
+      margin: 12px 4px 0;
+      line-height: 1.45;
+    }
     .ly-legend {
       display: flex;
       align-items: center;
@@ -478,111 +473,112 @@
       font-size: 11px;
       color: var(--text-secondary);
     }
-    .ly-legend-head {
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      flex: 0 0 auto;
-    }
-    .ly-legend-bar {
+    /* Three discrete labeled dots on a hairline, matching the radar legend. */
+    .ly-legend-scale {
       flex: 1 1 auto;
-      height: 10px;
-      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
     }
-    .ly-legend-ticks {
-      flex: 0 0 auto;
+    .ly-legend-scale::before {
+      content: "";
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 5px;
+      height: 1px;
+      background: var(--band-stroke);
+    }
+    .ly-legend-stop {
+      position: relative;
       display: inline-flex;
-      gap: 6px;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
     }
-    .ly-legend-ticks > span:first-child::before { content: ""; }
-    .ly-legend-ticks > span { font-size: 10px; }
+    .ly-legend-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .ly-legend-label { font-size: 10px; white-space: nowrap; }
 
-    /* Nested rings — each ring is a rectangle that visually contains the
-       next. Inner padding gets smaller for visual rhythm. */
-    .ly-ring {
+    /* Strata layers — flush horizontal bands stacked coarse (top) to fine
+       (bottom), like geologic sediment. The whole stack shares one rounded
+       border; layers butt against each other with a hairline seam. */
+    .ly-strata {
       border: 1px solid var(--band-stroke);
       border-radius: 10px;
-      padding: 8px 8px 4px;
-      margin-top: 6px;
-      background: var(--band-1);
+      overflow: hidden;
     }
-    .ly-ring-application,
-    .ly-ring-component,
-    .ly-ring-template { background: var(--band-2); }
-    .ly-ring-window,
-    .ly-ring-service  { background: var(--band-1); }
-    .ly-ring-node     { background: var(--band-inner); }
+    .ly-ring {
+      padding: 9px 12px 11px;
+      background: var(--band-1);
+      border-top: 1px solid var(--band-stroke);
+    }
+    .ly-ring:first-child { border-top: 0; }
+    /* Alternate band tints + a subtle deepening toward the fine end so the
+       stack reads as descending strata. */
+    .ly-ring-window      { background: var(--band-1); }
+    .ly-ring-application { background: var(--band-2); }
+    .ly-ring-service     { background: var(--band-1); }
+    .ly-ring-component   { background: var(--band-2); }
+    .ly-ring-template    { background: var(--band-1); }
+    .ly-ring-node        { background: var(--band-inner); }
     .ly-ring-head {
       font-size: 10px;
       font-weight: 700;
       letter-spacing: 1.2px;
       color: var(--text-tertiary);
       text-transform: uppercase;
-      padding: 2px 6px 6px;
+      margin-bottom: 7px;
     }
     .ly-rows {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
 
-    /* Framework row = full-width button, generous tap target. */
-    .ly-row {
-      display: flex;
+    /* Framework chip = compact inline button so layers stay shallow. */
+    .ly-chip {
+      display: inline-flex;
       align-items: center;
-      gap: 10px;
-      width: 100%;
-      min-height: 44px;
-      padding: 8px 10px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      background: transparent;
+      gap: 7px;
+      min-height: 32px;
+      padding: 5px 11px 5px 9px;
+      border: 1px solid var(--band-stroke);
+      border-radius: 999px;
+      background: var(--pill-bg);
       color: var(--text-primary);
       font-family: var(--font-sans);
-      font-size: 14px;
+      font-size: 13px;
       text-align: left;
       cursor: pointer;
       transition: background 0.12s ease, border-color 0.12s ease;
     }
-    .ly-row:hover,
-    .ly-row:focus-visible {
-      background: var(--pill-bg);
-      border-color: var(--band-stroke);
+    .ly-chip:hover,
+    .ly-chip:focus-visible {
+      border-color: var(--text-tertiary);
       outline: none;
     }
-    .ly-row-dot {
-      width: 14px;
-      height: 14px;
+    .ly-chip-dot {
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
       flex: 0 0 auto;
       border: 1.5px solid var(--dot-stroke);
     }
-    .ly-row-name {
-      flex: 1 1 auto;
+    .ly-chip-name {
       font-weight: 600;
-      line-height: 1.25;
+      line-height: 1.2;
+      white-space: nowrap;
     }
-    .ly-row-note {
-      flex: 0 0 auto;
-      font-size: 11px;
+    .ly-chip-note {
+      font-size: 10.5px;
       color: var(--text-secondary);
       font-style: italic;
-    }
-
-    /* Nanostores spans Service → Component. Show a connector line on the
-       left edge of its row that drops down into the Component ring. */
-    .ly-row-span {
-      position: relative;
-    }
-    .ly-row-span::before {
-      content: "";
-      position: absolute;
-      left: -1px;
-      top: 50%;
-      bottom: -28px;
-      width: 3px;
-      border-radius: 2px;
-      background: linear-gradient(to bottom, ${COLOR["push-lean"]}, transparent);
-      opacity: 0.5;
+      white-space: nowrap;
     }
   `;
 
@@ -673,20 +669,17 @@
       const lx0 = 792;
       let legend =
         `<text class="legend-head" x="${lx0}" y="80">PUSH \u2013 PULL</text>` +
-        `<defs><linearGradient id="rgr-pp" x1="0" y1="0" x2="0" y2="1">` +
-        `<stop offset="0" stop-color="${COLOR.pull}"/><stop offset="0.30" stop-color="${COLOR["pull-lean"]}"/>` +
-        `<stop offset="0.5" stop-color="${COLOR.pushpull}"/><stop offset="0.72" stop-color="${COLOR["push-lean"]}"/>` +
-        `<stop offset="1" stop-color="${COLOR.push}"/></linearGradient>` +
-        `<clipPath id="rgr-top"><rect x="0" y="0" width="${VBW}" height="${OY}"/></clipPath></defs>` +
-        `<rect x="${lx0}" y="90" width="13" height="132" rx="4" fill="url(#rgr-pp)"/>`;
+        `<defs><clipPath id="rgr-top"><rect x="0" y="0" width="${VBW}" height="${OY}"/></clipPath></defs>` +
+        `<line x1="${lx0 + 6}" y1="90" x2="${lx0 + 6}" y2="222" stroke="var(--band-stroke)" stroke-width="1"/>`;
       [
-        [0, "pull"],
-        [0.3, "pull-lean"],
-        [0.5, "push-pull"],
-        [0.72, "push-lean"],
-        [1, "push"],
-      ].forEach(([o, t]) => {
-        legend += `<text class="legend-tick" x="${lx0 + 20}" y="${Math.round(90 + o * 132 + 3.5)}">${t}</text>`;
+        [0, "pull", COLOR.pull],
+        [0.5, "push-pull", COLOR.pushpull],
+        [1, "push", COLOR.push],
+      ].forEach(([o, t, c]) => {
+        const cy = Math.round(90 + o * 132);
+        legend +=
+          `<circle cx="${lx0 + 6}" cy="${cy}" r="6.5" fill="${c}"/>` +
+          `<text class="legend-tick" x="${lx0 + 22}" y="${cy + 3.5}">${t}</text>`;
       });
 
       return (
@@ -727,51 +720,62 @@
         const c = COLOR[fw.pp];
         const spanNote =
           fw.kind === "range"
-            ? `<span class="ly-row-note">spans Service → Component</span>`
+            ? `<span class="ly-chip-note">(spans into Component)</span>`
             : "";
         const scopeName = fw.scopeLabel || SCOPE_LABEL[fw.scope];
         const aria = `${fw.name}: change detection at the ${scopeName} level, ${PP_LABEL[fw.pp]}.`;
-        const spanClass = fw.kind === "range" ? " ly-row-span" : "";
         return (
-          `<button type="button" class="ly-row dot-group${spanClass}" ` +
+          `<button type="button" class="ly-chip dot-group" ` +
           `data-id="${fw.id}" role="button" aria-label="${aria}">` +
-          `<span class="ly-row-dot" style="background:${c}" aria-hidden="true"></span>` +
-          `<span class="ly-row-name">${fw.name}</span>` +
+          `<span class="ly-chip-dot" style="background:${c}" aria-hidden="true"></span>` +
+          `<span class="ly-chip-name">${fw.name}</span>` +
           spanNote +
           `</button>`
         );
       };
 
-      // Build nested structure: each ring wraps the next. Innermost (node)
-      // has no children.
-      const buildLayer = (idx) => {
-        if (idx >= RINGS.length) return "";
-        const [key, label] = RINGS[idx];
-        const rows = byRing[key].map(renderRow).join("");
-        const inner = buildLayer(idx + 1);
-        return (
-          `<section class="ly-ring ly-ring-${key}" aria-label="${label}">` +
-          `<header class="ly-ring-head">${label}</header>` +
-          `<div class="ly-rows">${rows}</div>` +
-          inner +
-          `</section>`
-        );
-      };
+      // Build a flat stack of strata layers, outermost (coarse) at top to
+      // innermost (fine) at bottom — like geologic sediment layers. Layers sit
+      // flush against each other rather than nesting.
+      const buildLayers = () =>
+        RINGS.map(([key, label]) => {
+          const rows = byRing[key].map(renderRow).join("");
+          return (
+            `<section class="ly-ring ly-ring-${key}" aria-label="${label}">` +
+            `<header class="ly-ring-head">${label}</header>` +
+            `<div class="ly-rows">${rows}</div>` +
+            `</section>`
+          );
+        }).join("");
 
-      // Horizontal push-pull legend above the layered stack
+      // Horizontal push-pull legend above the layered stack: three discrete
+      // labeled dots (pull / push-pull / push), mirroring the radar legend.
       const legend =
         `<div class="ly-legend" aria-hidden="true">` +
-        `<span class="ly-legend-head">PUSH – PULL</span>` +
-        `<span class="ly-legend-bar" style="background:linear-gradient(to right, ${COLOR.pull}, ${COLOR["pull-lean"]} 30%, ${COLOR.pushpull} 50%, ${COLOR["push-lean"]} 72%, ${COLOR.push})"></span>` +
-        `<span class="ly-legend-ticks"><span>pull</span><span>push</span></span>` +
+        `<span class="ly-legend-scale">` +
+        [
+          ["pull", COLOR.pull],
+          ["push-pull", COLOR.pushpull],
+          ["push", COLOR.push],
+        ]
+          .map(
+            ([label, c]) =>
+              `<span class="ly-legend-stop">` +
+              `<span class="ly-legend-label">${label}</span>` +
+              `<span class="ly-legend-dot" style="background:${c}"></span>` +
+              `</span>`,
+          )
+          .join("") +
+        `</span>` +
         `</div>`;
 
       return (
         `<div class="ly-root" role="region" aria-label="Granularity, mobile view">` +
         `<h2 class="ly-title">Change detection scope map</h2>` +
-        `<p class="ly-subtitle">Each layer is the level at which change detection is forced. Outermost layer is the broadest scope.</p>` +
+        `<p class="ly-subtitle">Each layer is the level at which change detection is forced. The top layer is the broadest scope; the bottom is the finest.</p>` +
         legend +
-        buildLayer(0) +
+        `<div class="ly-strata">${buildLayers()}</div>` +
+        `<p class="ly-note">These are the same layers as the radar diagram, stacked for a narrow screen. To see the radar version, rotate to landscape or open this on a larger screen.</p>` +
         `</div>`
       );
     }

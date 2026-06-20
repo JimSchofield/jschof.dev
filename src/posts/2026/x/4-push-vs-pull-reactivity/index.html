@@ -1,0 +1,246 @@
+---
+title: "JavaScript Reactivity (Part 4): Push vs. Pull Reactivity"
+excerpt: "Does the source notify subscribers when it changes, or do consumers ask for the value when they need it? Most modern frameworks are quietly both."
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+date: 2026-05-08
+series: "JavaScript Reactivity"
+eleventyExcludeFromCollections: true
+---
+
+<h1>JavaScript Reactivity (Part 4): Push vs. Pull Reactivity</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/2-deep-vs-shallow-reactivity/"
+        >Deep vs. Shallow Reactivity</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/6/3-coarse-vs-fine-grained-reactivity/"
+        >Coarse vs. Fine-Grained Reactivity</a
+      >
+    </li>
+    <li><strong>Push vs. Pull Reactivity</strong></li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity and Scheduling
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+  </ol>
+</nav>
+
+<p>
+  TODO: intro. The one-sentence hook: when a value changes, does the source
+  shove the update out to whoever cares, or do consumers come ask for it when
+  they need it? People call this "push vs. pull," and signals get called
+  "push-pull," and somehow almost every framework ends up sounding like it's
+  both. That's because the term quietly bundles two different questions
+  together.
+</p>
+
+<aside class="blue">
+  <p>
+    A note before we start: there's a related question this post deliberately
+    does <em>not</em> cover-
+    <em>when</em> the work actually runs (this frame, next microtask, on idle).
+    That's scheduling, and it's its own axis. We'll get to it in
+    <strong>Part 7</strong>. Here we only care about whether a notification is
+    sent and when the value is resolved- not the timing of the flush.
+  </p>
+</aside>
+
+<h2>Push/pull is really two questions</h2>
+
+<p>
+  TODO: the key move of the whole post. "Push/pull" overloads two separate
+  questions, and untangling them is what makes everything click:
+</p>
+
+<ul>
+  <li>
+    <strong>Q1 - Notification.</strong> On a write, does the system actively
+    reach out and tell its dependents "you're dirty"? Or does it tell nobody,
+    and let readers discover the change on their own?
+  </li>
+  <li>
+    <strong>Q2 - Resolution.</strong> Is the new value computed eagerly, right
+    at write time? Or lazily, the next time something reads it?
+  </li>
+</ul>
+
+<p>
+  TODO: signals are the canonical "push-pull" precisely because they answer
+  these two questions <em>differently</em>:
+  <strong>push the notification</strong> (Q1),
+  <strong>pull the value</strong> (Q2). That combination is the thing people are
+  gesturing at when they say a signal is push-pull.
+</p>
+
+<h2>The 2&times;2 (and why it collapses to three buckets)</h2>
+
+<p>
+  TODO: lay out the grid. Q1 (notify / no-notify) on one side, Q2 (eager / lazy)
+  on the other. Four cells, but one is degenerate:
+  <strong>no-notify + eager resolve</strong> is incoherent- eager computation
+  needs <em>something</em> to fire it, and that firing <em>is</em> a
+  notification. So it's only reachable when there are no dependents, i.e. nothing
+  reactive to plot. Three reachable strategies fall out:
+</p>
+
+<ul>
+  <li>
+    <strong>Pull</strong> (no notify + lazy): the write tells no dependents;
+    readers discover changes by re-running or polling. React, Redux, Lit,
+    AngularJS, and- the surprising ones-
+    <strong>Ember</strong> and <strong>Angular Zone.js</strong>.
+  </li>
+  <li>
+    <strong>Push-pull</strong> (notify + lazy): the write actively wakes its
+    dependents, but values recompute lazily on read. The whole signals family
+    lives here: Solid, Preact signals, Vue, Svelte 5, MobX, Valtio, nanostores,
+    Angular Signals.
+  </li>
+  <li>
+    <strong>Push</strong> (notify + eager): the write computes and applies the
+    update immediately, with no lazy read phase. Compiled Svelte 4, event buses,
+    Cycle.js, RxJS.
+  </li>
+</ul>
+
+<p>
+  TODO: note this is the same three buckets shown on the radar in Part 3, and
+  the spectrum on the chart in Part 1- the color key everywhere is pull /
+  push-pull / push.
+</p>
+
+<h2>The surprising pulls: Ember and Angular Zone</h2>
+
+<p>
+  TODO: this is the part worth dwelling on, because it's counterintuitive.
+  Ember's Glimmer is fine-grained and feels reactive, but a <code>@tracked</code>
+  write only bumps a global revision clock- it notifies <em>no</em> dependents.
+  The render pass later compares clocks and recomputes what's stale.
+  <strong>Invalidation is not a notification.</strong> A clock bump, a dirty
+  flag, a <code>setState</code> schedule, a zone tick- none of these compute or
+  notify; they just mark or schedule. So they're all pull. Angular Zone is the
+  same: the tick says "something happened, recheck everything," carries no
+  dependency information, and the dirty-check resolves at render. Pull, same
+  bucket as React- despite the very different machinery.
+</p>
+
+<h2>Push: the source tells you</h2>
+
+<!--
+  ============================================================================
+  DRAFT / REFERENCE - moved from Part 2 (deep vs. shallow).
+  Imperative vs. implicit signaling is not really a depth question, and not
+  really a granularity question either - it's about HOW the tripwire gets
+  placed (who calls it, you or the system). Parking here because fine-grained
+  systems tend to use implicit signaling, so it's a natural digression in
+  this post. Decide later whether to use it here, move to Part 4 (push/pull),
+  or split into its own aside.
+  ============================================================================
+
+<p>
+  This becomes important when you set up systems to notify when changes are
+  occuring. There are two general ways to "notify" when a change has occured:
+</p>
+
+<ol>
+  <li>
+    <strong>Imperative signaling</strong> - Have the user of the reactivity
+    signal explicitly when state has changed. This is done through calling a
+    method, or dirtying some flag somewhere directly. Some examples:
+    <ul>
+      <li>
+        React <code>this.setState()</code> or, more modern,
+        <code>setSomething()</code> hook conventions
+      </li>
+      <li>Wc-services <code>this.notify()</code></li>
+      <li>Nanostores <code>$store.set(...)</code></li>
+    </ul>
+  </li>
+  <li>
+    <strong>Implicit signaling</strong> - The data structure somehow
+    automatically detects data changes. There is no explicit calling of any
+    tracking mechanism.
+    <ul>
+      <li>
+        Signals either use a <a href="">Proxy wrapper</a> where if anything
+        triggers a `set()` trap on the proxy, it automatically notifies the
+        reactivity system in the background. This is common in Solid, Preact
+        signals, Vue, and Svelte just to name a few
+      </li>
+      <li>
+        Reactive properties might be set using the (now old) method of creating
+        getters using `Object.defineProperty`. This allows the same setter trap,
+        but does not create a proxy middleman. This can be seen in frameworks
+        like Vue 2.
+      </li>
+    </ul>
+  </li>
+</ol>
+-->
+<p>
+  TODO: the pure-push end. Event buses, observable streams, compiled Svelte 4.
+  The write both notifies <em>and</em> resolves on the spot- a listener fires, a
+  stream emits a value downstream, a compiled assignment writes straight to the
+  DOM. No deferred read phase. Use the imperative/implicit-signaling material in
+  the draft comment above to ground "how the notification gets sent."
+</p>
+
+<h2>Pull: the consumer asks</h2>
+
+<p>
+  TODO: the pure-pull end. React's render cycle, the digest loop, the game loop
+  (forward-reference Part 7). Nobody is notified; the consumer re-reads on its
+  own schedule and figures out what changed- by diffing (React), by polling
+  watchers (AngularJS), by comparing revision clocks (Ember). The defining trait:
+  the write left no breadcrumb pointing at a dependent.
+</p>
+
+<h2>Push-pull: notify, then resolve lazily</h2>
+
+<p>
+  TODO: the middle, where the signals family lives and where most modern
+  reactivity has converged. The write pushes a precise notification to exactly
+  the dependents that read the value (push), but the new value isn't computed
+  until something reads it (pull). Walk Solid (wake the effect, lazy memo), Vue
+  (wake the render effect, lazy re-run + diff), MobX. Tie back to the diamond
+  problem from Part 3: resolving lazily on read is part of how these systems stay
+  glitch-free- you mark dirty eagerly but recompute in dependency order only when
+  the value is actually pulled.
+</p>
+
+<h2>Wrap-up</h2>
+
+<p>
+  TODO: recap the two questions (notify? resolve when?), the three buckets, and
+  the headline that "signals are push-pull" is shorthand for "push the
+  notification, pull the value." Forward-reference Part 5 (cache invalidation)
+  and Part 7 (scheduling- the "when does it run" axis we set aside up top).
+</p>
+
+<p>If you like my work, please let me know! {% socials %}</p>

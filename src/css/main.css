@@ -28,6 +28,10 @@ em {
 :root {
   --body-font: "Atkinson Hyperlegible Next";
 
+  /* Max width for full-bleed content (.wide, iframes, play-ground) on large
+     screens. The half-width is used to keep these centered. */
+  --content-max: 1440px;
+
   --gradient-angle: 135deg;
 
   /* --- Raw palette (constant) --- */
@@ -323,7 +327,8 @@ table {
 /* Top-left cell sits at both intersections- keep it above the rest. */
 .table-scroll thead th:first-child {
   z-index: 2;
-  box-shadow: inset -1px 0 0 var(--border-subtle),
+  box-shadow:
+    inset -1px 0 0 var(--border-subtle),
     inset 0 -2px 0 var(--border);
 }
 
@@ -336,6 +341,12 @@ td {
 
 th {
   font-weight: bold;
+}
+
+/* Only the column-header row gets the heavy underline. Row headers (a <th>
+   in the first column of a body row) keep the light border from the th,td
+   rule above- otherwise each one draws a thick stub under a single cell. */
+thead th {
   border-bottom: 2px solid var(--border);
 }
 
@@ -559,12 +570,18 @@ footer {
 .wide,
 embed,
 iframe {
-  margin-left: calc(50% - 45vw);
-  width: 90vw;
+  margin-left: calc(50% - min(45vw, calc(var(--content-max) / 2)));
+  width: min(90vw, var(--content-max));
 }
 embed,
 iframe {
   height: 80vh;
+}
+/* Video embeds (YouTube etc.) are 16:9- derive height from width so the
+   player fills the box instead of letterboxing inside a fixed height. */
+iframe.video {
+  height: auto;
+  aspect-ratio: 16 / 9;
 }
 @media (max-width: 900px) {
   .wide,
@@ -581,8 +598,8 @@ play-ground {
 }
 
 play-ground::part(container) {
-  margin-left: calc(50% - 42.5vw);
-  width: 85vw;
+  margin-left: calc(50% - min(42.5vw, calc(var(--content-max) / 2)));
+  width: min(85vw, var(--content-max));
 }
 @media (max-width: 900px) {
   play-ground::part(container) {
@@ -1078,8 +1095,8 @@ h6:hover .heading-link {
 
 .wide-2up {
   display: flex;
-  margin-left: calc(50% - 42.5vw);
-  width: 85vw;
+  margin-left: calc(50% - min(42.5vw, calc(var(--content-max) / 2)));
+  width: min(85vw, var(--content-max));
   gap: 8px;
 
   & > * {

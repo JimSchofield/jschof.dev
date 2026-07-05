@@ -52,6 +52,7 @@
     "happy-dom": "^20.10.6",
     "lit": "^3.3.3",
     "prettier": "^3.9.4",
+    "prettier-plugin-svelte": "^3.4.0",
     "shiki": "^4.3.0"
   }
 }

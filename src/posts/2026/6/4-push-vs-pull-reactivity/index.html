@@ -58,27 +58,29 @@ image: leaf.webp
   and multiple values as arguments:
 </p>
 
-<table style="width: auto; margin: auto">
-  <thead>
-    <tr>
-      <th></th>
-      <th>SINGLE</th>
-      <th>MULTIPLE</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>Pull</th>
-      <td>Function</td>
-      <td>Iterator</td>
-    </tr>
-    <tr>
-      <th>Push</th>
-      <td>Promise</td>
-      <td>Observable</td>
-    </tr>
-  </tbody>
-</table>
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>SINGLE</th>
+        <th>MULTIPLE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Pull</th>
+        <td>Function</td>
+        <td>Iterator</td>
+      </tr>
+      <tr>
+        <th>Push</th>
+        <td>Promise</td>
+        <td>Observable</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <p>
   What tidiness! What pure, Platonic satisfaction it gives! Of course, this
@@ -92,20 +94,21 @@ image: leaf.webp
   illustrate these four quadrants better:
 </p>
 
-<table style="width: auto; margin: auto">
-  <thead>
-    <tr>
-      <th></th>
-      <th>SINGLE</th>
-      <th>MULTIPLE</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>Pull</th>
-      <td>
-        <ul>
-          <li>Function</li>
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>SINGLE</th>
+        <th>MULTIPLE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Pull</th>
+        <td>
+          <ul>
+            <li>Function</li>
           <li>Getter (<code>get foo()</code>)</li>
           <li>Plain property / variable read</li>
           <li>Thunk/callback (<code>() =&gt; value</code>)</li>
@@ -138,8 +141,9 @@ image: leaf.webp
         </ul>
       </td>
     </tr>
-  </tbody>
-</table>
+    </tbody>
+  </table>
+</div>
 
 <p>
   After thrashing about in the reactive framework landscape for the last few

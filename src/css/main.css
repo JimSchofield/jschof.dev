@@ -631,6 +631,10 @@ play-ground::part(editor-format-button):focus-visible {
 
 code-highlight {
   margin: 1rem 0;
+  /* Language badge — the code surface is always dark, so use light-on-dark
+     palette tokens rather than the theme-flipping text tokens. */
+  --code-lang-color: color-mix(in srgb, var(--seasalt) 65%, transparent);
+  --code-lang-bg: color-mix(in srgb, var(--seasalt) 10%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {

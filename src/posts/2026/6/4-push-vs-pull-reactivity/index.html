@@ -173,6 +173,58 @@ image: leaf.webp
 
 <p>Let's go further.</p>
 
+<h2>There really isn't a good example of a pure push framework</h2>
+
+<p>
+  The "most push-iest" of all the framework seems to be Svelte before runes. Up
+  to and including Svelte 4, the reactivity was wholly wired up at compile-time
+  with the svelte compiler. When a value was invalidated, all calculations and
+  dependencies were figured out (and guessed at) at compile time, so that when a
+  value changed there was literally a function already created that got called
+  to handle that state change and affect all dependencies for that piece of
+  state. This was all before running any javascript (and it's why Richard Harris
+  famously claimed Svelte "has no runtime" and the framework is
+  <a href="https://svelte.dev/blog/frameworks-without-the-framework"
+    >"compiled away"</a
+  >. Spoiler: there's a little bit of a run time.).
+</p>
+
+<p>
+  Why is this the pushiest? At run time the connective tissues of dependencies
+  and dependency chains were already figured out. Values wouldn't have to be
+  pulled when the template was re-rendered- we already have all the actions that
+  need to happen to update the DOM. We have a function for that, provided by the
+  Svelte compiler.
+</p>
+
+<p>
+  This led to some real issues, though. You may remember I noted the compiler
+  sometimes "guessed" at dependencies. There are certain situations where the
+  compiler just couldn't know there is a dependency that needs to be associated
+  without workarounds. Here is an example:
+</p>
+
+<code-highlight lang="svelte">
+  <template>
+    <script lang="js">
+      let count = 0;
+      $: doubled = double();
+
+      function double() {
+        return count * 2;
+      }
+
+      function incr() {
+        count += 1;
+      }
+    </script>
+
+    <button onclick={incr}>{count}</button>
+
+    <p>Doubled: {doubled}</p>
+  </template>
+</code-highlight>
+
 <h2>It's really difficult to pin down what would make a "push" framework</h2>
 
 <p>
@@ -185,13 +237,18 @@ image: leaf.webp
 </p>
 
 <p>
-  If invalidation were technically a "push", <strong>all</strong> frameworks
-  would be considered push-pull and the push-to-pull axis that I've been talking
-  about collapses and is meaningless. There is something more than just nudging
-  the framework with an invalidation. It has to do with dependencies and how the
+  If invalidation were technically enough to qualify a framework as "push",
+  <strong>all</strong> frameworks would be considered push-pull and the
+  push-to-pull axis that I've been talking about collapses and is meaningless.
+  It would turn out that all framework just have both.
+</p>
+
+<p>
+  There is something more than just nudging the framework with an invalidation
+  to qualify as push in my mind. It has to do with dependencies and how the
   system solves the diamond problem.
 </p>
 
-<p></p>
+<h2>The diamond problem and glitches</h2>
 
 <hr />

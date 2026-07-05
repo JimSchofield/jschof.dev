@@ -23,7 +23,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "google-logging-utils": "^1.1.1"
+    "google-logging-utils": "^1.1.4"
   },
   "peerDependencies": {
     "lit": "^3.0.0"

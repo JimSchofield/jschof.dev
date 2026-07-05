@@ -1,0 +1,197 @@
+---
+title: "JavaScript Reactivity (Part 4): Push vs. Pull Reactivity"
+excerpt: "Does data get pushed to the framework to immediately recalculate, or does the framework pull the data and work out the changes? This is quite a subjective distinction!"
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+  - push-pull
+date: 2026-06-27
+series: "JavaScript Reactivity"
+image: leaf.webp
+---
+
+<h1>JavaScript Reactivity (Part 4): Push vs. Pull Reactivity</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/2-deep-vs-shallow-reactivity/"
+        >Deep vs. Shallow Reactivity</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/6/3-coarse-vs-fine-grained-reactivity/"
+        >Coarse vs. Fine-Grained Reactivity</a
+      >
+    </li>
+    <li><strong>Push vs. Pull Reactivity</strong></li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity and Scheduling
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+  </ol>
+</nav>
+
+<p>
+  In the docs for <a href="https://rxjs.dev/guide/observable">RxJS</a> there is
+  a tidy table that lays out the distinction between push and pull over single
+  and multiple values as arguments:
+</p>
+
+<table style="width: auto; margin: auto">
+  <thead>
+    <tr>
+      <th></th>
+      <th>SINGLE</th>
+      <th>MULTIPLE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Pull</th>
+      <td>Function</td>
+      <td>Iterator</td>
+    </tr>
+    <tr>
+      <th>Push</th>
+      <td>Promise</td>
+      <td>Observable</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  What tidiness! What pure, Platonic satisfaction it gives! Of course, this
+  table is nice, but only as far as it markets why RxJS exists: push strategies
+  need a primitive. (And, I wonder, is this a fundamental leaning that all
+  languages succumb to?)
+</p>
+
+<p>
+  You can actually adjust this table to include more examples, which might help
+  illustrate these four quadrants better:
+</p>
+
+<table style="width: auto; margin: auto">
+  <thead>
+    <tr>
+      <th></th>
+      <th>SINGLE</th>
+      <th>MULTIPLE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>Pull</th>
+      <td>
+        <ul>
+          <li>Function</li>
+          <li>Getter (<code>get foo()</code>)</li>
+          <li>Plain property / variable read</li>
+          <li>Thunk/callback (<code>() =&gt; value</code>)</li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>Iterator / generator (<code>function*</code>)</li>
+          <li>Any iterable (<code>Symbol.iterator</code>)</li>
+          <li>Cursor / <code>next()</code> / paginated fetch</li>
+        </ul>
+      </td>
+    </tr>
+    <tr>
+      <th>Push</th>
+      <td>
+        <ul>
+          <li>Promise</li>
+          <li>
+            Callback (before promises, like <code>(err, value) =&gt; {}</code>)
+          </li>
+          <li><code>requestAnimationFrame</code> / <code>setTimeout</code></li>
+          <li><code>once: true</code> event listener</li>
+        </ul>
+      </td>
+      <td>
+        <ul>
+          <li>Events (<code>addEventListener</code>)</li>
+          <li>Observable</li>
+        </ul>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  After thrashing about in the reactive framework landscape for the last few
+  months I've noticed a few themes:
+</p>
+
+<ul>
+  <li>
+    <strong
+      >Programming languages generally don't start with "push" in their
+      design</strong
+    >
+    - In the table you can see that the push row developed later in Javascript's
+    life- promises were included in the Ecmascript standard after A+ was
+    formulated, and observables have no comparable primitive in the standard
+    today.
+  </li>
+  <li>
+    <strong
+      >Frameworks gravitate towards "pull" actions by the nature of the problems
+      they solve</strong
+    >
+    - This leaning is a result of frameworks dealing with consistency,
+    idempotency, and efficiency forces.
+  </li>
+  <li>
+    <strong>There really isn't a pure push framework.</strong> - The closest I
+    can find is Svelte 4, but even that could be considered slightly pull.
+  </li>
+</ul>
+
+<p>Let's go further.</p>
+
+<h2>It's really difficult to pin down what would make a "push" framework</h2>
+
+<p>
+  The main reason this is really difficult is that all frameworks or reactivity
+  systems need to "nudge" the system in some way. In React, using a
+  <code>setState()</code> hook will schedule re-renders generally. In Ember,
+  setting a tracked property will nudge a clock. In wc-services,
+  <code>notify()</code> is called. With signals, tracked depenencies are
+  directly informed.
+</p>
+
+<p>
+  If invalidation were technically a "push", <strong>all</strong> frameworks
+  would be considered push-pull and the push-to-pull axis that I've been talking
+  about collapses and is meaningless. There is something more than just nudging
+  the framework with an invalidation. It has to do with dependencies and how the
+  system solves the diamond problem.
+</p>
+
+<p></p>
+
+<hr />

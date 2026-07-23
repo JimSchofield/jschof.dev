@@ -1,0 +1,863 @@
+---
+title: "JavaScript Reactivity (Part 4): Push vs. Pull Reactivity"
+excerpt: "Does data get pushed to the framework to immediately recalculate, or does the framework pull the data and work out the changes? This is quite a subjective distinction!"
+layout: post
+tags:
+  - posts
+  - essay
+  - javascript
+  - frameworks
+  - reactivity
+  - push-pull
+date: 2026-07-23
+series: "JavaScript Reactivity"
+image: leaf.webp
+---
+
+<h1>JavaScript Reactivity (Part 4): Push vs. Pull Reactivity</h1>
+
+<p class="post-details">Published {% prettyDate date %}, {% readTime page %}</p>
+
+<nav class="series-toc">
+  <p><strong>Series: JavaScript Reactivity</strong></p>
+  <ol>
+    <li>
+      <a href="/posts/2026/5/1-javascript-frameworks-a-global-look/"
+        >A Global Look</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/5/2-deep-vs-shallow-reactivity/"
+        >Deep vs. Shallow Reactivity</a
+      >
+    </li>
+    <li>
+      <a href="/posts/2026/6/3-coarse-vs-fine-grained-reactivity/"
+        >Coarse vs. Fine-Grained Reactivity</a
+      >
+    </li>
+    <li><strong>Push vs. Pull Reactivity</strong></li>
+    <li>
+      Reactivity as Cache Invalidation
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Agnostic Reactivity - Does It Exist?
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+    <li>
+      Reactivity and Scheduling
+      <span class="coming-soon">(Coming soon!)</span>
+    </li>
+  </ol>
+</nav>
+
+<p>
+  In the docs for <a href="https://rxjs.dev/guide/observable">RxJS</a> there is
+  a tidy table that lays out the distinction between push and pull over single
+  and multiple values as arguments:
+</p>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>SINGLE</th>
+        <th>MULTIPLE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Pull</th>
+        <td>Function</td>
+        <td>Iterator</td>
+      </tr>
+      <tr>
+        <th>Push</th>
+        <td>Promise</td>
+        <td>Observable</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>
+  What tidiness! What pure, Platonic satisfaction it gives! Of course, this
+  table is nice, but only as far as it markets why RxJS exists: push strategies
+  need a primitive. (And, I wonder, is this a fundamental leaning that all
+  languages succumb to?)
+</p>
+
+<p>
+  You can actually adjust this table to include more examples, which might help
+  illustrate these four quadrants better:
+</p>
+
+<div class="table-scroll">
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>SINGLE</th>
+        <th>MULTIPLE</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Pull</th>
+        <td>
+          <ul>
+            <li>Function</li>
+            <li>Getter (<code>get foo()</code>)</li>
+            <li>Plain property / variable read</li>
+            <li>Thunk/callback (<code>() =&gt; value</code>)</li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li>Iterator / generator (<code>function*</code>)</li>
+            <li>Any iterable (<code>Symbol.iterator</code>)</li>
+            <li>Cursor / <code>next()</code> / paginated fetch</li>
+          </ul>
+        </td>
+      </tr>
+      <tr>
+        <th>Push</th>
+        <td>
+          <ul>
+            <li>Promise</li>
+            <li>
+              Callback (before promises, like
+              <code>(err, value) =&gt; {}</code>)
+            </li>
+            <li>
+              <code>requestAnimationFrame</code> / <code>setTimeout</code>
+            </li>
+            <li><code>once: true</code> event listener</li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li>Events (<code>addEventListener</code>)</li>
+            <li>Observable</li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<p>
+  After thrashing about in the reactive framework landscape for the last few
+  months I've noticed a few themes:
+</p>
+
+<ul>
+  <li>
+    Frameworks gravitate towards "pull" actions by the nature of the problems
+    they solve. This is a result of the problems they have to solve when
+    rendering.
+    <strong>The diamond problem and consistency in dependency chains</strong>
+    seem to be the main determinant in whether a framework is push/pull or just
+    full pull.
+  </li>
+  <li>
+    Programming languages generally don't start with "push" in their design. In
+    the table you can see that the push row developed later in Javascript's
+    life- promises were included in the Ecmascript standard after A+ was
+    formulated, and observables have no comparable primitive in the standard
+    today.
+  </li>
+
+  <li>
+    There really isn't a pure push framework. The closest I can find is Svelte
+    4, but even that could be considered slightly pull.
+  </li>
+</ul>
+
+<h2>There really isn't a good example of a pure push framework</h2>
+
+<p>
+  The "most push-iest" of all the frameworks seems to be Svelte before runes. Up
+  to and including Svelte 4, the reactivity was wholly wired up at compile-time
+  with the svelte compiler. When a value was invalidated, all calculations and
+  dependencies were figured out (and guessed at) at compile time. When a value
+  changed there was literally a function already created that got called to
+  handle that state change and affect all dependencies for that piece of state.
+  This was all before running any javascript.
+</p>
+
+<p>
+  Why is this the pushiest? At run time the connective tissues of dependencies
+  and dependency chains were already figured out. Values wouldn't have to be
+  pulled when the template was re-rendered- we already have all the actions that
+  need to happen to update the DOM. We have a function for that, provided by the
+  Svelte compiler. Svelte works out the reactivity statically beforehand. It's
+  this compile-first approach that led Rich Harris to
+  <a href="https://svelte.dev/blog/frameworks-without-the-framework"
+    >imagine a framework that gets "compiled away"</a
+  >
+  into vanilla javascript.
+</p>
+
+<p>
+  This led to some real issues, though. You may remember I noted the compiler
+  sometimes "guessed" at dependencies. There are certain situations where the
+  compiler just couldn't know there is a dependency that needs to be associated
+  without workarounds. Here is an example (and you can see it in the playground
+  <a href="https://svelte.dev/playground/143bd8ee69204ba59eab6005d85b0936"
+    >here</a
+  >):
+</p>
+
+<code-highlight lang="svelte">
+  <template>
+    <script lang="js">
+      let count = 0;
+      $: doubled = double();
+
+      function double() {
+        return count * 2;
+      }
+
+      function incr() {
+        count += 1;
+      }
+    </script>
+
+    <button on:click="{incr}">{count}</button>
+
+    <p>Doubled: {doubled}</p>
+  </template>
+</code-highlight>
+
+<p>
+  The way that the computed variable is structured, you would expect the
+  <code>doubled</code> variable to be reactive. Svelte 4 relied on understanding
+  dependencies by seeing what variables are used in the computed
+  <code>$:</code> statements. Svelte misses the fact that <code>count</code> is
+  a dependency of the <code>double</code> variable, because
+  <code>count</code> is not used in the computed definition and Svelte does not
+  inspect the <code>double()</code> function body. How do we make it work? Force
+  <code>count</code> to be recognized as a dependency by artificially passing it
+  as an argument:
+</p>
+
+<code-highlight lang="svelte">
+  <template>
+    <script lang="js">
+      let count = 0;
+      $: doubled = double(count);
+
+      function double(count) {
+        return count * 2;
+      }
+
+      // ...
+    </script>
+    <!-- ... -->
+  </template>
+</code-highlight>
+
+<p>
+  This is not ideal. There is clearly a something in the reactivity that gets
+  missed when analyzing statically. Do we start to statically analyze deeper? Or
+  do we make some "concessions" and start to include signals to the Svelte
+  compiler that are more explicit about what is reactive? This is where runes
+  come in, and that's starting to take Svelte into signal-land.
+</p>
+
+<h2>It's really difficult to pin down what would make a "push" framework</h2>
+
+<p>
+  All frameworks or reactivity systems need to "nudge" the system in some way.
+  In React, using a
+  <code>setState()</code> hook will schedule re-renders generally. In Ember,
+  setting a tracked property will nudge a clock. In wc-services,
+  <code>notify()</code> is called. With signals, tracked dependencies are
+  directly informed.
+</p>
+
+<p>
+  If this little "push" (or state invalidation, or notification, or signal, or
+  dirtying) were technically enough to qualify the whole framework as "push",
+  <strong>all</strong> frameworks would be considered push-pull and the
+  push-to-pull axis that I've been talking about collapses and is meaningless.
+  It would turn out that all frameworks just have both. But I feel in my heart
+  of hearts that there is a meaningful difference between push-pull and pull
+  strategies. And looking out at the discussions on frameworks this is not just
+  my assessment.
+</p>
+
+<p>
+  There is something more than just nudging the framework with an invalidation
+  to qualify as push in my mind. It has to do with dependencies and how the
+  system solves the diamond problem. In React, Ember, Angular (with Zone.js),
+  and Lit, the fact that everything is pulled during the render process means
+  that we don't run into state inconsistencies because the whole state tree used
+  to render is freshly pulled. But in signals frameworks like Solid, Preact, and
+  Svelte 5, the framework now has to be concerned with dependencies and
+  consistency in state changes.
+</p>
+
+<p>
+  My thesis is that labelling a framework as <strong>push</strong> doesn't mean
+  that there is an invalidation or state change notification. Every framework
+  has that. It means that dependencies of the reactive data are figured out
+  ahead of time.
+</p>
+
+<h2>The diamond problem and glitches</h2>
+
+<p>
+  We need to dig into the diamond problem and how this occurs with signals-based
+  frameworks.
+</p>
+
+<p>
+  So, we're going to make a new signal system called "sig," because it's a naive
+  implementation of signals. Our goal here is that we want effects to be run
+  when a consumer changes state. Effects include rendering, so in our toy
+  framework, you could assume that rendering could be scheduled after a signal
+  alerted sig of changes. For our purposes, we will just run a callback and
+  <code>console.log</code>
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      // The "framework"
+      let currentEffect = null;
+
+      function makeSig(val) {
+        const subs = new Set();
+
+        return new Proxy(val, {
+          get(target, prop) {
+            if (currentEffect && !subs.has(currentEffect)) {
+              subs.add(currentEffect);
+            }
+            return target[prop];
+          },
+          set(target, prop, value) {
+            target[prop] = value;
+            subs.forEach((fn) => fn());
+          },
+        });
+      }
+
+      function effect(fn) {
+        currentEffect = fn;
+        fn();
+        currentEffect = null;
+      }
+
+      // now for the runtime
+      const mySig = makeSig({ value: 0 });
+
+      effect(() => {
+        console.log("Effect is running...");
+        console.log(mySig.value);
+      });
+
+      mySig.value = 42;
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  <code>effect</code> tracks when a signal is consumed and tracks the effect
+  function on the signal in a list of subscribers. When the signal value is
+  changed, the signal goes through each subscriber and re-runs each effect
+  function.
+</p>
+
+<p>
+  Now we introduce the problem: diamond dependencies. If we create derived state
+  that is situated in a diamond hierarchy, we will notice a glitch. Values will
+  redundantly be recomputed, and for a brief period effects will run with
+  incorrect values. (And remember, the effects here are where the render of the
+  template would happen in our framework.)
+</p>
+
+<repl-playground class="wide" fold="1-26">
+  <template>
+    <script>
+      // The "framework" (folded)
+      let currentEffect = null;
+
+      function makeSig(val) {
+        const subs = new Set();
+
+        return new Proxy(val, {
+          get(target, prop) {
+            if (currentEffect && !subs.has(currentEffect)) {
+              subs.add(currentEffect);
+            }
+            return target[prop];
+          },
+          set(target, prop, value) {
+            target[prop] = value;
+            subs.forEach((fn) => fn());
+          },
+        });
+      }
+
+      function effect(fn) {
+        currentEffect = fn;
+        fn();
+        currentEffect = null;
+      }
+
+      // now for the runtime
+      const A = makeSig({ value: 1 });
+      const B = makeSig({ value: 2 });
+      const C = makeSig({ value: 3 });
+
+      effect(() => {
+        B.value = A.value;
+      });
+      effect(() => {
+        C.value = A.value;
+      });
+
+      effect(() => {
+        console.log(`D: ${B.value + C.value}`);
+      });
+
+      /*
+       *  We have a diamond!
+       *       A
+       *      / \
+       *     B   C
+       *      \ /
+       *       D
+       */
+
+      A.value = 2;
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  If you trace the effects that are run synchronously after
+  <code>A.value</code> is set to 2, the "D" effect has an intermediate run that
+  produces a wrong value!
+</p>
+
+<p>Why? Let's walk through the runtime as it executes:</p>
+
+<scroll-explain>
+  <explain-section slot="prose" lines="1-3">
+    <p>
+      There are three signals that represent the top three entities in our
+      dependency graph- <code>A</code>, <code>B</code>, and <code>C</code>.
+    </p></explain-section
+  >
+
+  <explain-section slot="prose" lines="5-7">
+    <p>
+      <code>A</code> becomes a dependency of <code>B</code> here. This creates
+      one "subscription" that sig needs to handle for <code>A</code>.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="8-10">
+    <p>
+      <code>A</code> becomes a dependency of <code>C</code> also. This creates
+      another "subscriber" that sig needs to handle and track.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="12-14">
+    <p>
+      The <code>D</code> effect reads <code>B.value</code> <em>and</em>
+      <code>C.value</code>, so it subscribes to both <code>B</code> and
+      <code>C</code>. On the first run (before we trigger any change) everything
+      is computed correctly. <code>B</code> is already 1, <code>C</code> is
+      already 1, and <code>D</code> is then calculated to be 1 + 1 which is 2.
+      So far, so good.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="16">
+    <p>
+      Setting <code>A</code>'s value triggers all effects to run synchronously
+      and in order. First, the <code>A->B->D</code> chain, then the
+      <code>A->C->D</code> chain.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="5-7">
+    <p>
+      First subscriber runs <code>B.value = A.value</code> and sets
+      <code>B</code> to 2. Writing <code>B</code> fires <em>its</em> set trap,
+      which notifies <code>B</code>'s subscriber <code>D</code>.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="12-14">
+    <p>
+      The <code>D</code> effect logs out C + B, but it's <em>incorrect</em>!
+      <code>D</code> re-runs before the <code>C</code> effect has updated
+      <code>C</code>'s value. In this case, then, the value will be 1 + 2 = 3.
+      (If the <code>C</code> effect had run, it would be 2 + 2 = 4!)
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="8-10">
+    <p>
+      Now <code>A</code> continues to its second subscriber:
+      <code>C.value = A.value</code> sets <code>C</code> to 2. Writing to
+      <code>C</code>'s value fires its set trap, which notifies its subscriber
+      <code>D</code>. This is a second call for <code>D</code>'s effect now.
+    </p>
+  </explain-section>
+
+  <explain-section slot="prose" lines="12-14">
+    <p>
+      <code>D</code> reads <code>B.value</code> (2) and
+      <code>C.value</code> (now correctly 2) and logs <code>D: 4</code>. This is
+      correct, but we had an incorrect state for a quick second!
+    </p>
+  </explain-section>
+
+  <code-highlight slot="code" lang="javascript" dont-pretty line-numbers>
+    <template>
+      <script>
+        const A = makeSig({ value: 1 });
+        const B = makeSig({ value: 2 });
+        const C = makeSig({ value: 3 });
+
+        effect(() => {
+          B.value = A.value;
+        });
+        effect(() => {
+          C.value = A.value;
+        });
+
+        effect(() => {
+          console.log(`D: ${B.value + C.value}`);
+        });
+
+        A.value = 2;
+      </script>
+    </template>
+  </code-highlight>
+</scroll-explain>
+
+<p>This ain't great.</p>
+
+<h2>Solutions to the diamond problem</h2>
+
+<h3>Try 1: Let's schedule effects!</h3>
+
+<p>
+  You may have noticed we ran into this issue because we eagerly ran effects
+  synchronously. What if we scheduled effects and just took note if we were
+  trying to run an effect twice? Then, when we want to flush the effects, we
+  could be sure that effects run in order and effect chains don't duplicate
+  effects.
+</p>
+
+<p>
+  Below is a bare-bones scheduler example. Instead of actually running effects,
+  we schedule them, and then "flush" the effects all at once after the updating
+  work is all scheduled out. It's a very neat trick, relying on queueing a flush
+  as a microtask so that the flush happens after all the scheduling work is
+  complete.
+</p>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      // The "framework" (folded)
+      let currentEffect = null;
+      let scheduled = new Set();
+      let isScheduled = false;
+
+      function schedule(fn) {
+        scheduled.add(fn);
+
+        // We don't want multiple flushes on a schedule
+        // run, so early return if we already have
+        // a flush scheduled
+        if (isScheduled) return;
+        isScheduled = true;
+        queueMicrotask(flush);
+      }
+
+      function flush() {
+        isScheduled = false;
+        const runSet = scheduled;
+        scheduled = new Set();
+        for (const fn of runSet) fn();
+      }
+
+      function makeSig(val) {
+        const subs = new Set();
+
+        return new Proxy(val, {
+          get(target, prop) {
+            if (currentEffect && !subs.has(currentEffect)) {
+              subs.add(currentEffect);
+            }
+            return target[prop];
+          },
+          set(target, prop, value) {
+            target[prop] = value;
+            subs.forEach((fn) => schedule(fn));
+          },
+        });
+      }
+
+      function effect(fn) {
+        currentEffect = fn;
+        fn();
+        currentEffect = null;
+      }
+
+      // now for the runtime
+      const A = makeSig({ value: 1 });
+      const B = makeSig({ value: 2 });
+      const C = makeSig({ value: 3 });
+
+      effect(() => {
+        B.value = A.value;
+      });
+      effect(() => {
+        C.value = A.value;
+      });
+
+      effect(() => {
+        console.log(`D: ${B.value + C.value}`);
+      });
+
+      A.value = 2;
+    </script>
+  </template>
+</repl-playground>
+
+<p>It's fixed, right? We can go home now?</p>
+
+<p>Not exactly...</p>
+
+<p>
+  This might be the fix for this small diamond, but what happens if we have
+  larger and more complicated dependency chains? The answer is that scheduling
+  won't solve this completely in all cases.
+</p>
+
+<p>
+  We could just let this re-render and run effects until everything eventually
+  "settles." But this makes us feel sad because there's no guarantee that a
+  graph of sig dependencies would eventually settle. What if there is a cycle in
+  the graph of reactive data? In the end this is not a strong enough guarantee
+  for us to rely on. We need something more solid and robust.
+</p>
+
+<p>
+  The other solution is to solve the dependency hierarchy with
+  <a href="https://en.wikipedia.org/wiki/Topological_sorting"
+    >topological ordering</a
+  >.
+</p>
+
+<h2>Try 2: Topological ordering</h2>
+
+<p>Fancy!</p>
+
+<p>
+  The biggest change here is that we have to start explicitly tracking
+  dependencies at run time. The strategy here is that we track derived reactive
+  values and dependencies. Then, we construct a graph of nodes that help us sort
+  the effects in the right order of execution.
+</p>
+
+<p>
+  That graph of nodes needs to be re-constructed on each notification, because
+  often there can be dynamic or conditional dependencies that show up in an
+  update.
+</p>
+
+<p>
+  How do we know what order is correct? If a data change is signalled, we look
+  at the depth of dependency chains at that point. We sort the node chains by
+  depth. Once we're there, we can run the effects in order knowing that there
+  will be no chains of reactivity competing like before.
+</p>
+
+<p>
+  So, forgive me, but this example is going to get big. It's adding two things:
+  a constructed dependency graph for reactive data, and a topological sort that
+  schedules updates in order.
+</p>
+
+<aside>
+  <p>
+    I used Claude to help me formulate this example. I edited this code example
+    and annotated for clarity. To be precise, this is not the canonical Kahn's
+    algorithm. This is a version that calculates depth and sorts instead of
+    removing shortest dependency chains in sequence. But it's basically
+    achieving the same result!
+  </p>
+</aside>
+
+<repl-playground class="wide">
+  <template>
+    <script>
+      // The "framework"
+      let currentEffect = null;
+      let scheduled = new Set();
+      let isScheduled = false;
+
+      function schedule(eff) {
+        scheduled.add(eff);
+        if (isScheduled) return;
+        isScheduled = true;
+        queueMicrotask(flush);
+      }
+
+      // Recursive function that walks down signal producer chains (dependency chains)
+      // If this effect reads no signal that another effect produces, depth is 0
+      // If we find a dependency chain, the depth is one deeper than the deepest producer chain
+      function depth(eff) {
+        let max = -1;
+
+        for (const sig of eff.deps) {
+          if (sig.producer) {
+            max = Math.max(max, depth(sig.producer));
+          }
+        }
+
+        return max + 1;
+      }
+
+      function flush() {
+        isScheduled = false;
+
+        // This is the magic sauce
+        // Runs effects from shortest to longest dep chains
+        const sortedEffects = Array.from(scheduled).sort(
+          (a, b) => depth(a) - depth(b),
+        );
+
+        scheduled = new Set();
+        for (const eff of sortedEffects) run(eff);
+      }
+
+      function makeSig(val) {
+        const sig = {
+          subs: new Set(), // list of readers of this value
+          producer: null, // effect that wrote to this value
+        };
+
+        return new Proxy(val, {
+          get(target, prop) {
+            if (currentEffect) {
+              sig.subs.add(currentEffect);
+
+              // This is new- we have to track dependents now too
+              currentEffect.deps.add(sig);
+            }
+            return target[prop];
+          },
+          set(target, prop, value) {
+            target[prop] = value;
+
+            // whoever is writing this signal is its producer
+            if (currentEffect) sig.producer = currentEffect;
+
+            sig.subs.forEach((eff) => schedule(eff));
+            return true;
+          },
+        });
+      }
+
+      function run(eff) {
+        eff.deps.clear(); // re-discover deps on every run
+
+        // We do this dance here because effects can be _nested_
+        const prev = currentEffect;
+        currentEffect = eff;
+        eff.run();
+        currentEffect = prev;
+      }
+
+      function effect(fn) {
+        run({ run: fn, deps: new Set() });
+      }
+
+      // now for the runtime
+      const A = makeSig({ value: 1 });
+      const B = makeSig({ value: 2 });
+      const C = makeSig({ value: 3 });
+
+      effect(() => {
+        B.value = A.value;
+      });
+      effect(() => {
+        C.value = A.value;
+      });
+
+      effect(() => {
+        console.log(`D: ${B.value + C.value}`);
+      });
+
+      A.value = 2;
+    </script>
+  </template>
+</repl-playground>
+
+<p>
+  This is getting pretty abstract and recursive, but the important point is that
+  dependency chains are analyzed and sorted before effects are run in a batch.
+  <strong
+    >In my estimation, this glitch-free ordering is the central problem that
+    fine-grained push systems have to solve.</strong
+  >
+  Pull frameworks don't run into this same issue because they do a full pull of
+  all render functions (effect functions) from top to bottom. They never see
+  that intermediate glitch.
+</p>
+
+<aside class="blue">
+  <p>
+    This toy example is fine for smaller graphs because it resolves our diamond
+    problem. But if our state were cyclic, this wouldn't work and we would need
+    to build a cycle detector to escape or map the cyclic portions to a true
+    non-cyclic graph. Also, for larger graphs, we might actually make two plus
+    passes on flushing effects instead of one neat microtask like we have above.
+    But we're not going to get into those details- the point is that we can see
+    how topological ordering and scheduling send us in the direction of
+    resolving these issues.
+  </p>
+</aside>
+
+<h2>In summary</h2>
+
+<p>
+  We've discovered that languages naturally start with pull data flow, and push
+  actions and behaviors often need to be discovered and added later.
+</p>
+
+<p>
+  The big, hairy problem a fine-grained push framework has to solve is that
+  state change dependencies need to be tracked and investigated before effects
+  are run. Pull frameworks sidestep this problem by re-running every render
+  function from top to bottom.
+</p>
+
+<p>
+  Topological sorting and scheduling are tools to ensure proper dependency
+  resolution in push-based scenarios. These allow frameworks to be fine-grained,
+  but are more onerous to track and keep consistent.
+</p>
+
+<p>
+  Hope you are enjoying these as much as I enjoy writing them. Next up, a bit of
+  philosophy: reactivity as cache invalidation (coming soon!)
+</p>
+
+<p>{% socials %}</p>

@@ -28,6 +28,6 @@ Some recent projects
 
 I have <a href="/posts/2025/5/opinion-ai-is-bad-for-us/">very strong and conflicting feelings</a> about AI use in general. I've found in my line of work that using AI to supplement your workflow is necessary. I occasionally use claude-code to brainstorm, to prototype, to vet strategies, and to do mundane tasks that are just a tad too sophistocated for bash scripts.
 
-<div class="decorate">That said, you can be certain that I write every line of text you read on this site.</div>  And I hand-write the code examples that I share. I do not use AI to generate pictures or content.  It's my conviction that we put this sort of boundary around AI use.
+<div class="decorate">That said, you can be certain that I write every line of text you read on this site.</div>  And I prefer hand-write the code examples that I share. If I rely on Claude more in a certain code example, I will generally add a note describing how Claude was used. I do not use AI to generate pictures or content.  It's my conviction that we put this sort of boundary around AI use.
 
 </main>

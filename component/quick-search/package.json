@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@lit/task": "catalog:",
-    "fuse.js": "^7.0.0"
+    "fuse.js": "^7.4.2"
   },
   "peerDependencies": {
     "lit": "^3.0.0"

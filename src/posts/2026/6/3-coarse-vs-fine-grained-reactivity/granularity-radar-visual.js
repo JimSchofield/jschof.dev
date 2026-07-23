@@ -107,8 +107,8 @@
       kind: "arc",
       ring: "service",
       angle: 132,
-      pp: "pushpull",
-      desc: "A service\u2019s notify() pushes to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to investigate and figure out what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. Push-pull: notify() pushes to subscribers immediately, and consumers read to resolve what changed.",
+      pp: "pull",
+      desc: "A service\u2019s notify() broadcasts to every subscribed consumer, but the notification doesn\u2019t carry which property changed. Each consumer has to re-read and investigate what shifted. Same shape as Redux, one ring in, because a service owns a narrower slice than a global store. A broadcast that names no dependent and leaves consumers to discover the change is pull, not push-pull \u2014 the notify() verb looks active, but without a subscriber list it can\u2019t target anyone.",
     },
 
     {

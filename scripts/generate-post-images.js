@@ -23,6 +23,10 @@ const OG_WIDTH = 1200;
 const OG_HEIGHT = 630;
 const OG_QUALITY = 85;
 const WEBP_QUALITY = 85;
+// Cap the in-page/index-card webp width so oversized originals (e.g. a 3000px
+// phone photo) don't ship a multi-hundred-KB cover. Matches the wider end of
+// existing covers; smaller sources are left untouched (withoutEnlargement).
+const WEBP_MAX_WIDTH = 1400;
 const SOURCE_EXTS = [".jpg", ".jpeg", ".png"];
 
 async function* walkPosts(dir) {
@@ -100,7 +104,10 @@ for await (const postFile of walkPosts(POSTS_DIR)) {
   let didWork = false;
 
   if (original && !(await isUpToDate(original, webpPath))) {
-    await sharp(original).webp({ quality: WEBP_QUALITY }).toFile(webpPath);
+    await sharp(original)
+      .resize(WEBP_MAX_WIDTH, null, { withoutEnlargement: true })
+      .webp({ quality: WEBP_QUALITY })
+      .toFile(webpPath);
     results.generated.push(webpPath);
     didWork = true;
   }

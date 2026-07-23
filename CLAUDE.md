@@ -184,6 +184,10 @@ When adding new resources or features, maintain these existing patterns:
 
 Single stylesheet at `src/css/main.css`. Uses CSS custom properties for the color palette (e.g., `--paynes-gray`, `--seasalt`, `--carrot`, `--teal`). Font stack: Atkinson Hyperlegible Next (variable font in `src/assets/fonts/`) with Fira Code from Google Fonts for code blocks.
 
+**Always prefer CSS variables over hardcoded colors**, and **support light/dark mode in any context that is sensitive to it** (see the Theming section for the gating pattern). Consume tokens via `var(--token)` rather than literal color values so a color only needs to be defined once. Two caveats:
+- A surface that does **not** follow the site theme (e.g. the code block is always the dark Tokyo Night theme regardless of light/dark) must **not** use the theme-flipping tokens (`--text`, `--text-secondary`, `--bg-surface`, …) — those would invert and become unreadable. Use a stable raw palette token instead (e.g. `--seasalt`), optionally via `color-mix()` for opacity.
+- Shadow-DOM components should expose their own `--component-*` custom properties (with sensible fallbacks for standalone/npm consumers) and let the host page map them to site tokens — see `<code-highlight>`'s `--code-lang-color` / `--code-lang-bg`.
+
 ## Theming (light/dark)
 
 The site supports three theme states, controlled by `<theme-toggle>` (`src/js/theme-toggle.js`):

@@ -203,19 +203,6 @@ code {
   font-family: "Fira Code", monospace;
 }
 
-pre.shiki {
-  padding: 0.5rem 0.5rem;
-  border-radius: 8px;
-  line-height: 1.2;
-  font-family: "Fira Code", monospace;
-  box-shadow: var(--code-shadow);
-
-  & code {
-    border: transparent;
-    padding: 0;
-  }
-}
-
 blockquote {
   margin: 1em;
   padding: 0 1em;

@@ -3,7 +3,6 @@ import { feedPlugin } from "@11ty/eleventy-plugin-rss";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import * as esbuild from "esbuild";
-import highlightPlugin from "./eleventy/highlight.js";
 import autoHeadingIds from "./plugins/auto-heading-ids.js";
 
 export default function (eleventyConfig) {
@@ -60,7 +59,6 @@ export default function (eleventyConfig) {
     },
   });
 
-  eleventyConfig.addPlugin(highlightPlugin);
   eleventyConfig.addPlugin(autoHeadingIds);
 
   eleventyConfig.addFilter("jsonify", function(value) {
